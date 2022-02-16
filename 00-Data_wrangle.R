@@ -6,23 +6,30 @@ setwd("C:/Users/Quresh.Latif/files/projects/BLM/ARIM")
 
 ################## Inputs ####################
 # Get latest AOU checklist with tax names and order #
-aou.checklist <- read.csv("C:/Users/Quresh.Latif/files/data/NACC_list_bird_species_downloaded_20200416.csv",
+aou.checklist <- read.csv("C:/Users/Quresh.Latif/files/data/NACC_list_bird_species_downloaded_20220204.csv",
                           header = T, stringsAsFactors = F) %>% as_tibble() %>%
   mutate(tax_ord = row_number())
+# Recommended citation: Chesser, R. T., S. M. Billerman, K. J. Burns,
+  #C. Cicero, J. L. Dunn, B. E. Hernández-Baños, A. W. Kratter, I. J. Lovette,
+  #N. A. Mason, P. C. Rasmussen, J. V. Remsen, Jr., D. F. Stotz, and K. Winker. 2021.
+  #Check-list of North American Birds (online). American Ornithological Society.
+  #http://checklist.aou.org/taxa
 
-spp.exclude <- c("Squirrel, Red", "Ruffed Grouse", "Turkey Vulture", "Wild Turkey",
-                 "Sandhill Crane", "Bald Eagle", "American Kestrel", "Red-tailed Hawk",
-                 "Great Blue Heron", "Swainson's Hawk", "Canada Goose", "Squirrel, Abert's",
-                 "Northern Pygmy-Owl", "Northern Goshawk", "Sharp-shinned Hawk", "Green-winged Teal",
-                 "Cooper's Hawk", "Great Horned Owl", "Pika", "Gambel's Quail", "Osprey",
-                 "Common Merganser", "White-tailed Ptarmigan", "Peregrine Falcon",
-                 "Boreal Owl", "Spotted Owl", "Black-crowned Night-Heron", "Ring-necked Duck",
-                 "California Gull", "Northern Saw-whet Owl", "Long-eared Owl", "Flammulated Owl",
-                 "Prairie Falcon", "Northern Harrier", "American White Pelican", "Western Screech-Owl",
-                 "Double-crested Cormorant", "Bufflehead", "Thicket Tinamou", "Dusky Grouse", "Mallard",
-                 "Golden Eagle", "Gadwall", "Virginia Rail", "Chukar")
+spp.exclude <- aou.checklist %>%
+  filter(!order %in% c("Apodiformes", "Caprimulgiformes", "Charadriiformes",
+                       "Caprimulgiformes", "Columbiformes", "Coraciiformes",
+                       "Cuculiformes", "Nyctibiiformes", "Passeriformes",
+                       "Piciformes")) %>%
+  pull(common_name)
+spp.exclude <- c(spp.exclude,
+                 "Squirrel, Red", "Squirrel, Abert's", "Pika",
+                 "American Avocet", "Forster's Tern", "Franklin's Gull",
+                 "Long-billed Curlew", "Marbled Godwit", "Ring-billed Gull",
+                 "Willet", "Black-necked Stilt", "Wilson's Phalarope",
+                 "California Gull", "Caspian Tern")
 strata <- c("WY-ARIM-HI", "WY-ARIM-LO", "WY-BCR10-BU", "WY-BCR10-CA", "WY-BCR10-CO", "WY-BCR10-KE",
             "WY-BCR10-LA", "WY-BCR10-PI", "WY-BCR10-RA", "WY-BCR10-RO", "WY-BCR10-WO")
+years <- 2010:2019
 SampDesign <- c("IMBCR", "GRTS")
 ##############################################
 
@@ -37,6 +44,28 @@ BCRDataAPI::group_by(c("TransectNum"))
 grab <- BCRDataAPI::get_data()
 write.csv(grab, "Transects.csv", row.names = F)
 
+#### Get primary habitat types for sample transects ####
+BCRDataAPI::reset_api()
+BCRDataAPI::set_api_server('analysis.api.bcr.eco')
+BCRDataAPI::add_columns(c('TransectNum|str',
+                          'Point|int',
+                          'Year|int',
+                          'primaryHabitat',
+                          'HabitatCommonName'
+))
+
+BCRDataAPI::filter_on(c(str_c('Stratum in ', str_c(strata, collapse = ","))))
+BCRDataAPI::group_by(c('TransectNum', 'Point', 'Year', 'primaryHabitat',
+                       'HabitatCommonName'))
+grab <- BCRDataAPI::get_data()
+#grab %>% dplyr::group_by(primaryHabitat, HabitatCommonName) %>%
+#  summarise(n = n()) %>% arrange(desc(n)) %>%
+#  View()
+PH.list <- grab %>% dplyr::group_by(primaryHabitat, HabitatCommonName) %>%
+  summarise(n = n()) %>% arrange(desc(n)) %>%
+  pull(primaryHabitat)
+PH.list <- PH.list[1:7]
+
 #### Compile species list ####
 BCRDataAPI::reset_api()
 BCRDataAPI::set_api_server('analysis.api.bcr.eco')
@@ -46,9 +75,8 @@ BCRDataAPI::add_columns(c('BirdCode|str',
 BCRDataAPI::filter_on('SelectionMethod in IMBCR,GRTS')
 BCRDataAPI::filter_on('Migrant = 0')
 BCRDataAPI::filter_on('BirdCode <> NOBI')
-BCRDataAPI::filter_on('BCR = 16')
-BCRDataAPI::filter_on('primaryHabitat in LP,MC,II,PP')
-BCRDataAPI::filter_on(str_c('Year in ', str_c(2008:2020, collapse = ",")))
+BCRDataAPI::filter_on('BCR = 10')
+BCRDataAPI::filter_on(str_c('primaryHabitat in ', str_c(PH.list, collapse = ",")))
 BCRDataAPI::group_by(c('BirdCode', 'Species'))
 grab <- BCRDataAPI::get_data()
 
@@ -64,8 +92,11 @@ spp.out <- spp.out %>%
   mutate(min_length = min(nchar(Species))) %>%
   mutate(Species = str_sub(Species, 1, min_length)) %>%
   select(BirdCode, Species) %>%
-  # Additional tweaks #
-  mutate(Species = replace(Species, which(Species %in% c("Western Scrub-Jay", "Woodhouse's Scrub")), "Woodhouse's Scrub-Jay")) %>%
+  # Additional adjustment:
+  mutate(Species = ifelse(BirdCode == "WEFL",
+                              "Cordilleran Flycatcher", Species)) %>%
+  mutate(BirdCode = ifelse(BirdCode == "WEFL", "COFL", BirdCode)) %>%
+  #_____________________#
   ungroup %>%
   unique
 
@@ -76,9 +107,31 @@ spp.out <- spp.out %>%
   select(tax_ord, BirdCode, common_name, species) %>%
   arrange(tax_ord)
 
-# Remove additional implausible members of the metacommunity (based on review of BNA range maps and habitat accounts) #
+# Join guilds classified for report #
+spp_guilds <- read.csv("Spp_guilds_prior.csv", header = T, stringsAsFactors = F) %>%
+  mutate(Common_Name = ifelse(Common_Name == "Gray Jay", "Canada Jay", Common_Name)) %>%
+  mutate(Common_Name = ifelse(Common_Name == "Western Scrub-Jay", "Woodhouse's Scrub-Jay", Common_Name)) %>%
+  mutate(Common_Name = ifelse(Common_Name == "Sage Sparrow", "Sagebrush Sparrow", Common_Name)) %>%
+  mutate(Common_Name = ifelse(Common_Name == "McCown's Longspur", "Thick-billed Longspur", Common_Name))
+#spp.out %>% filter(!common_name %in% spp_guilds$Common_Name) %>% pull(common_name) # Review this....
+#spp_guilds %>% filter(!Common_Name %in% spp.out$common_name) %>% pull(Common_Name) %>% sort() # ...and this.
 spp.out <- spp.out %>%
-  filter(!BirdCode %in% c("RUHU", "PAWR", "OLWA", "AMPI", "WWCR", "SABS"))
+  left_join(
+    spp_guilds %>%
+      select(Common_Name, Guilds) %>%
+      rename(common_name = Common_Name,
+             Guild = Guilds),
+    by = "common_name"
+  )
+rm(spp_guilds)
+spp.out <- spp.out %>%
+  mutate(Guild = ifelse(common_name == "Cassin's Sparrow", "Range", Guild)) %>%
+  mutate(Guild = ifelse(common_name == "Orchard Oriole", "Generalist", Guild)) %>%
+  mutate(Guild = ifelse(common_name == "Yellow Grosbeak", "Generalist", Guild))
+
+# Remove additional implausible members of the metacommunity (based on review of BNA range maps and habitat accounts) #
+#spp.out <- spp.out %>%
+#  filter(!BirdCode %in% c("RUHU", "PAWR", "OLWA", "AMPI", "WWCR", "SABS"))
 
 spp.excluded <- grab %>%
   select(BirdCode, Species) %>%
@@ -99,13 +152,12 @@ BCRDataAPI::add_columns(c('TransectNum|str',
                           'Point|int',
                           'PointLatitude|num',
                           'PointLongitude|num',
+                          'easting|int',
+                          'northing|int',
                           'zone|int',
                           'Year|int',
                           'Date|str',
                           'PointVisitStartTime|str',
-                          'easting|int',
-                          'northing|int',
-                          'zone|int',
                           'Stratum|str',
                           'radialDistance|int',
                           'CL_count|int',
@@ -118,7 +170,7 @@ BCRDataAPI::add_columns(c('TransectNum|str',
 
 BCRDataAPI::filter_on(c(str_c('Stratum in ', str_c(strata, collapse = ",")),
                         str_c('SelectionMethod in ', str_c(SampDesign, collapse = ",")),
-                        'Year in 2014,2016,2018',
+                        str_c('Year in ', str_c(years, collapse = ",")),
                         str_c('BirdCode in ', str_c(spp.out$BirdCode, collapse = ",")),
                         'ninetynine = 0',
                         'eightyeight = 0',
@@ -132,9 +184,10 @@ grab <- BCRDataAPI::get_data(interpolate_effort = T) %>%
 
 point.coords <- grab %>%
   select(TransectNum, Point, easting, northing, zone) %>%
-  unique
+  distinct()
 point.list <- unique(str_c(point.coords$TransectNum,
-                           str_pad(point.coords$Point, width = 2, side = "left", pad = "0"), sep = "-")) %>%
+                           str_pad(point.coords$Point, width = 2, side = "left", pad = "0"),
+                           sep = "-")) %>%
   sort
 grid.list <- unique(point.coords$TransectNum) %>% sort
 
@@ -186,156 +239,85 @@ rm(smry)
 bird_data <- grab %>%  # Store bird survey data for later use.
   mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year))
 
-## Get GIS covariates ##
-dat.gis <- foreign::read.dbf("C:/Users/Quresh.Latif/files/GIS/FS/CFLRP/Bird_survey_point_coords.dbf", as.is = T) %>%
-  tibble::as_tibble() %>%
-  rename(Grid = TransectNu) %>%
-  select(Grid, Point, Northing, heatload, TWI, LifeZone)
-
-## Get grid-level landscape structure (LANDFIRE) covariates ##
-landscape_data <- data.frame(Grid = pointXyears.list %>% str_sub(1, -9),
-                             Year = pointXyears.list %>% str_sub(-4, -1), stringsAsFactors = F) %>%
+## Covariates ##
+cov_grid <- data.frame(Grid = pointXyears.list %>% str_sub(1, -9),
+                             Year = pointXyears.list %>%
+                         str_sub(-4, -1) %>% as.integer(),
+                             stringsAsFactors = F) %>%
   mutate(gridIndex = Grid %>% as.factor %>% as.integer,
-         YearInd = Year %>% as.factor %>% as.integer) %>%
-  unique
+         YearInd = Year %>% as.factor %>% as.integer,
+         Development = ifelse(str_detect(Grid, "ARIM-HI"), "HI",
+                             ifelse(str_detect(Grid, "ARIM-LO"), "LO", "BG"))) %>%
+  distinct() %>%
+  left_join(read.csv("covariates/Grid_Covariates_ARIM.csv",
+                     stringsAsFactors = F, header = T) %>%
+              tibble::as_tibble() %>%
+              mutate(PJ_area = str_sub(PJ_area, 1, -2) %>% as.numeric) %>%
+              rename(TransectNum = TrnsctN,
+                     Road_1km = Road_length_2009_km,
+                     Well_1km = Well_count_1km) %>%
+              select(TransectNum, Year, PJ_area,
+                     Well_1km, Road_1km,
+                     NDVI),
+    by = c("Grid" = "TransectNum", "Year" = "Year"))
 
-PA_data <- read.csv("data/CFLRP Percent Areas 2014.csv", header = T, stringsAsFactors = F) %>%
-  tbl_df %>%
-  mutate(Year = "2014") %>%
-  bind_rows(
-    read.csv("data/CFLRP Percent Areas 2016.csv", header = T, stringsAsFactors = F) %>%
-      tbl_df %>%
-      mutate(Year = "2016")
-  ) %>%
-  bind_rows(
-    read.csv("data/Gaps_3km_2018.csv", header = T, stringsAsFactors = F) %>%
-      tbl_df() %>%
-      rename(Gap_3km_square = PercentArea,
-             TransectNum = TransNum) %>%
-      select(TransectNum, Gap_3km_square) %>%
-      left_join(read.csv("data/Open_3km_2018.csv", header = T, stringsAsFactors = F) %>%
-                  tbl_df() %>%
-                  rename(Open_3km_square = PercentArea,
-                         TransectNum = TransNum) %>%
-                  select(TransectNum, Open_3km_square),
-                by = "TransectNum") %>%
-      mutate(Year = "2018")
-  ) %>%
-  rename(PACC10 = Gap_3km_square,
-         PACC40 = Open_3km_square) %>%
-  select(TransectNum, Year, PACC10, PACC40)
-
-landscape_data <- landscape_data %>%
-  left_join(
-    PA_data %>%
-      select(TransectNum, Year, PACC10, PACC40),
-    by = c("Grid" = "TransectNum", "Year" = "Year")
-  ) %>%
-  left_join(read.csv("data/Patch_struct_&_config.csv", header = T, stringsAsFactors = F) %>%
-              tbl_df %>%
-              mutate(Year = as.character(Year),
-                     # Rescale area and distance covariates to ha and km
-                     mnPtchAr_Gap = mnPtchAr_Gap3km / 10000,
-                     mnPtchAr_Opn = mnPtchAr_Opn3km / 10000,
-                     mnPerArRatio_Gap = mnPerArRatio_Gap3km,
-                     mnPerArRatio_Opn = mnPerArRatio_Opn3km,
-                     NNdist_Gap = NNdist_Gap3km / 1000,
-                     NNdist_Opn = NNdist_Opn3km / 1000) %>%
-              select(TransNum, Year, mnPtchAr_Gap:NNdist_Opn) %>%
-              bind_rows(
-                read.csv("data/Gaps_3km_2018.csv", header = T, stringsAsFactors = F) %>%
-                  tbl_df() %>%
-                  rename(mnPtchAr_Gap = MeanPatch,
-                         mnPerArRatio_Gap = para_mn,
-                         NNdist_Gap = enn_mn) %>%
-                  mutate(NNdist_Gap = NNdist_Gap / 1000) %>%
-                  select(TransNum, mnPtchAr_Gap, NNdist_Gap, mnPerArRatio_Gap) %>%
-                  left_join(
-                    read.csv("data/Open_3km_2018.csv", header = T, stringsAsFactors = F) %>%
-                      tbl_df() %>%
-                      rename(mnPtchAr_Opn = MeanPatch,
-                             mnPerArRatio_Opn = para_mn,
-                             NNdist_Opn = enn_mn) %>%
-                      mutate(NNdist_Opn = NNdist_Opn / 1000) %>%
-                      select(TransNum, mnPtchAr_Opn, NNdist_Opn, mnPerArRatio_Opn),
-                    by = "TransNum"
-                  ) %>%
-                  mutate(Year = "2018")
-              ),
-            by = c("Grid" = "TransNum", "Year" = "Year")) %>%
-  select(Grid:NNdist_Opn)
-
-Mode <- function(x) { # Define function for getting the most frequent level
-  ux <- unique(x)
-  ux[which.max(tabulate(match(x, ux)))]
-}
-dat.gis <- dat.gis %>%
-  dplyr::group_by(Grid) %>%
-  summarize(Latitude = mean(Northing),
-            heatload = mean(heatload),
-            TWI = mean(TWI),
-            LifeZone = Mode(LifeZone)) %>%
-  mutate(LowMont = as.integer(LifeZone == "Lower montane"))
-
-landscape_data <- landscape_data %>%
-  left_join(dat.gis, by = "Grid")
-
-rm(PA_data)
-rm(dat.gis)
-
-#cor(landscape_data %>% select(PACC10:TWI), use = "complete")
-# Remove mnPtchAr_Gap & mnPtchAr_Opn from planned analysis model
-
-## Get point level canopy cover values ##
-veg_data <- data.frame(Point_year = pointXyears.list, stringsAsFactors = F) %>%
-  tbl_df() %>%
-  mutate(Point = str_sub(Point_year, 1, -6),
-         Year = str_sub(Point_year, -4, -1)) %>%
-  left_join(
-    read.csv("data/PointLevel_ContinuousCC_2014.csv", header = T, stringsAsFactors = F) %>%
-      tbl_df() %>%
-      select(TransectNum, Point, Year, cc2014ext) %>%
-      mutate(Point = str_c(TransectNum, "-", str_pad(Point, side = "left", width = 2, pad = "0")),
-             Year = as.character(Year)) %>%
-      rename(CanCov = cc2014ext) %>%
-      bind_rows(
-        read.csv("data/PointLevel_ContinuousCC_2016.csv", header = T, stringsAsFactors = F) %>%
-          tbl_df() %>%
-          select(TransectNum, Point, Year, cc2016ext) %>%
-          mutate(Point = str_c(TransectNum, "-", str_pad(Point, side = "left", width = 2, pad = "0")),
-                 Year = as.character(Year)) %>%
-          rename(CanCov = cc2016ext)
-      ) %>%
-      bind_rows(
-        read.csv("data/PointLevel_ContinuousCC_2018.csv", header = T, stringsAsFactors = F) %>%
-          tbl_df() %>%
-          select(TransectNum, Point, Year, cc2018ext) %>%
-          mutate(Point = str_c(TransectNum, "-", str_pad(Point, side = "left", width = 2, pad = "0")),
-                 Year = as.character(Year)) %>%
-          rename(CanCov = cc2018ext)
-      ) %>%
-      select(-TransectNum),
+cov_point <- data.frame(Point_year = pointXyears.list,
+                        Point = pointXyears.list %>% str_sub(1, -6),
+                       Year = pointXyears.list %>%
+                         str_sub(-4, -1) %>% as.integer(),
+                       stringsAsFactors = F) %>%
+  mutate(pointIndex = Point %>% as.factor %>% as.integer,
+         YearInd = Year %>% as.factor %>% as.integer,
+         Development = ifelse(str_detect(Point, "ARIM-HI"), "HI",
+                              ifelse(str_detect(Point, "ARIM-LO"), "LO", "BG"))) %>%
+  distinct() %>%
+  dplyr::left_join(
+    read.csv("covariates/Point_Covariates_ARIM.csv", stringsAsFactors = F, header = T) %>%
+      tibble::as_tibble() %>%
+      rename(TransectNum = TrnsctN) %>%
+      mutate(Point = str_c(TransectNum,
+                           str_pad(Point, width = 2, side = "left", pad = "0"),
+                           sep = "-"),
+             Sage = suppressWarnings(as.numeric(Sage)), # 123 values are missing for each of these.
+             Litter = suppressWarnings(as.numeric(Litter)),
+             Herb = suppressWarnings(as.numeric(Herb)),
+             AHerb = suppressWarnings(as.numeric(AHerb))) %>%
+      rename(Road_125m = Road_length_2009_125m,
+             TPI = elevation_difference,
+             Well_125m = Well_count) %>%
+      select(Point, Year, Sage:Well_125m, Road_125m, TPI),
     by = c("Point", "Year")
-  ) %>%
-  mutate(CanCov = ifelse(is.na(CanCov), 0, CanCov))
+  )
+
+  # Check number of years sampled for each grid cell #
+# out <- matrix(0, nrow = sum(str_sub(grid.list, 4, 7) == "ARIM"),
+#               ncol = length(years),
+#               dimnames = list(grid.list[which(str_sub(grid.list, 4, 7) == "ARIM")],
+#                               as.character(years)))
+# ind <- which(str_sub(cov_grid$Grid, 4, 7) == "ARIM")
+# for(i in ind) out[cov_grid$Grid[i], as.character(cov_grid$Year[i])] <- 1
 
 ## Trim dates, compile day of year & start time in minutes ##
 library(lubridate)
-bird_data <- bird_data %>%
+tab.datetime <- bird_data %>%
+  mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year)) %>%
+  arrange(Point_year) %>%
+  select(Point_year, PointLatitude, PointLongitude, Date, PointVisitStartTime) %>%
+  distinct() %>%
   mutate(Date = str_sub(Date, 6, -14) %>% dmy) %>%
   mutate(DOY = yday(Date)) %>%
   mutate(PointVisitStartTime = PointVisitStartTime %>%
            replace(which(PointVisitStartTime == "0"), NA)) %>%
-  mutate(HR = PointVisitStartTime %>% str_sub(1, -3) %>% as.integer) %>%
-  mutate(MIN = PointVisitStartTime %>% str_sub(-2, -1) %>% as.integer) %>%
+  mutate(HR = PointVisitStartTime %>% str_sub(1, -3) %>% as.integer()) %>%
+  mutate(HR = HR %>% str_pad(width = 2, side = "left", pad = "0")) %>%
+  mutate(MIN = PointVisitStartTime %>% str_sub(-2, -1) %>% str_pad(width = 2, side = "left", pad = "0")) %>%
   mutate(Time = str_c(HR, MIN, "00", sep = ":")) %>%
   mutate(dateTime = str_c(Date, Time, sep = " ")) %>%
   mutate(Time_ssr = QSLpersonal::tssr(PointLatitude, PointLongitude, dateTime)) %>%
-  select(TransectNum:Date, DOY, Time_ssr, PointVisitStartTime:TimePeriod)
+  select(Point_year, PointLatitude, PointLongitude, DOY, Time_ssr)
 
 ## Compile multidimensional detection data array ##
 spp.list <- spp.out$BirdCode
-cov.names <- c("gridIndex", "YearInd", "DayOfYear", "Time_ssr", names(veg_data)[-c(1:3)])
 
 bird_data <- bird_data %>%
   mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year))
@@ -355,47 +337,30 @@ for(sp in 1:length(spp.list)) {
   }
 }
 
-Cov <- matrix(NA, nrow = length(pointXyears.list), ncol = length(cov.names),
+## Compile covariate arrays ##
+cov.names <- c("gridIndex", "YearInd", "DayOfYear", "Time_ssr", "Develop_low", "Develop_high", names(cov_point)[-c(1:6)])
+Cov_point <- matrix(NA, nrow = length(pointXyears.list), ncol = length(cov.names),
               dimnames = list(pointXyears.list, cov.names))
-Cov[, "gridIndex"] <- pointXyears.list %>% str_sub(1, -9) %>% as.factor %>% as.integer
-Cov[, "YearInd"] <- pointXyears.list %>% str_sub(-4, -1) %>% as.factor %>% as.integer
-Cov[, "DayOfYear"] <- bird_data %>%
-  select(Point_year, DOY) %>% distinct() %>% arrange(Point_year) %>% pull(DOY)
-Cov[, "Time_ssr"] <- bird_data %>%
-  select(Point_year, Time_ssr) %>% distinct() %>% arrange(Point_year) %>%
-  pull(Time_ssr)
-Cov[, -c(1:4)] <- veg_data %>%
+Cov_point[, "gridIndex"] <- pointXyears.list %>% str_sub(1, -9) %>% as.factor %>% as.integer
+Cov_point[, "YearInd"] <- pointXyears.list %>% str_sub(-4, -1) %>% as.factor %>% as.integer
+Cov_point[, "DayOfYear"] <- tab.datetime %>% arrange(Point_year) %>% pull(DOY)
+Cov_point[, "Time_ssr"] <- tab.datetime %>% arrange(Point_year) %>% pull(Time_ssr)
+Cov_point[, "Develop_low"] <- cov_point %>% arrange(Point_year) %>% pull(Development) %>%
+  (function(x) (x == "LO") * 1)
+Cov_point[, "Develop_high"] <- cov_point %>% arrange(Point_year) %>% pull(Development) %>%
+  (function(x) (x == "HI") * 1)
+Cov_point[, -c(1:6)] <- cov_point %>%
   arrange(Point_year) %>%
-  select(-Point_year) %>%
-  select(-Point) %>%
-  select(-Year) %>%
+  select(matches(cov.names[-c(1:6)])) %>%
   data.matrix()
 
-rm(obs, maxDetPossible, sp, ss, tvec, grab)
-save.image("Data_compiled.RData")
+cov.names <- c("Develop_low", "Develop_high", names(cov_grid)[-c(1:5)])
+Cov_grid <- array(NA, dim = c(length(grid.list), length(years), length(cov.names)),
+              dimnames = list(grid.list, years, cov.names))
+Cov_grid[, , "Develop_low"] <- str_detect(grid.list, "ARIM-LO") * 1
+Cov_grid[, , "Develop_high"] <- str_detect(grid.list, "ARIM-HI") * 1
+for(i in 1:nrow(cov_grid)) Cov_grid[cov_grid$gridIndex[i], cov_grid$YearInd[i], -c(1:2)] <-
+  cov_grid %>% slice(i) %>% select(matches(cov.names)) %>% data.matrix() %>% as.numeric()
 
-#### Check life zone correlation with primary habitat classifications ####
-# BCRDataAPI::reset_api()
-# BCRDataAPI::set_api_server('analysis.api.bcr.eco')
-# BCRDataAPI::add_columns(c('TransectNum|str',
-#                           'Point|int',
-#                           'Year|int',
-#                           'primaryHabitat|str'
-# ))
-# 
-# BCRDataAPI::filter_on(c(str_c('Stratum in ', str_c(strata, collapse = ",")),
-#                         str_c('SelectionMethod in ', str_c(SampDesign, collapse = ",")),
-#                         'Year in 2014,2016,2018'))
-# BCRDataAPI::group_by(c('TransectNum', 'Point', 'Year', 'primaryHabitat'))
-# grab_ph <- BCRDataAPI::get_data() %>%
-#   mutate(PIPO = primaryHabitat == "PP",
-#          MixCon = primaryHabitat == "MC") %>%
-#   dplyr::group_by(TransectNum, Point) %>%
-#   summarise(PIPO1 = sum(PIPO == 1), PIPO0 = sum(PIPO == 0),
-#             MixCon1 = sum(MixCon == 1), MixCon0 = sum(MixCon == 0)) %>%
-#   mutate(PIPO = ifelse(PIPO1 > PIPO0, 1, 0),
-#          MixCon = ifelse(MixCon1 > MixCon0, 1, 0)) %>%
-#   select(TransectNum, Point, PIPO, MixCon)
-# 
-# dat.gis <- dat.gis %>% left_join(grab_ph, by = c("Grid" = "TransectNum", "Point" = "Point"))
-# cor(dat.gis %>% select(PIPO:LowMont), use = "complete")
+rm(obs, maxDetPossible, sp, ss, tvec, grab, cov.names, i)
+save.image("Data_compiled.RData")
