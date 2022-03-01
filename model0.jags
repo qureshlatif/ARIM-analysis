@@ -1,0 +1,112 @@
+model {
+  for (i in 1:n.spp) {
+    # Observation process
+    for(j in 1:n.pntyr) {
+      Y[j, i] ~ dbinom(p[j, i]*z[pointID[j], yearID[j], i], TPeriod[j, i])
+      logit(p[j, i]) <- zeta0[i] + dev.zeta[i, yearID[j]]
+    }
+
+    # Ecological state processes
+    for(j in 1:n.point) {
+      z[j, 1, i] ~ dbern(psi[j, i] * Z[gridID[j], 1, i])
+      logit(psi[j, i]) <- beta0[i]
+      for(t in 2:n.year) {
+        z[j, t, i] ~ dbern((gamma[j, (t-1), i] * (1 - z[j, (t - 1), i]) +
+          phi[j, (t-1), i] * z[j, (t - 1), i]) * Z[gridID[j], t, i])
+        logit(gamma[j, (t-1), i]) <- delta0[i] + dev.delta[i, (t-1)]
+        logit(phi[j, (t-1), i]) <- eta0[i] + dev.eta[i, (t-1)]
+      }
+    }
+    
+    for(k in 1:n.grid) {
+      Z[k, 1, i] ~ dbern(PSI[k, i]*w[i])
+      logit(PSI[k, i]) <- BETA0[i]
+      for(t in 2:n.year) {
+        Z[k, t, i] ~ dbern((GAMMA[k, (t - 1), i] * (1 - Z[k, (t - 1), i]) +
+          PHI[k, (t-1), i] * Z[k, (t - 1), i]) * w[i])
+        logit(GAMMA[k, (t-1), i]) <- DELTA0[i] + dev.DELTA[i, (t-1)]
+        logit(PHI[k, (t-1), i]) <- ETA0[i] + dev.ETA[i, (t-1)]
+      }
+    }
+    
+    # Species-specific parameters
+    BETA0[i] ~ dnorm(BETA0.mu, pow(sigma.BETA0, -2))
+    DELTA0[i] ~ dnorm(DELTA0.mu, pow(sigma.DELTA0, -2))
+    ETA0[i] ~ dnorm(ETA0.mu, pow(sigma.ETA0, -2))
+    beta0[i] ~ dnorm(beta0.mu + (rho.bB*sigma.beta0 / sigma.BETA0) * (BETA0[i] - BETA0.mu),
+      pow(sigma.beta0, -2) / (1 - pow(rho.bB, 2)))
+    delta0[i] ~ dnorm(delta0.mu, pow(sigma.delta0, -2))
+    eta0[i] ~ dnorm(eta0.mu, pow(sigma.eta0, -2))
+    zeta0[i] ~ dnorm(zeta0.mu + (rho.zb*sigma.zeta0 / sigma.beta0) * (beta0[i] - beta0.mu),
+      pow(sigma.zeta0, -2)/(1 - pow(rho.zb, 2)))
+    
+    for(t in 1:n.year) { # yearly deviations from the mean
+      dev.zeta[i, t] ~ dnorm(0, pow(sigma.z0, -2)) # Year-specific deviations in detectability from mean for each species
+      dev.delta[i, t] ~ dnorm(0, pow(sigma.d0, -2)) # Year-specific deviations in point colonization from mean for each species
+      dev.eta[i, t] ~ dnorm(0, pow(sigma.e0, -2)) # Year-specific deviations in point persistence from mean for each species
+      dev.DELTA[i, t] ~ dnorm(0, pow(sigma.D0, -2)) # Year-specific deviations in grid colonization from mean for each species
+      dev.ETA[i, t] ~ dnorm(0, pow(sigma.E0, -2)) # Year-specific deviations in grid persistence from mean for each species
+    }
+
+    w[i] ~ dbern(omega)
+  }
+  
+  ### Prior distributions ###
+  
+  # parameter correlations
+  
+  rho.zb ~ dunif(-1,1) # Correlation between detectability and point occupancy
+  rho.bB ~ dunif(-1,1) # Correlation between point and grid occupancy
+  
+  # mean and precison for the parameter intercepts
+  
+  zeta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit detection probability intercept
+  tvar.sigma.zeta0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.zeta0 <- abs(tvar.sigma.zeta0)  # half-Cauchy distribution
+    # Year effect detectability hyper-parameters #
+  tvar.sigma.z0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.z0 <- abs(tvar.sigma.z0)  # half-Cauchy distribution
+
+  beta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
+  sigma.beta0 <- abs(tvar.sigma.beta0)  # half-Cauchy distribution
+  tvar.sigma.beta0 ~ dt(0,1,1)  # Cauchy distribution
+
+  delta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
+  sigma.delta0 <- abs(tvar.sigma.delta0)  # half-Cauchy distribution
+  tvar.sigma.delta0 ~ dt(0,1,1)  # Cauchy distribution
+    # Year effect point occupancy hyper-parameters #
+  tvar.sigma.d0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.d0 <- abs(tvar.sigma.d0)  # half-Cauchy distribution
+
+  eta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
+  sigma.eta0 <- abs(tvar.sigma.eta0)  # half-Cauchy distribution
+  tvar.sigma.eta0 ~ dt(0,1,1)  # Cauchy distribution
+    # Year effect point occupancy hyper-parameters #
+  tvar.sigma.e0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.e0 <- abs(tvar.sigma.e0)  # half-Cauchy distribution
+
+  BETA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
+  sigma.BETA0 <- abs(tvar.sigma.BETA0)  # half-Cauchy distribution
+  tvar.sigma.BETA0 ~ dt(0,1,1)  # Cauchy distribution
+
+  DELTA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
+  sigma.DELTA0 <- abs(tvar.sigma.DELTA0)  # half-Cauchy distribution
+  tvar.sigma.DELTA0 ~ dt(0,1,1)  # Cauchy distribution
+    # Year effect point occupancy hyper-parameters #
+  tvar.sigma.D0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.D0 <- abs(tvar.sigma.D0)  # half-Cauchy distribution
+
+  ETA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
+  sigma.ETA0 <- abs(tvar.sigma.ETA0)  # half-Cauchy distribution
+  tvar.sigma.ETA0 ~ dt(0,1,1)  # Cauchy distribution
+    # Year effect point occupancy hyper-parameters #
+  tvar.sigma.E0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.E0 <- abs(tvar.sigma.E0)  # half-Cauchy distribution
+  
+  
+  # Probability of species inclusion in the metacommunity
+  omega ~ dunif(0,1)
+  
+  t.nu <- 7.763179      # Uniform prior
+  t.sigma <- 1.566267   # Uniform prior
+}

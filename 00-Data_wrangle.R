@@ -240,6 +240,16 @@ bird_data <- grab %>%  # Store bird survey data for later use.
   mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year))
 
 ## Covariates ##
+# # Apply slope filter on units represented in data from GIS shop
+# PY.GIS <- read.csv("covariates/Point_Covariates_ARIM.csv", stringsAsFactors = F, header = T) %>%
+#   mutate(PY = str_c(TrnsctN, str_pad(Point, width = 2, side = "left", pad = "0"), Year, sep = "-")) %>%
+#   pull(PY)
+# pointXyears.list <- pointXyears.list[which(pointXyears.list %in% PY.GIS)]
+# rm(PY.GIS)
+# point.list <- str_sub(pointXyears.list, 1, -6) %>% unique() %>% sort
+# grid.list <- str_sub(pointXyears.list, 1, -9) %>% unique() %>% sort
+
+# GIS #
 cov_grid <- data.frame(Grid = pointXyears.list %>% str_sub(1, -9),
                              Year = pointXyears.list %>%
                          str_sub(-4, -1) %>% as.integer(),
@@ -249,45 +259,25 @@ cov_grid <- data.frame(Grid = pointXyears.list %>% str_sub(1, -9),
          Development = ifelse(str_detect(Grid, "ARIM-HI"), "HI",
                              ifelse(str_detect(Grid, "ARIM-LO"), "LO", "BG"))) %>%
   distinct() %>%
-  left_join(read.csv("covariates/Grid_Covariates_ARIM.csv",
+  left_join(read.csv("covariates/Grid_Covariates_ARIM_2.csv",
                      stringsAsFactors = F, header = T) %>%
               tibble::as_tibble() %>%
               mutate(PJ_area = str_sub(PJ_area, 1, -2) %>% as.numeric) %>%
               rename(TransectNum = TrnsctN,
-                     Road_1km = Road_length_2009_km,
-                     Well_1km = Well_count_1km) %>%
+                     Road_1km_2009 = Road_length_2009_Odonnell_km,
+                     Road_1km_2019 = Road_length_2019_km,
+                     WellA_1km = Well_count_1km,
+                     WellA_3x3km = Well_count_3x3km,
+                     WellD_1km = PA_Well_count_1km,
+                     WellD_3x3km = PA_Well_count_3x3km) %>%
+              mutate(Road_1km = ifelse(Year == 2010,
+                                       Road_1km_2009,
+                                       Road_1km_2019)) %>%
               select(TransectNum, Year, PJ_area,
-                     Well_1km, Road_1km,
+                     WellA_1km, WellA_3x3km, WellD_1km, WellD_3x3km,
+                     Road_1km, Road_1km_2009, Road_1km_2019,
                      NDVI),
     by = c("Grid" = "TransectNum", "Year" = "Year"))
-
-cov_point <- data.frame(Point_year = pointXyears.list,
-                        Point = pointXyears.list %>% str_sub(1, -6),
-                       Year = pointXyears.list %>%
-                         str_sub(-4, -1) %>% as.integer(),
-                       stringsAsFactors = F) %>%
-  mutate(pointIndex = Point %>% as.factor %>% as.integer,
-         YearInd = Year %>% as.factor %>% as.integer,
-         Development = ifelse(str_detect(Point, "ARIM-HI"), "HI",
-                              ifelse(str_detect(Point, "ARIM-LO"), "LO", "BG"))) %>%
-  distinct() %>%
-  dplyr::left_join(
-    read.csv("covariates/Point_Covariates_ARIM.csv", stringsAsFactors = F, header = T) %>%
-      tibble::as_tibble() %>%
-      rename(TransectNum = TrnsctN) %>%
-      mutate(Point = str_c(TransectNum,
-                           str_pad(Point, width = 2, side = "left", pad = "0"),
-                           sep = "-"),
-             Sage = suppressWarnings(as.numeric(Sage)), # 123 values are missing for each of these.
-             Litter = suppressWarnings(as.numeric(Litter)),
-             Herb = suppressWarnings(as.numeric(Herb)),
-             AHerb = suppressWarnings(as.numeric(AHerb))) %>%
-      rename(Road_125m = Road_length_2009_125m,
-             TPI = elevation_difference,
-             Well_125m = Well_count) %>%
-      select(Point, Year, Sage:Well_125m, Road_125m, TPI),
-    by = c("Point", "Year")
-  )
 
   # Check number of years sampled for each grid cell #
 # out <- matrix(0, nrow = sum(str_sub(grid.list, 4, 7) == "ARIM"),
@@ -297,10 +287,114 @@ cov_point <- data.frame(Point_year = pointXyears.list,
 # ind <- which(str_sub(cov_grid$Grid, 4, 7) == "ARIM")
 # for(i in ind) out[cov_grid$Grid[i], as.character(cov_grid$Year[i])] <- 1
 
+cov_point <- data.frame(Point_year = pointXyears.list,
+                        Grid = pointXyears.list %>% str_sub(1, -9),
+                        Point = pointXyears.list %>% str_sub(1, -6),
+                        Year = pointXyears.list %>%
+                          str_sub(-4, -1) %>% as.integer(),
+                        stringsAsFactors = F) %>%
+  mutate(gridIndex = Grid %>% as.factor %>% as.integer,
+         pointIndex = Point %>% as.factor %>% as.integer,
+         YearInd = Year %>% as.factor %>% as.integer,
+         Development = ifelse(str_detect(Point, "ARIM-HI"), "HI",
+                              ifelse(str_detect(Point, "ARIM-LO"), "LO", "BG"))) %>%
+  distinct() %>%
+  dplyr::left_join(
+    read.csv("covariates/Point_Covariates_ARIM_2.csv", stringsAsFactors = F, header = T) %>%
+      tibble::as_tibble() %>%
+      rename(TransectNum = TrnsctN) %>%
+      mutate(Point = str_c(TransectNum,
+                           str_pad(Point, width = 2, side = "left", pad = "0"),
+                           sep = "-"),
+             Sage = suppressWarnings(as.numeric(Sage)), # 123 values are missing for each of these.
+             Litter = suppressWarnings(as.numeric(Litter)),
+             Herb = suppressWarnings(as.numeric(Herb)),
+             AHerb = suppressWarnings(as.numeric(AHerb)),
+             vrm_125m = suppressWarnings(as.numeric(vrm_125m))) %>%
+      rename(Road_125m_2009 = Roads_2009_km_Odonnell,
+             Road_125m_2019 = Road_length_2019_km,
+             TPI_min = Min_elev_diff,
+             TPI_mean = Mean_elevation_difference,
+             TPI_point = Point_elev_diff,
+             WellA_125m = Well_count_125m
+             ) %>%
+      mutate(Road_125m = ifelse(Year == 2010, Road_125m_2009, Road_125m_2019),
+             WellA_125m = ifelse(WellA_125m > 0, 1, 0)) %>% # Convert to presence / absence of active well pad (Only 17 points with decom well pad within 125 m).
+      select(Point, Year, Sage:AHerb, WellA_125m, Road_125m,
+             Road_125m_2009:vrm_125m, TPI_mean, TPI_point, TPI_min),
+    by = c("Point", "Year")
+  )
+
+cov_point <- cov_point %>%
+  left_join(
+    cov_grid %>%
+      select(Grid:Year, WellA_1km, WellD_1km, Road_1km, NDVI),
+    by = c("Grid", "Year")
+  )
+
+# IMBCR woody vegetation cover #
+BCRDataAPI::reset_api()
+BCRDataAPI::set_api_server('analysis.api.bcr.eco')
+BCRDataAPI::add_columns(c('TransectNum|str',
+                          'Point|int',
+                          'Year|int',
+                          'o_canopy_percent|int',
+                          'shrub_cover|int'
+))
+
+BCRDataAPI::filter_on(c(str_c('Stratum in ', str_c(strata, collapse = ",")),
+                        str_c('SelectionMethod in ', str_c(SampDesign, collapse = ",")),
+                        'TransectExcludeAnalysis = FALSE'
+))
+BCRDataAPI::group_by(c('TransectNum',
+                       'Point',
+                       'Year',
+                       'o_canopy_percent',
+                       'shrub_cover'))
+grab <- BCRDataAPI::get_data() %>%
+  mutate(Point_year = str_c(TransectNum, "-",
+                            str_pad(Point, width = 2, pad = "0",
+                                    side = "left"), "-", Year)) %>%
+  rename(CanCov = o_canopy_percent,
+         ShrubCov = shrub_cover) %>%
+  mutate(CanCov = ifelse(CanCov == -1, NA, CanCov),
+         ShrubCov = ifelse(ShrubCov == -1, NA, ShrubCov))
+
+cov_point <- cov_point %>%
+  left_join(
+    grab %>% select(Point_year, CanCov, ShrubCov),
+    by = "Point_year"
+  )
+
+## Fill 123 missing ground cover values ##
+library(randomForest)
+cov_point <- cov_point %>%
+  left_join(
+    cov_point %>%
+      group_by(Grid, Year) %>%
+      summarise(Sage_grid = mean(Sage, na.rm = T),
+                Litter_grid = mean(Litter, na.rm = T),
+                Herb_grid = mean(Herb, na.rm = T),
+                AHerb_grid = mean(AHerb, na.rm = T)),
+    by = c("Grid", "Year")
+  )
+
+v.fill <- c("Sage", "Herb", "AHerb")
+v.inform <- c("vrm_125m", "TPI_mean", "TPI_point", "TPI_min", "Sage_grid", "Litter_grid", "Herb_grid", "AHerb_grid")
+for(v in 1:length(v.fill)) {
+  ind.missing <- which(is.na(cov_point[,v.fill[v]]))
+  ind.known <- which(!is.na(cov_point[,v.fill[v]]))
+  rf <- randomForest(as.formula(str_c(v.fill[v], "~", str_c(v.inform, collapse = "+"))), data = (cov_point %>% slice(ind.known)))
+  cov_point[ind.missing, v.fill[v]] <- predict(rf, newdata = (cov_point %>% slice(ind.missing)))
+}
+cov_point <- cov_point %>% select(Point_year:ShrubCov)
+rm(v.fill, v.inform, ind.missing, ind.known, rf, v)
+
 ## Trim dates, compile day of year & start time in minutes ##
 library(lubridate)
 tab.datetime <- bird_data %>%
   mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year)) %>%
+  filter(Point_year %in% pointXyears.list) %>%
   arrange(Point_year) %>%
   select(Point_year, PointLatitude, PointLongitude, Date, PointVisitStartTime) %>%
   distinct() %>%
@@ -326,7 +420,7 @@ Y.mat <- matrix(NA, nrow = length(pointXyears.list), ncol = length(spp.list),
 TR.mat <- matrix(6, nrow = length(pointXyears.list), ncol = length(spp.list),
                dimnames = list(pointXyears.list, spp.list))
 for(sp in 1:length(spp.list)) {
-  obs <- bird_data %>% filter(BirdCode == spp.list[sp])
+  obs <- bird_data %>% filter(BirdCode == spp.list[sp] & Point_year %in% pointXyears.list)
   if(nrow(obs) > 0) {
     Y.mat[, sp] <- (pointXyears.list %in% obs$Point_year) %>% as.integer
     tvec <- tapply(obs$TimePeriod, obs$Point_year, min)
@@ -338,21 +432,25 @@ for(sp in 1:length(spp.list)) {
 }
 
 ## Compile covariate arrays ##
-cov.names <- c("gridIndex", "YearInd", "DayOfYear", "Time_ssr", "Develop_low", "Develop_high", names(cov_point)[-c(1:6)])
-Cov_point <- matrix(NA, nrow = length(pointXyears.list), ncol = length(cov.names),
-              dimnames = list(pointXyears.list, cov.names))
+cov.names <- c("gridIndex", "YearInd", "pointInd", "DayOfYear",
+               "Time_ssr", "Develop_low", "Develop_high",
+               names(cov_point)[-c(1:8)])
+Cov_point <- matrix(NA, nrow = length(pointXyears.list),
+                    ncol = length(cov.names),
+                    dimnames = list(pointXyears.list, cov.names))
 Cov_point[, "gridIndex"] <- pointXyears.list %>% str_sub(1, -9) %>% as.factor %>% as.integer
 Cov_point[, "YearInd"] <- pointXyears.list %>% str_sub(-4, -1) %>% as.factor %>% as.integer
+Cov_point[, "pointInd"] <- pointXyears.list %>% str_sub(1, -6) %>% as.factor %>% as.integer
 Cov_point[, "DayOfYear"] <- tab.datetime %>% arrange(Point_year) %>% pull(DOY)
 Cov_point[, "Time_ssr"] <- tab.datetime %>% arrange(Point_year) %>% pull(Time_ssr)
 Cov_point[, "Develop_low"] <- cov_point %>% arrange(Point_year) %>% pull(Development) %>%
   (function(x) (x == "LO") * 1)
 Cov_point[, "Develop_high"] <- cov_point %>% arrange(Point_year) %>% pull(Development) %>%
   (function(x) (x == "HI") * 1)
-Cov_point[, -c(1:6)] <- cov_point %>%
+Cov_point[, cov.names[-c(1:7)]] <- (cov_point %>%
   arrange(Point_year) %>%
-  select(matches(cov.names[-c(1:6)])) %>%
-  data.matrix()
+  select(matches(cov.names[-c(1:7)])) %>%
+  data.matrix())[,cov.names[-c(1:7)]]
 
 cov.names <- c("Develop_low", "Develop_high", names(cov_grid)[-c(1:5)])
 Cov_grid <- array(NA, dim = c(length(grid.list), length(years), length(cov.names)),
@@ -360,7 +458,9 @@ Cov_grid <- array(NA, dim = c(length(grid.list), length(years), length(cov.names
 Cov_grid[, , "Develop_low"] <- str_detect(grid.list, "ARIM-LO") * 1
 Cov_grid[, , "Develop_high"] <- str_detect(grid.list, "ARIM-HI") * 1
 for(i in 1:nrow(cov_grid)) Cov_grid[cov_grid$gridIndex[i], cov_grid$YearInd[i], -c(1:2)] <-
-  cov_grid %>% slice(i) %>% select(matches(cov.names)) %>% data.matrix() %>% as.numeric()
+  (cov_grid %>% slice(i) %>%
+     select(matches(cov.names[-c(1:2)])) %>%
+     data.matrix())[,cov.names[-c(1:2)]] %>% as.numeric()
 
 rm(obs, maxDetPossible, sp, ss, tvec, grab, cov.names, i)
 save.image("Data_compiled.RData")
