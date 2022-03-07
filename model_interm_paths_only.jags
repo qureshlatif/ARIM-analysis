@@ -8,33 +8,60 @@ model {
   # Grid cell scale pathways #
   for(k in 1:n.grid) {
     for(t in 1:n.year) {
-      X.PSI.raw[k, t, ind.WellA_3km] ~ dpois(pred.WellA_3km[k, t])
-      log(pred.WellA_3km[k, t]) <- ALPHA0.WellA_3km +
+      X.PSI.raw[k, t, ind.WellA_3km] ~ dnegbin(pred.WellA_3km[k, t], r.WellA_3km)
+      pred.WellA_3km[k, t] <- r.WellA_3km / (r.WellA_3km + lambda.WellA_3km[k, t])
+      log(lambda.WellA_3km[k, t]) <- ALPHA0.WellA_3km +
         ALPHA.Dev_lo.WellA_3km * X.PSI[k, t, ind.PSI.Dev_lo] +
-        ALPHA.Dev_hi.WellA_3km * X.PSI[k, t, ind.PSI.Dev_hi] +
-        dev.WellA_3km[k, t]
-      dev.WellA_3km[k, t] ~ dnorm(0, tau.pred.WellA_3km)
-        
-      X.PSI.raw[k, t, ind.WellD_3km] ~ dpois(pred.WellD_3km[k, t])
-      log(pred.WellD_3km[k, t]) <- ALPHA0.WellD_3km +
+        ALPHA.Dev_bg.WellA_3km * X.PSI[k, t, ind.PSI.Dev_bg]
+      #____ GOF _____#
+      LLobs.WellA_3km[k, t] <- logdensity.negbin(X.PSI.raw[k, t, ind.WellA_3km],
+        pred.WellA_3km[k, t], r.WellA_3km)
+      X.sim.WellA_3km[k, t] ~ dnegbin(pred.WellA_3km[k, t], r.WellA_3km)
+      LLsim.WellA_3km[k, t] <- logdensity.negbin(X.sim.WellA_3km[k, t],
+        pred.WellA_3km[k, t], r.WellA_3km)
+      #______________#
+      
+      X.PSI.raw[k, t, ind.WellD_3km] ~ dnegbin(pred.WellD_3km[k, t], r.WellD_3km)
+      pred.WellD_3km[k, t] <- r.WellD_3km / (r.WellD_3km + lambda.WellD_3km[k, t])
+      log(lambda.WellD_3km[k, t]) <- ALPHA0.WellD_3km +
         ALPHA.Dev_lo.WellD_3km * X.PSI[k, t, ind.PSI.Dev_lo] +
-        ALPHA.Dev_hi.WellD_3km * X.PSI[k, t, ind.PSI.Dev_hi] +
-        dev.WellD_3km[k, t]
-      dev.WellD_3km[k, t] ~ dnorm(0, tau.pred.WellD_3km)
+        ALPHA.Dev_bg.WellD_3km * X.PSI[k, t, ind.PSI.Dev_bg]
+      #____ GOF _____#
+      LLobs.WellD_3km[k, t] <- logdensity.negbin(X.PSI.raw[k, t, ind.WellD_3km],
+        pred.WellA_3km[k, t], r.WellD_3km)
+      X.sim.WellD_3km[k, t] ~ dnegbin(pred.WellD_3km[k, t], r.WellD_3km)
+      LLsim.WellD_3km[k, t] <- logdensity.negbin(X.sim.WellD_3km[k, t],
+        pred.WellD_3km[k, t], r.WellD_3km)
+      #______________#
         
-      X.PSI.raw[k, t, ind.WellA_1km] ~ dpois(pred.WellA_1km[k, t])
-      log(pred.WellA_1km[k, t]) <- ALPHA0.WellA_1km +
+      X.PSI.raw[k, t, ind.WellA_1km] ~ dnegbin(pred.WellA_1km[k, t], r.WellA_1km)
+      pred.WellA_1km[k, t] <- r.WellA_1km / (r.WellA_1km + lambda.WellA_1km[k, t])
+      log(lambda.WellA_1km[k, t]) <- ALPHA0.WellA_1km +
         ALPHA.Dev_lo.WellA_1km * X.PSI[k, t, ind.PSI.Dev_lo] +
-        ALPHA.Dev_hi.WellA_1km * X.PSI[k, t, ind.PSI.Dev_hi] +
-        dev.WellA_1km[k, t]
-      dev.WellA_1km[k, t] ~ dnorm(0, tau.pred.WellA_1km)
+        ALPHA.Dev_bg.WellA_1km * X.PSI[k, t, ind.PSI.Dev_bg]
+      #____ GOF _____#
+      LLobs.WellA_1km[k, t] <- logdensity.negbin(X.PSI.raw[k, t, ind.WellA_1km],
+        pred.WellA_1km[k, t], r.WellA_1km)
+      X.sim.WellA_1km[k, t] ~ dnegbin(pred.WellA_1km[k, t], r.WellA_1km)
+      LLsim.WellA_1km[k, t] <- logdensity.negbin(X.sim.WellA_1km[k, t],
+        pred.WellA_1km[k, t], r.WellA_1km)
+      #______________#
     }
     
     for(t in 1:2) { # Years 2-n.year are redundant.
-      X.PSI.raw[k, t, ind.Road_1km] ~ dlnorm(pred.Road_1km[k, t], tau.Road_1km)
+      X.PSI.raw[k, t, ind.Road_1km] ~ dgamma(shape.Road_1km,
+        shape.Road_1km / exp(pred.Road_1km[k, t]))
       pred.Road_1km[k, t] <- ALPHA0.Road_1km +
         ALPHA.Dev_lo.Road_1km * X.PSI[k, t, ind.PSI.Dev_lo] +
-        ALPHA.Dev_hi.Road_1km * X.PSI[k, t, ind.PSI.Dev_hi]
+        ALPHA.Dev_bg.Road_1km * X.PSI[k, t, ind.PSI.Dev_bg]
+      #____ GOF _____#
+      LLobs.Road_1km[k, t] <- logdensity.gamma(X.PSI.raw[k, t, ind.Road_1km],
+        shape.Road_1km, shape.Road_1km / exp(pred.Road_1km[k, t]))
+      X.sim.Road_1km[k, t] ~ dgamma(shape.Road_1km,
+        shape.Road_1km / exp(pred.Road_1km[k, t]))
+      LLsim.Road_1km[k, t] <- logdensity.gamma(X.sim.Road_1km[k, t],
+        shape.Road_1km, shape.Road_1km / exp(pred.Road_1km[k, t]))
+      #______________#
     }
   }
     
@@ -44,70 +71,124 @@ model {
       X.psi.raw[j, t, ind.WellA_125m] ~ dbern(pred.WellA_125m[j, t])
       logit(pred.WellA_125m[j, t]) <- alpha0.WellA_125m +
         alpha.Dev_lo.WellA_125m * X.PSI[gridID[j], t, ind.PSI.Dev_lo] +
-        alpha.Dev_hi.WellA_125m * X.PSI[gridID[j], t, ind.PSI.Dev_hi]
-
+        alpha.Dev_bg.WellA_125m * X.PSI[gridID[j], t, ind.PSI.Dev_bg]
+      #____ GOF _____#
+      LLobs.WellA_125m[j, t] <- logdensity.bern(X.psi.raw[j, t, ind.WellA_125m],
+        pred.WellA_125m[j, t])
+      X.sim.WellA_125m[j, t] ~ dbern(pred.WellA_125m[j, t])
+      LLsim.WellA_125m[j, t] <- logdensity.bern(X.sim.WellA_125m[j, t],
+        pred.WellA_125m[j, t])
+      #______________#
+      
       X.psi.raw[j, t, ind.AHerb] ~ dbin(pred.AHerb[j, t], 100) # Need to round AHerb in R for this to work.
-      logit(pred.AHerb[j, t]) <- alpha0.AHerb + dev.alpha.AHerb[j, t] +
+      logit(pred.AHerb[j, t]) <- alpha0.AHerb +
         alpha.WellA_125m.AHerb * X.psi.raw[j, t, ind.WellA_125m] +
         alpha.Road_125m.AHerb * X.psi.raw[j, t, ind.Road_125m]
-      dev.alpha.AHerb[j, t] ~ dnorm(0, tau.alpha.AHerb)
+      #____ GOF _____#
+      LLobs.AHerb[j, t] <- logdensity.bin(X.psi.raw[j, t, ind.AHerb],
+        pred.AHerb[j, t], 100)
+      X.sim.AHerb[j, t] ~ dbin(pred.AHerb[j, t], 100)
+      LLsim.AHerb[j, t] <- logdensity.bin(X.sim.AHerb[j, t],
+        pred.AHerb[j, t], 100)
+      #______________#
     }
     
     for(t in 1:2) { # Years 2-n.year are redundant.
-      X.psi.raw[j, t, ind.D_Road_125m] ~ dlnorm(pred.D_Road_125m[j, t], tau.D.Road_125m) # Need to compile in R. Should be NA where roads are absent.
+      X.psi.raw[j, t, ind.D_Road_125m] ~ dgamma(shape.D_Road_125m,
+        shape.D_Road_125m / exp(pred.D_Road_125m[j, t])) # Need to compile in R. Should be NA where roads are absent.
       X.psi.raw[j, t, ind.PA_Road_125m] ~ dbern(pred.PA_Road_125m[j, t]) # Need to compile this in R.
       logit(pred.PA_Road_125m[j, t]) <- alpha0.PA_Road_125m +
         alpha.Dev_lo.PA_Road_125m * X.PSI[gridID[j], t, ind.PSI.Dev_lo] +
-        alpha.Dev_hi.PA_Road_125m * X.PSI[gridID[j], t, ind.PSI.Dev_hi]
+        alpha.Dev_bg.PA_Road_125m * X.PSI[gridID[j], t, ind.PSI.Dev_bg]
       pred.D_Road_125m[j, t] <- alpha0.D_Road_125m +
         alpha.Dev_lo.D_Road_125m * X.PSI[gridID[j], t, ind.PSI.Dev_lo] +
-        alpha.Dev_hi.D_Road_125m * X.PSI[gridID[j], t, ind.PSI.Dev_hi]
+        alpha.Dev_bg.D_Road_125m * X.PSI[gridID[j], t, ind.PSI.Dev_bg]
+      #____ GOF _____#
+      LLobs.Road_125m[j, t] <- logdensity.bern(X.psi.raw[j, t, ind.PA_Road_125m],
+        pred.PA_Road_125m[j, t]) +
+        ifelse(X.psi.raw[j, t, ind.PA_Road_125m] == 1,
+          logdensity.gamma(X.psi.raw[j, t, ind.D_Road_125m],
+          shape.D_Road_125m, shape.D_Road_125m / exp(pred.D_Road_125m[j, t])),
+          0)
+      X.sim.PA_Road_125m[j, t] ~ dbern(pred.PA_Road_125m[j, t])
+      X.sim.D_Road_125m[j, t] ~ dgamma(shape.D_Road_125m,
+        shape.D_Road_125m / exp(pred.D_Road_125m[j, t]))
+      LLsim.Road_125m[j, t] <- logdensity.bern(X.sim.PA_Road_125m[j, t],
+        pred.PA_Road_125m[j, t]) +
+        ifelse(X.sim.PA_Road_125m[j, t] == 1,
+          logdensity.gamma(X.sim.D_Road_125m[j, t],
+          shape.D_Road_125m, shape.D_Road_125m / exp(pred.D_Road_125m[j, t])),
+          0)
+      #______________#
     }
   }
+  
+  #________ GOF __________#
+  dev.obs.WellA_3km <- -2 * sum(LLobs.WellA_3km[1:n.grid, 1:n.year])
+  dev.sim.WellA_3km <- -2 * sum(LLsim.WellA_3km[1:n.grid, 1:n.year])
+  test.WellA_3km <- step(dev.sim.WellA_3km - dev.obs.WellA_3km)
+
+  dev.obs.WellD_3km <- -2 * sum(LLobs.WellD_3km[1:n.grid, 1:n.year])
+  dev.sim.WellD_3km <- -2 * sum(LLsim.WellD_3km[1:n.grid, 1:n.year])
+  test.WellD_3km <- step(dev.sim.WellD_3km - dev.obs.WellD_3km)
+
+  dev.obs.WellA_1km <- -2 * sum(LLobs.WellA_1km[1:n.grid, 1:n.year])
+  dev.sim.WellA_1km <- -2 * sum(LLsim.WellA_1km[1:n.grid, 1:n.year])
+  test.WellA_1km <- step(dev.sim.WellA_1km - dev.obs.WellA_1km)
+  
+  dev.obs.Road_1km <- -2 * sum(LLobs.Road_1km[1:n.grid, 1:2])
+  dev.sim.Road_1km <- -2 * sum(LLsim.Road_1km[1:n.grid, 1:2])
+  test.Road_1km <- step(dev.sim.Road_1km - dev.obs.Road_1km)
+
+  dev.obs.WellA_125m <- -2 * sum(LLobs.WellA_125m[1:n.point, 1:n.year])
+  dev.sim.WellA_125m <- -2 * sum(LLsim.WellA_125m[1:n.point, 1:n.year])
+  test.WellA_125m <- step(dev.sim.WellA_125m - dev.obs.WellA_125m)
+
+  dev.obs.Road_125m <- -2 * sum(LLobs.Road_125m[1:n.point, 1:2])
+  dev.sim.Road_125m <- -2 * sum(LLsim.Road_125m[1:n.point, 1:2])
+  test.Road_125m <- step(dev.sim.Road_125m - dev.obs.Road_125m)
+
+  dev.obs.AHerb <- -2 * sum(LLobs.AHerb[1:n.point, 1:n.year])
+  dev.sim.AHerb <- -2 * sum(LLsim.AHerb[1:n.point, 1:n.year])
+  test.AHerb <- step(dev.sim.AHerb - dev.obs.AHerb)
+  #_______________________#
   
   ### Prior distributions ###
   ## Grid cell level models ##
   ALPHA0.WellA_3km ~ dnorm(0, 0.66667)
   ALPHA.Dev_lo.WellA_3km ~ dnorm(0, 0.66667)
-  ALPHA.Dev_hi.WellA_3km ~ dnorm(0, 0.66667)
-  sigma.pred.WellA_3km ~ dunif(0, 3)
-  tau.pred.WellA_3km <- pow(sigma.pred.WellA_3km, -2)
+  ALPHA.Dev_bg.WellA_3km ~ dnorm(0, 0.66667)
+  r.WellA_3km ~ dunif(0, 50)
 
   ALPHA0.WellD_3km ~ dnorm(0, 0.66667)
   ALPHA.Dev_lo.WellD_3km ~ dnorm(0, 0.66667)
-  ALPHA.Dev_hi.WellD_3km ~ dnorm(0, 0.66667)
-  sigma.pred.WellD_3km ~ dunif(0, 3)
-  tau.pred.WellD_3km <- pow(sigma.pred.WellD_3km, -2)
+  ALPHA.Dev_bg.WellD_3km ~ dnorm(0, 0.66667)
+  r.WellD_3km ~ dunif(0, 50)
 
-  ALPHA0.WellA_1km ~ dnorm(0, 1)
-  ALPHA.Dev_lo.WellA_1km ~ dnorm(0, 1)
-  ALPHA.Dev_hi.WellA_1km ~ dnorm(0, 1)
-  sigma.pred.WellA_1km ~ dunif(0, 3)
-  tau.pred.WellA_1km <- pow(sigma.pred.WellA_1km, -2)
+  ALPHA0.WellA_1km ~ dnorm(0, 0.66667)
+  ALPHA.Dev_lo.WellA_1km ~ dnorm(0, 0.66667)
+  ALPHA.Dev_bg.WellA_1km ~ dnorm(0, 0.66667)
+  r.WellA_1km ~ dunif(0, 50)
 
   ALPHA0.Road_1km ~ dnorm(0, 0.5)
   ALPHA.Dev_lo.Road_1km ~ dnorm(0, 0.5)
-  ALPHA.Dev_hi.Road_1km ~ dnorm(0, 0.5)
-  sigma.Road_1km ~ dunif(0, 3)
-  tau.Road_1km <- pow(sigma.Road_1km, -2)
-  
+  ALPHA.Dev_bg.Road_1km ~ dnorm(0, 0.5)
+  shape.Road_1km ~ dunif(0, 100)
+
   ## Point level models ##
   alpha0.WellA_125m ~ dnorm(0, 0.66667)
   alpha.Dev_lo.WellA_125m ~ dnorm(0, 0.66667)
-  alpha.Dev_hi.WellA_125m ~ dnorm(0, 0.66667)
+  alpha.Dev_bg.WellA_125m ~ dnorm(0, 0.66667)
 
   alpha0.PA_Road_125m ~ dnorm(0, 0.66667)
   alpha.Dev_lo.PA_Road_125m ~ dnorm(0, 0.66667)
-  alpha.Dev_hi.PA_Road_125m ~ dnorm(0, 0.66667)
+  alpha.Dev_bg.PA_Road_125m ~ dnorm(0, 0.66667)
   alpha0.D_Road_125m ~ dnorm(0, 1)
   alpha.Dev_lo.D_Road_125m ~ dnorm(0, 1)
-  alpha.Dev_hi.D_Road_125m ~ dnorm(0, 1)
-  sigma.D.Road_125m ~ dunif(0, 3)
-  tau.D.Road_125m <- pow(sigma.D.Road_125m, -2)
-  
+  alpha.Dev_bg.D_Road_125m ~ dnorm(0, 1)
+  shape.D_Road_125m ~ dunif(0, 100)
+
   alpha0.AHerb ~ dnorm(0, 0.66667)
   alpha.WellA_125m.AHerb ~ dnorm(0, 0.66667)
   alpha.Road_125m.AHerb ~ dnorm(0, 0.66667)
-  sigma.alpha.AHerb ~ dunif(0, 3)
-  tau.alpha.AHerb <- pow(sigma.alpha.AHerb, -2)
 }

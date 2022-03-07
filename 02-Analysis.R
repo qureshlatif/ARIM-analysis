@@ -74,27 +74,31 @@ parameters <- c(# Bird community parameters
                 
                 # Interm path parameters #
                 "ALPHA0.WellA_3km", "ALPHA.Dev_lo.WellA_3km",
-                "ALPHA.Dev_hi.WellA_3km", "sigma.pred.WellA_3km",
+                "ALPHA.Dev_bg.WellA_3km", "r.WellA_3km",
 
                 "ALPHA0.WellD_3km", "ALPHA.Dev_lo.WellD_3km",
-                "ALPHA.Dev_hi.WellD_3km", "sigma.pred.WellD_3km",
+                "ALPHA.Dev_bg.WellD_3km", "r.WellD_3km",
 
                 "ALPHA0.WellA_1km", "ALPHA.Dev_lo.WellA_1km",
-                "ALPHA.Dev_hi.WellA_1km", "sigma.pred.WellA_1km",
+                "ALPHA.Dev_bg.WellA_1km", "r.WellA_1km",
 
                 "ALPHA0.Road_1km", "ALPHA.Dev_lo.Road_1km",
-                "ALPHA.Dev_hi.Road_1km", "sigma.Road_1km",
+                "ALPHA.Dev_bg.Road_1km", "shape.Road_1km",
                 
                 "alpha0.WellA_125m", "alpha.Dev_lo.WellA_125m",
-                "alpha.Dev_hi.WellA_125m",
+                "alpha.Dev_bg.WellA_125m",
                 
                 "alpha0.PA_Road_125m", "alpha.Dev_lo.PA_Road_125m",
-                "alpha.Dev_hi.PA_Road_125m", "alpha0.D_Road_125m",
-                "alpha.Dev_lo.D_Road_125m", "alpha.Dev_hi.D_Road_125m",
-                "sigma.D.Road_125m",
+                "alpha.Dev_bg.PA_Road_125m", "alpha0.D_Road_125m",
+                "alpha.Dev_lo.D_Road_125m", "alpha.Dev_bg.D_Road_125m",
+                "shape.D_Road_125m",
                 
                 "alpha0.AHerb", "alpha.WellA_125m.AHerb",
-                "alpha.Road_125m.AHerb", "sigma.alpha.AHerb")
+                "alpha.Road_125m.AHerb",
+                
+                "test.WellA_3km", "test.WellD_3km", "test.WellA_1km",
+                "test.Road_1km", "test.WellA_125m", "test.Road_125m",
+                "test.AHerb")
 
 # Function for setting initial values in JAGS
 inits <- function()
