@@ -1,3 +1,5 @@
+#*** Need to convert to presence / absence of active well pad (Only 17 points with decom well pad within 125 m).
+
 # Primary data objects
 BETA.vars.cntrl <- c("PJ_area", "NDVI")
 BETA.vars.trt <- c("Develop_low", "Develop_high")

@@ -7,16 +7,19 @@ load("Data_compiled.RData")
 
 #_____ Script inputs _____#
 scripts.loc <- "ARIM-analysis/"
-model.file <- str_c(scripts.loc, "model.jags")
+model.file <- str_c(scripts.loc, "model_interm_paths_only.jags")
 saveJAGS.loc <- "saveJAGS/"
 package <- "jagsUI" # Set to jagsUI or saveJAGS
-mod.nam <- "mod_trt"
+mod.nam <- "mod_int_paths"
+development <- TRUE # Set to TRUE for running test model with only develop.spp, and FALSE to run the full model.
+develop.spp <- c("AMRO", "BARS", "OROR",
+                 "BOBO", "MOPL")
 
 # MCMC values
-nc <- 2 #3 # number of chains
-nb <- 10#1000 # burn in
-ni <- 20#11000 # number of iterations
-nt <- 1 #10 # thinning
+nc <- 3 # number of chains
+nb <- 1000 # burn in
+ni <- 11000 # number of iterations
+nt <- 10 # thinning
 #_________________________#
 
 if(package == "jagsUI") {
@@ -26,16 +29,29 @@ if(package == "jagsUI") {
 }
 
 # Compile data #
-source(str_c(scripts.loc, "Data_processing.R"))
+source(str_c(scripts.loc, "Data_processing_path.R"))
 
 # Data objects to send to JAGS
 data.nams <- list("Y", "TPeriod", "gridID", "yearID", "pointID", "n.grid", "n.year", "n.point",
-                  "n.pntyr", "n.spp", "X.beta", "p.beta", "tpi", "X.delta", "p.delta",
-                  "X.eta", "p.eta", "X.BETA", "p.BETA", "X.DELTA", "p.DELTA",
-                  "X.ETA", "p.ETA", "X.zeta", "p.zeta")
+                  "n.pntyr", "n.spp",
+                  
+                  "X.PSI", "X.PSI.raw", "p.PSI", "ind.PSI.offset", "ind.PSI.no_offset",
+                  "ind.PSI.Dev_hi", "ind.PSI.Dev_lo", "ind.WellA_3km", "ind.WellD_3km",
+                  "ind.WellA_1km", "ind.Road_1km",
+                  
+                  "X.psi", "X.psi.raw", "ind.psi.tpi", "ind.psi.not_tpi", "ind.psi.dyn",
+                  "p.psi.init", "p.psi.dyn", "ind.psi.init.offset", "ind.psi.init.no_offset",
+                  "ind.psi.dyn.offset", "ind.psi.dyn.no_offset", "ind.WellA_125m",
+                  "ind.D_Road_125m", "ind.PA_Road_125m", "ind.Road_125m", "ind.AHerb",
+                  
+                  "X.zeta", "p.zeta",
+                  
+                  "guildMem", "n.guild")
+# "X.ETA", "p.ETA", "X.DELTA", "p.DELTA", "X.eta", "p.eta", "X.delta", "p.delta",
 
 # Stuff to save from JAGS
-parameters <- c("omega", "rho.zb", "rho.bB",
+parameters <- c(# Bird community parameters
+                "omega", "rho.zb", "rho.bB",
                 
                 "BETA0.mu", "sigma.BETA0", "BETA1.mu", "sigma.BETA1",
                 "DELTA0.mu", "sigma.DELTA0", "sigma.D0", "DELTA1.mu", "sigma.DELTA1",
@@ -45,13 +61,40 @@ parameters <- c("omega", "rho.zb", "rho.bB",
                 "eta0.mu", "sigma.eta0", "sigma.e0", "eta1.mu", "sigma.eta1",
                 "zeta0.mu", "sigma.zeta0", "sigma.z0", "zeta1.mu", "sigma.zeta1",
                 
-                "BETA0", "BETA1",
-                "DELTA0", "dev.DELTA", "DELTA1",
-                "ETA0", "dev.ETA", "ETA1",
-                "beta0", "beta1", "beta.gully", "tpi.threshold",
-                "delta0", "dev.delta", "delta1",
-                "eta0", "dev.eta", "eta1",
-                "zeta0", "dev.zeta", "zeta1")
+                "BETA0", "BETA1", "BETA1.offset",
+                "DELTA0", "dev.DELTA", "DELTA1", "DELTA1.offset",
+                "ETA0", "dev.ETA", "ETA1", "ETA1.offset",
+                "beta0", "beta1", "tpi.threshold", "beta1.offset",
+                "delta0", "dev.delta", "delta1", "delta1.offset",
+                "eta0", "dev.eta", "eta1", "eta1.offset",
+                "zeta0", "dev.zeta", "zeta1",
+                
+                "occ.pnt.yr", "occ.grd.yr", "SR.pnt.yr",
+                "SR.pnt.gld.yr", "SR.grd.yr", "SR.grd.gld.yr",
+                
+                # Interm path parameters #
+                "ALPHA0.WellA_3km", "ALPHA.Dev_lo.WellA_3km",
+                "ALPHA.Dev_hi.WellA_3km", "sigma.pred.WellA_3km",
+
+                "ALPHA0.WellD_3km", "ALPHA.Dev_lo.WellD_3km",
+                "ALPHA.Dev_hi.WellD_3km", "sigma.pred.WellD_3km",
+
+                "ALPHA0.WellA_1km", "ALPHA.Dev_lo.WellA_1km",
+                "ALPHA.Dev_hi.WellA_1km", "sigma.pred.WellA_1km",
+
+                "ALPHA0.Road_1km", "ALPHA.Dev_lo.Road_1km",
+                "ALPHA.Dev_hi.Road_1km", "sigma.Road_1km",
+                
+                "alpha0.WellA_125m", "alpha.Dev_lo.WellA_125m",
+                "alpha.Dev_hi.WellA_125m",
+                
+                "alpha0.PA_Road_125m", "alpha.Dev_lo.PA_Road_125m",
+                "alpha.Dev_hi.PA_Road_125m", "alpha0.D_Road_125m",
+                "alpha.Dev_lo.D_Road_125m", "alpha.Dev_hi.D_Road_125m",
+                "sigma.D.Road_125m",
+                
+                "alpha0.AHerb", "alpha.WellA_125m.AHerb",
+                "alpha.Road_125m.AHerb", "sigma.alpha.AHerb")
 
 # Function for setting initial values in JAGS
 inits <- function()
@@ -61,27 +104,26 @@ inits <- function()
        tvar.zeta1 = rnorm(p.zeta),
        
        tvar.sigma.BETA0 = rnorm(1),
-       tvar.BETA1 = rnorm(p.BETA),
+       tvar.BETA1 = rnorm(p.PSI),
        
        tvar.sigma.DELTA0 = rnorm(1),
        tvar.sigma.D0 = rnorm(1),
-       tvar.DELTA1 = rnorm(p.DELTA),
+       tvar.DELTA1 = rnorm(p.PSI),
        
        tvar.sigma.ETA0 = rnorm(1),
        tvar.sigma.E0 = rnorm(1),
-       tvar.ETA1 = rnorm(p.ETA),
+       tvar.ETA1 = rnorm(p.PSI),
        
        tvar.sigma.beta0 = rnorm(1),
-       tvar.beta1 = rnorm(p.beta),
-       tvar.beta.gully = rnorm(1),
-       
+       tvar.beta1 = rnorm(p.psi.init),
+
        tvar.sigma.delta0 = rnorm(1),
        tvar.sigma.d0 = rnorm(1),
-       tvar.delta1 = rnorm(p.delta),
+       tvar.delta1 = rnorm(p.psi.dyn),
        
        tvar.sigma.eta0 = rnorm(1),
        tvar.sigma.e0 = rnorm(1),
-       tvar.eta1 = rnorm(p.eta))
+       tvar.eta1 = rnorm(p.psi.dyn))
 
 # Assemble the initial values for JAGS.
 z.init <- array(1, dim = c(n.point, n.year, n.spp))
