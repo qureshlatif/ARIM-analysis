@@ -1,15 +1,15 @@
 # Primary data objects
 PSI.vars.cntrl <- c("PJ_area", "NDVI")
-PSI.vars.trt <- c("Dev_lo", "Dev_hi", "WellA_3km",
+PSI.vars.trt <- c("Dev_bg", "Dev_lo", "WellA_3km",
                    "WellD_3km", "Road_1km")
 PSI.additional.path <- c("WellA_1km", "WellD_1km")
 
 beta.vars.cntrl <- c("vrm_125m", "TPI_min", "Sage", "Herb")
-beta.vars.trt <- c("Dev_lo", "Dev_hi", "WellA_125m", "Road_125m",
+beta.vars.trt <- c("Dev_bg", "Dev_lo", "WellA_125m", "Road_125m",
                    "AHerb", "WellA_1km", "Road_1km")
 
 psi_dyn.vars.cntrl <- c("Sage", "Herb")
-psi_dyn.vars.trt <- c("Dev_lo", "Dev_hi", "WellA_125m", "Road_125m",
+psi_dyn.vars.trt <- c("Dev_bg", "Dev_lo", "WellA_125m", "Road_125m",
                       "AHerb", "WellA_1km", "Road_1km")
 
 zeta.vars <- c("CanCov", "ShrubCov", "DOY", "Time_ssr")
@@ -64,7 +64,7 @@ ind.PSI.offset <- which(vars %in% PSI.vars.trt)
 ind.PSI.no_offset <- which(vars %in% PSI.vars.cntrl)
 
     # Additional indices for intermediate path models #
-ind.PSI.Dev_hi <- which(vars == "Dev_hi")
+ind.PSI.Dev_bg <- which(vars == "Dev_bg")
 ind.PSI.Dev_lo <- which(vars == "Dev_lo")
 ind.WellA_3km <- which(vars == "WellA_3km")
 ind.WellD_3km <- which(vars == "WellD_3km")

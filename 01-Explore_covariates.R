@@ -132,6 +132,7 @@ for(i in 8:nrow(out)) {
 write.csv(out, "SumStats.csv", row.names = T)
 
 ## Plot well pad counts and road density over time ##
+#***This still needs to be updated for current Covariate data structure***
 library(ggplot2)
 library(cowplot)
 theme_set(theme_bw())

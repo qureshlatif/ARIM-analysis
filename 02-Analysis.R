@@ -36,7 +36,7 @@ data.nams <- list("Y", "TPeriod", "gridID", "yearID", "pointID", "n.grid", "n.ye
                   "n.pntyr", "n.spp",
                   
                   "X.PSI", "X.PSI.raw", "p.PSI", "ind.PSI.offset", "ind.PSI.no_offset",
-                  "ind.PSI.Dev_hi", "ind.PSI.Dev_lo", "ind.WellA_3km", "ind.WellD_3km",
+                  "ind.PSI.Dev_bg", "ind.PSI.Dev_lo", "ind.WellA_3km", "ind.WellD_3km",
                   "ind.WellA_1km", "ind.Road_1km",
                   
                   "X.psi", "X.psi.raw", "ind.psi.tpi", "ind.psi.not_tpi", "ind.psi.dyn",

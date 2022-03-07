@@ -1,13 +1,13 @@
 model {
 
-  n.pnt.bkg <- (n.point - sum(X.PSI[gridID, 1, ind.PSI.Dev_lo]) -
-    sum(X.PSI[gridID, 1, ind.PSI.Dev_hi]))
+  n.pnt.bkg <- sum(X.PSI[gridID, 1, ind.PSI.Dev_bg])
   n.pnt.dlo <- sum(X.PSI[gridID, 1, ind.PSI.Dev_lo])
-  n.pnt.dhi <- sum(X.PSI[gridID, 1, ind.PSI.Dev_hi])
-  n.grd.bkg <- (n.grid - sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo]) -
-    sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_hi]))
+  n.pnt.dhi <- (n.point - sum(X.PSI[gridID, 1, ind.PSI.Dev_bg]) -
+    sum(sum(X.PSI[gridID, 1, ind.PSI.Dev_lo])))
+  n.grd.bkg <- sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_bg])
   n.grd.dlo <- sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo])
-  n.grd.dhi <- sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_hi])
+  n.grd.dhi <- (n.grid - sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_bg]) -
+    sum(sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo])))
   
   ########################
   # Bird community model #
@@ -38,12 +38,12 @@ model {
       #___ For deriving yearly occupancy rates ___#
       for(t in 1:n.year) {
         z_bkg[j, t, i] <-
-          z[j, t, i] * (1 - (X.PSI[gridID[j], 1, ind.PSI.Dev_lo] +
-            X.PSI[gridID[j], 1, ind.PSI.Dev_hi]))
+          z[j, t, i] * X.PSI[gridID[j], 1, ind.PSI.Dev_bg]
         z_dlo[j, t, i] <-
           z[j, t, i] * X.PSI[gridID[j], 1, ind.PSI.Dev_lo]
         z_dhi[j, t, i] <-
-          z[j, t, i] * X.PSI[gridID[j], 1, ind.PSI.Dev_hi]
+          z[j, t, i] * (1 - (X.PSI[gridID[j], 1, ind.PSI.Dev_bg] +
+            X.PSI[gridID[j], 1, ind.PSI.Dev_lo]))
       }
       #___________________________________________#
     }
@@ -63,12 +63,12 @@ model {
       #___ For deriving yearly occupancy rates ___#
       for(t in 1:n.year) {
         Z_bkg[k, t, i] <-
-          Z[k, t, i] * (1 - (X.PSI[k, 1, ind.PSI.Dev_lo] +
-            X.PSI[k, 1, ind.PSI.Dev_hi]))
+          Z[k, t, i] * X.PSI[k, 1, ind.PSI.Dev_bg]
         Z_dlo[k, t, i] <-
           Z[k, t, i] * X.PSI[k, 1, ind.PSI.Dev_lo]
         Z_dhi[k, t, i] <-
-          Z[k, t, i] * X.PSI[k, 1, ind.PSI.Dev_hi]
+          Z[k, t, i] * (1 - (X.PSI[k, 1, ind.PSI.Dev_bg] +
+            X.PSI[k, 1, ind.PSI.Dev_lo]))
       }
       #___________________________________________#
     }

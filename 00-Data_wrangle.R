@@ -323,9 +323,9 @@ cov_grid <- data.frame(Grid = pointXyears.list %>% str_sub(1, -9),
   )
 
 Cov_grid <- abind::abind(
-  Dev_lo = (cov_grid$Development == "LO") %>% as.integer %>%
+  Dev_bg = (cov_grid$Development == "BG") %>% as.integer %>%
     array(dim = c(length(grid.list), length(years))),
-  Dev_hi = (cov_grid$Development == "HI") %>% as.integer %>%
+  Dev_lo = (cov_grid$Development == "LO") %>% as.integer %>%
     array(dim = c(length(grid.list), length(years))),
   PJ_area = cov_grid %>% select(PJ_area_2010:PJ_area_2019) %>%
     data.matrix,
