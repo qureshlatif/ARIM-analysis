@@ -106,7 +106,7 @@ PA_Road_125m <- (X.psi.raw[,,"Road_125m"] > 0) * 1
 X.psi.raw <- abind::abind(X.psi.raw, PA_Road_125m, along = 3)
 ind.PA_Road_125m <- dim(X.psi.raw)[3]
 
-X.psi.raw[,,"AHerb"] <- round(X.psi.raw[,,"AHerb"])
+X.psi.raw[,,"AHerb"] <- ((X.psi.raw[,,"AHerb"] + 0.001) / 100)
 ind.AHerb <- which(vars == "AHerb")
 
   # Detection

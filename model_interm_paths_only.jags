@@ -28,7 +28,7 @@ model {
         ALPHA.Dev_bg.WellD_3km * X.PSI[k, t, ind.PSI.Dev_bg]
       #____ GOF _____#
       LLobs.WellD_3km[k, t] <- logdensity.negbin(X.PSI.raw[k, t, ind.WellD_3km],
-        pred.WellA_3km[k, t], r.WellD_3km)
+        pred.WellD_3km[k, t], r.WellD_3km)
       X.sim.WellD_3km[k, t] ~ dnegbin(pred.WellD_3km[k, t], r.WellD_3km)
       LLsim.WellD_3km[k, t] <- logdensity.negbin(X.sim.WellD_3km[k, t],
         pred.WellD_3km[k, t], r.WellD_3km)
@@ -80,16 +80,18 @@ model {
         pred.WellA_125m[j, t])
       #______________#
       
-      X.psi.raw[j, t, ind.AHerb] ~ dbin(pred.AHerb[j, t], 100) # Need to round AHerb in R for this to work.
+      X.psi.raw[j, t, ind.AHerb] ~ dbeta(a.AHerb[j, t], b.AHerb[j, t])
+      a.AHerb[j, t] <- pred.AHerb[j, t] * phi.AHerb
+      b.AHerb[j, t] <- (1 - pred.AHerb[j, t]) * phi.AHerb
       logit(pred.AHerb[j, t]) <- alpha0.AHerb +
         alpha.WellA_125m.AHerb * X.psi.raw[j, t, ind.WellA_125m] +
         alpha.Road_125m.AHerb * X.psi.raw[j, t, ind.Road_125m]
       #____ GOF _____#
-      LLobs.AHerb[j, t] <- logdensity.bin(X.psi.raw[j, t, ind.AHerb],
-        pred.AHerb[j, t], 100)
-      X.sim.AHerb[j, t] ~ dbin(pred.AHerb[j, t], 100)
-      LLsim.AHerb[j, t] <- logdensity.bin(X.sim.AHerb[j, t],
-        pred.AHerb[j, t], 100)
+      LLobs.AHerb[j, t] <- logdensity.beta(X.psi.raw[j, t, ind.AHerb],
+        a.AHerb[j, t], b.AHerb[j, t])
+      X.sim.AHerb[j, t] ~ dbeta(a.AHerb[j, t], b.AHerb[j, t])
+      LLsim.AHerb[j, t] <- logdensity.beta(X.sim.AHerb[j, t],
+        a.AHerb[j, t], b.AHerb[j, t])
       #______________#
     }
     
@@ -191,4 +193,5 @@ model {
   alpha0.AHerb ~ dnorm(0, 0.66667)
   alpha.WellA_125m.AHerb ~ dnorm(0, 0.66667)
   alpha.Road_125m.AHerb ~ dnorm(0, 0.66667)
+  phi.AHerb ~ dgamma(.1,.1)
 }

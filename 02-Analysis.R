@@ -153,6 +153,10 @@ run.time <- end.time - st.time
 run.time
 rm(st.time,end.time)
 
+library(R.utils)
+if(package == "jagsUI") {
+  saveObject(out, mod.nam)
+}
 #out <- resumeJAGS(fileStub = str_c(saveJAGS.loc, mod.nam, "/modsave"), nSaves = 40)
 
 # Gather, combine, and summarize JAGS saves from hard drive #

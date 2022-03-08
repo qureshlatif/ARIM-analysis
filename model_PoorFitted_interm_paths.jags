@@ -1,0 +1,40 @@
+model {
+
+
+  #####################################
+  # Intermediate mechanistic pathways #
+  #####################################
+  
+  # Grid cell scale pathways #
+
+  # Point scale pathways #
+  for(j in 1:n.point) {
+    for(t in 1:n.year) {
+      X.psi.raw[j, t, ind.AHerb] ~ dbeta(a.AHerb[j, t], b.AHerb[j, t])
+      a.AHerb[j, t] <- pred.AHerb[j, t] * phi.AHerb
+      b.AHerb[j, t] <- (1 - pred.AHerb[j, t]) * phi.AHerb
+      logit(pred.AHerb[j, t]) <- alpha0.AHerb +
+        alpha.WellA_125m.AHerb * X.psi.raw[j, t, ind.WellA_125m] +
+        alpha.Road_125m.AHerb * X.psi.raw[j, t, ind.Road_125m]
+      #____ GOF _____#
+      LLobs.AHerb[j, t] <- logdensity.beta(X.psi.raw[j, t, ind.AHerb],
+        a.AHerb[j, t], b.AHerb[j, t])
+      X.sim.AHerb[j, t] ~ dbeta(a.AHerb[j, t], b.AHerb[j, t])
+      LLsim.AHerb[j, t] <- logdensity.beta(X.sim.AHerb[j, t],
+        a.AHerb[j, t], b.AHerb[j, t])
+      #______________#
+    }
+  }
+  
+  #________ GOF __________#
+  dev.obs.AHerb <- -2 * sum(LLobs.AHerb[1:n.point, 1:n.year])
+  dev.sim.AHerb <- -2 * sum(LLsim.AHerb[1:n.point, 1:n.year])
+  test.AHerb <- step(dev.sim.AHerb - dev.obs.AHerb)
+  #_______________________#
+  
+  ### Prior distributions ###
+  alpha0.AHerb ~ dnorm(0, 0.66667)
+  alpha.WellA_125m.AHerb ~ dnorm(0, 0.66667)
+  alpha.Road_125m.AHerb ~ dnorm(0, 0.66667)
+  phi.AHerb ~ dgamma(.1,.1)
+}

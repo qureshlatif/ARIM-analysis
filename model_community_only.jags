@@ -1,14 +1,5 @@
 model {
 
-  n.pnt.bkg <- sum(X.PSI[gridID, 1, ind.PSI.Dev_bg])
-  n.pnt.dlo <- sum(X.PSI[gridID, 1, ind.PSI.Dev_lo])
-  n.pnt.dhi <- (n.point - sum(X.PSI[gridID, 1, ind.PSI.Dev_bg]) -
-    sum(sum(X.PSI[gridID, 1, ind.PSI.Dev_lo])))
-  n.grd.bkg <- sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_bg])
-  n.grd.dlo <- sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo])
-  n.grd.dhi <- (n.grid - sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_bg]) -
-    sum(sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo])))
-  
   ########################
   # Bird community model #
   ########################
@@ -369,4 +360,16 @@ model {
       SR.grd.gld.yr[t, g, 3] <- sum(SR.grd.guild[1:n.grid, t, g, 3]) / n.grd.dhi
     }
   }
+  
+  #____ Sample sizes for derived occupancy estimates ____#
+  n.pnt.bkg <- sum(X.PSI[gridID, 1, ind.PSI.Dev_bg])
+  n.pnt.dlo <- sum(X.PSI[gridID, 1, ind.PSI.Dev_lo])
+  n.pnt.dhi <- (n.point - sum(X.PSI[gridID, 1, ind.PSI.Dev_bg]) -
+    sum(sum(X.PSI[gridID, 1, ind.PSI.Dev_lo])))
+  n.grd.bkg <- sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_bg])
+  n.grd.dlo <- sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo])
+  n.grd.dhi <- (n.grid - sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_bg]) -
+    sum(sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo])))
+  #______________________________________________________#
+
 }
