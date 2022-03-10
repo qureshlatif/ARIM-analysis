@@ -1,0 +1,83 @@
+model {
+
+  for (i in 1:n.spp) {
+    # Observation process
+    for(j in 1:n.pntyr) {
+      Y[j, i] ~ dbinom(p[j, i]*z[pointID[j], yearID[j], i], TPeriod[j, i])
+      logit(p[j, i]) <- zeta0[i]
+    }
+
+    # Ecological state processes
+    for(j in 1:n.point) {
+      logit(psi[j, i]) <- beta0[i]
+      for(t in 1:n.year) {
+        z[j, t, i] ~ dbern(psi[j, i] * Z[gridID[j], t, i])
+      }
+    }
+    
+    for(k in 1:n.grid) {
+      logit(PSI[k, i]) <- BETA0[i]
+      for(t in 1:n.year) {
+        Z[k, t, i] ~ dbern(PSI[k, i]*w[i])
+      }
+    }
+
+    # Species-specific intercepts
+    B[i, 1:3] ~ dmnorm(B.mu, invSigma.B)
+    BETA0[i] <- B[i, 1]
+    beta0[i] <- B[i, 2]
+    zeta0[i] <- B[i, 3]
+    
+    #BETA0[i] ~ dnorm(BETA0.mu, pow(sigma.BETA0, -2))
+    #beta0[i] ~ dnorm(beta0.mu + (rho.bB*sigma.beta0 / sigma.BETA0) * (BETA0[i] - BETA0.mu),
+    #  pow(sigma.beta0, -2) / (1 - pow(rho.bB, 2)))
+    #zeta0[i] ~ dnorm(zeta0.mu + (rho.zb*sigma.zeta0 / sigma.beta0) * (beta0[i] - beta0.mu),
+    #  pow(sigma.zeta0, -2)/(1 - pow(rho.zb, 2)))
+
+    w[i] ~ dbern(omega)
+  }
+
+  ### Prior distributions ###
+  
+  # parameter correlations
+  
+  rho.zb ~ dunif(-1,1) # Correlation between detectability and point occupancy
+  rho.bB ~ dunif(-1,1) # Correlation between point and grid occupancy
+  rho.zB ~ dunif(-1,1) # Correlation between detectability and grid occupancy
+  
+  R[1,1] <- pow(sigma.BETA0, 2)
+  R[2,2] <- pow(sigma.beta0, 2)
+  R[3,3] <- pow(sigma.zeta0, 2)
+  R[1,2] <- rho.bB*sigma.BETA0*sigma.beta0
+  R[2,1] <- rho.bB*sigma.BETA0*sigma.beta0
+  R[2,3] <- rho.zb*sigma.beta0*sigma.zeta0
+  R[3,2] <- rho.zb*sigma.beta0*sigma.zeta0
+  R[1,3] <- rho.zB*sigma.BETA0*sigma.zeta0
+  R[3,1] <- rho.zB*sigma.BETA0*sigma.zeta0
+  invSigma.B ~ dwish(R, 3)
+  Sigma.B <- inverse(invSigma.B) # Not sure this is needed except possibly to be saved.
+  
+  # mean and precison for the parameter intercepts
+  
+  B.mu[1] <- BETA0.mu
+  B.mu[2] <- beta0.mu
+  B.mu[3] <- zeta0.mu
+  
+  zeta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit detection probability intercept
+  tvar.sigma.zeta0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.zeta0 <- abs(tvar.sigma.zeta0)  # half-Cauchy distribution
+
+  beta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
+  sigma.beta0 <- abs(tvar.sigma.beta0)  # half-Cauchy distribution
+  tvar.sigma.beta0 ~ dt(0,1,1)  # Cauchy distribution
+
+  BETA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
+  sigma.BETA0 <- abs(tvar.sigma.BETA0)  # half-Cauchy distribution
+  tvar.sigma.BETA0 ~ dt(0,1,1)  # Cauchy distribution
+
+  # Probability of species inclusion in the metacommunity
+  omega ~ dunif(0,1)
+  
+  t.nu <- 7.763179      # Uniform prior
+  t.sigma <- 1.566267   # Uniform prior
+}

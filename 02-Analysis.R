@@ -7,19 +7,19 @@ load("Data_compiled.RData")
 
 #_____ Script inputs _____#
 scripts.loc <- "ARIM-analysis/"
-model.file <- str_c(scripts.loc, "model_interm_paths_only.jags")
+model.file <- str_c(scripts.loc, "model_community_static_simple.jags")
 saveJAGS.loc <- "saveJAGS/"
 package <- "jagsUI" # Set to jagsUI or saveJAGS
-mod.nam <- "mod_int_paths"
-development <- TRUE # Set to TRUE for running test model with only develop.spp, and FALSE to run the full model.
+mod.nam <- "mod_community_static_simple"
+development <- FALSE # Set to TRUE for running test model with only develop.spp, and FALSE to run the full model.
 develop.spp <- c("AMRO", "BARS", "OROR",
                  "BOBO", "MOPL")
 
 # MCMC values
-nc <- 3 # number of chains
+nc <- 2#3 # number of chains
 nb <- 1000 # burn in
-ni <- 11000 # number of iterations
-nt <- 10 # thinning
+ni <- 3000 #11000 # number of iterations
+nt <- 1#10 # thinning
 #_________________________#
 
 if(package == "jagsUI") {
@@ -51,7 +51,7 @@ data.nams <- list("Y", "TPeriod", "gridID", "yearID", "pointID", "n.grid", "n.ye
 
 # Stuff to save from JAGS
 parameters <- c(# Bird community parameters
-                "omega", "rho.zb", "rho.bB",
+                "omega", "rho.zb", "rho.bB", "rho.zB", "Sigma.B",
                 
                 "BETA0.mu", "sigma.BETA0", "BETA1.mu", "sigma.BETA1",
                 "DELTA0.mu", "sigma.DELTA0", "sigma.D0", "DELTA1.mu", "sigma.DELTA1",
