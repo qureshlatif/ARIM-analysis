@@ -10,7 +10,7 @@ scripts.loc <- "ARIM-analysis/"
 model.file <- str_c(scripts.loc, "model_community_static_simple.jags")
 saveJAGS.loc <- "saveJAGS/"
 package <- "jagsUI" # Set to jagsUI or saveJAGS
-mod.nam <- "mod_community_static_simple"
+mod.nam <- "mod_community_static_simple_old_way"
 development <- FALSE # Set to TRUE for running test model with only develop.spp, and FALSE to run the full model.
 develop.spp <- c("AMRO", "BARS", "OROR",
                  "BOBO", "MOPL")
@@ -153,9 +153,8 @@ run.time <- end.time - st.time
 run.time
 rm(st.time,end.time)
 
-library(R.utils)
 if(package == "jagsUI") {
-  saveObject(out, mod.nam)
+  R.utils::saveObject(out, mod.nam)
 }
 #out <- resumeJAGS(fileStub = str_c(saveJAGS.loc, mod.nam, "/modsave"), nSaves = 40)
 

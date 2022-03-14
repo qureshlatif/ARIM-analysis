@@ -75,16 +75,15 @@ model {
     #__________________________________________________________________#
 
     # Species-specific intercepts
-    BETA0[i] ~ dnorm(BETA0.mu, pow(sigma.BETA0, -2))
+    B[i, 1:3] ~ dmnorm(B.mu, invSigma.B) # Multivariate Wishart approach for initial occupancy and detectability #
+    BETA0[i] <- B[i, 1]
     DELTA0[i] ~ dnorm(DELTA0.mu, pow(sigma.DELTA0, -2))
     ETA0[i] ~ dnorm(ETA0.mu, pow(sigma.ETA0, -2))
-    beta0[i] ~ dnorm(beta0.mu + (rho.bB*sigma.beta0 / sigma.BETA0) * (BETA0[i] - BETA0.mu),
-      pow(sigma.beta0, -2) / (1 - pow(rho.bB, 2)))
+    beta0[i] <- B[i, 2]
     delta0[i] ~ dnorm(delta0.mu, pow(sigma.delta0, -2))
     eta0[i] ~ dnorm(eta0.mu, pow(sigma.eta0, -2))
-    zeta0[i] ~ dnorm(zeta0.mu + (rho.zb*sigma.zeta0 / sigma.beta0) * (beta0[i] - beta0.mu),
-      pow(sigma.zeta0, -2)/(1 - pow(rho.zb, 2)))
-    
+    zeta0[i] <- B[i, 3]
+
     # Species-specific yearly deviations
     for(t in 1:n.year) {
       dev.zeta[i, t] ~ dnorm(0, pow(sigma.z0, -2)) # Year-specific deviations in detectability from mean for each species
@@ -144,9 +143,28 @@ model {
   
   rho.zb ~ dunif(-1,1) # Correlation between detectability and point occupancy
   rho.bB ~ dunif(-1,1) # Correlation between point and grid occupancy
+  rho.zB ~ dunif(-1,1) # Correlation between detectability and grid occupancy
   
   # mean and precison for the parameter intercepts
   
+  #____ Multivariate Wishart prior for variance-covariance of occupancy and detectability ____#
+  R[1,1] <- pow(sigma.BETA0, 2)
+  R[2,2] <- pow(sigma.beta0, 2)
+  R[3,3] <- pow(sigma.zeta0, 2)
+  R[1,2] <- rho.bB*sigma.BETA0*sigma.beta0
+  R[2,1] <- rho.bB*sigma.BETA0*sigma.beta0
+  R[2,3] <- rho.zb*sigma.beta0*sigma.zeta0
+  R[3,2] <- rho.zb*sigma.beta0*sigma.zeta0
+  R[1,3] <- rho.zB*sigma.BETA0*sigma.zeta0
+  R[3,1] <- rho.zB*sigma.BETA0*sigma.zeta0
+  invSigma.B ~ dwish(R, 3)
+  Sigma.B <- inverse(invSigma.B) # Not sure this is needed except possibly to be saved.
+
+  B.mu[1] <- BETA0.mu
+  B.mu[2] <- beta0.mu
+  B.mu[3] <- zeta0.mu
+  #___________________________________________________________________________________________#
+
   zeta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit detection probability intercept
   tvar.sigma.zeta0 ~ dt(0,1,1)  # Cauchy distribution
   sigma.zeta0 <- abs(tvar.sigma.zeta0)  # half-Cauchy distribution
@@ -371,7 +389,7 @@ model {
     sum(sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo])))
   #______________________________________________________#
   
-    #####################################
+  #####################################
   # Intermediate mechanistic pathways #
   #####################################
   
