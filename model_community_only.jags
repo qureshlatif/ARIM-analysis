@@ -1,98 +1,49 @@
 model {
-
   ########################
   # Bird community model #
   ########################
 
   for (i in 1:n.spp) {
-    # Observation process
-    for(j in 1:n.pntyr) {
-      Y[j, i] ~ dbinom(p[j, i]*z[pointID[j], yearID[j], i], TPeriod[j, i])
-      logit(p[j, i]) <- zeta0[i] + dev.zeta[i, yearID[j]] +
+    for(j in 1:n.grdyr) {
+      # Observation process (total detected)
+      Y.sum[j, i] ~ dbin(p_star[j, i], z[j, i])
+      p_star[j, i] <- 1 - pow(1 - p[j, i], K)
+      logit(p[j, i]) <- zeta0[i] + dev.zeta[i, yearID.grdyr[j]] +
         inprod(zeta1[i, 1:p.zeta], X.zeta[j, 1:p.zeta])
-    }
-
-    # Ecological state processes
-    for(j in 1:n.point) {
-      z[j, 1, i] ~ dbern(psi[j, i] * Z[gridID[j], 1, i])
-      logit(psi[j, i]) <- beta0[i] +
-        inprod(beta1[i, ind.psi.not_tpi], X.psi[j, 1, ind.psi.not_tpi]) +
-        beta1[i, ind.psi.tpi] * gully[j] # Threshold gully effect
-      for(t in 2:n.year) {
-        z[j, t, i] ~ dbern((gamma[j, (t-1), i] * (1 - z[j, (t - 1), i]) +
-          phi[j, (t-1), i] * z[j, (t - 1), i]) * Z[gridID[j], t, i])
-        logit(gamma[j, (t-1), i]) <- delta0[i] + dev.delta[i, (t-1)] +
-          inprod(delta1[i, 1:p.psi.dyn], X.psi[j, t, ind.psi.dyn])
-        logit(phi[j, (t-1), i]) <- eta0[i] + dev.eta[i, (t-1)] +
-          inprod(eta1[i, 1:p.psi.dyn], X.psi[j, t, ind.psi.dyn])
+      
+      # Point-level ecological process
+      z[j, i] ~ dbin(psi[j, i] * Z[j, i], n.point[j])
+      logit(psi[j, i]) <- beta0[i] + dev.beta[i, yearID.grdyr[j]] +
+        inprod(beta1[i, 1:p.psi.init], X.psi[j, 1:p.psi.init]) +
+        lambda[j, i] * (yearID.grdyr[j] - 1)
+      lambda[j, i] <- delta0[i] +
+        inprod(delta1[i, 1:p.psi.dyn], X.psi[j, ind.psi.dyn])
+        
+      # Grid-level ecological process
+      Z[j, i] ~ dbern(PSI[j, i] * w[i])
+      logit(PSI[j, i]) <- BETA0[i] + dev.BETA[i, yearID.grdyr[j]] +
+        inprod(BETA1[i, 1:p.PSI], X.PSI[j, 1:p.PSI]) +
+        LAMBDA[j, i] * (yearID.grdyr[j] - 1)
+      LAMBDA[j, i] <- DELTA0[i] +
+        inprod(DELTA1[i, 1:p.PSI], X.PSI[j, 1:p.PSI])
       }
-      #___ For deriving yearly occupancy rates ___#
-      for(t in 1:n.year) {
-        z_bkg[j, t, i] <-
-          z[j, t, i] * X.PSI[gridID[j], 1, ind.PSI.Dev_bg]
-        z_dlo[j, t, i] <-
-          z[j, t, i] * X.PSI[gridID[j], 1, ind.PSI.Dev_lo]
-        z_dhi[j, t, i] <-
-          z[j, t, i] * (1 - (X.PSI[gridID[j], 1, ind.PSI.Dev_bg] +
-            X.PSI[gridID[j], 1, ind.PSI.Dev_lo]))
-      }
-      #___________________________________________#
-    }
     
-    for(k in 1:n.grid) {
-      Z[k, 1, i] ~ dbern(PSI[k, i]*w[i])
-      logit(PSI[k, i]) <- BETA0[i] +
-        inprod(BETA1[i, 1:p.PSI], X.PSI[k, 1, 1:p.PSI])
-      for(t in 2:n.year) {
-        Z[k, t, i] ~ dbern((GAMMA[k, (t - 1), i] * (1 - Z[k, (t - 1), i]) +
-          PHI[k, (t-1), i] * Z[k, (t - 1), i]) * w[i])
-        logit(GAMMA[k, (t-1), i]) <- DELTA0[i] + dev.DELTA[i, (t-1)] +
-          inprod(DELTA1[i, 1:p.PSI], X.PSI[k, t, 1:p.PSI])
-        logit(PHI[k, (t-1), i]) <- ETA0[i] + dev.ETA[i, (t-1)] +
-          inprod(ETA1[i, 1:p.PSI], X.PSI[k, t, 1:p.PSI])
-      }
-      #___ For deriving yearly occupancy rates ___#
-      for(t in 1:n.year) {
-        Z_bkg[k, t, i] <-
-          Z[k, t, i] * X.PSI[k, 1, ind.PSI.Dev_bg]
-        Z_dlo[k, t, i] <-
-          Z[k, t, i] * X.PSI[k, 1, ind.PSI.Dev_lo]
-        Z_dhi[k, t, i] <-
-          Z[k, t, i] * (1 - (X.PSI[k, 1, ind.PSI.Dev_bg] +
-            X.PSI[k, 1, ind.PSI.Dev_lo]))
-      }
-      #___________________________________________#
-    }
-    
-    #___ Derived yearly finite-sample occupancy by development level___#
-    for(t in 1:n.year) {
-      occ.pnt.yr[t, i, 1] <- sum(z_bkg[1:n.point, t, i]) / n.pnt.bkg
-      occ.pnt.yr[t, i, 2] <- sum(z_dlo[1:n.point, t, i]) / n.pnt.dlo
-      occ.pnt.yr[t, i, 3] <- sum(z_dhi[1:n.point, t, i]) / n.pnt.dhi
-      occ.grd.yr[t, i, 1] <- sum(Z_bkg[1:n.grid, t, i]) / n.grd.bkg
-      occ.grd.yr[t, i, 2] <- sum(Z_dlo[1:n.grid, t, i]) / n.grd.dlo
-      occ.grd.yr[t, i, 3] <- sum(Z_dhi[1:n.grid, t, i]) / n.grd.dhi
-    }
-    #__________________________________________________________________#
+    w[i] ~ dbern(omega) # Species inclusion in community
 
     # Species-specific intercepts
     BETA0[i] ~ dnorm(BETA0.mu, pow(sigma.BETA0, -2))
     DELTA0[i] ~ dnorm(DELTA0.mu, pow(sigma.DELTA0, -2))
-    ETA0[i] ~ dnorm(ETA0.mu, pow(sigma.ETA0, -2))
     beta0[i] ~ dnorm(beta0.mu + (rho.bB*sigma.beta0 / sigma.BETA0) * (BETA0[i] - BETA0.mu),
       pow(sigma.beta0, -2) / (1 - pow(rho.bB, 2)))
     delta0[i] ~ dnorm(delta0.mu, pow(sigma.delta0, -2))
-    eta0[i] ~ dnorm(eta0.mu, pow(sigma.eta0, -2))
     zeta0[i] ~ dnorm(zeta0.mu + (rho.zb*sigma.zeta0 / sigma.beta0) * (beta0[i] - beta0.mu),
       pow(sigma.zeta0, -2)/(1 - pow(rho.zb, 2)))
-    
+
     # Species-specific yearly deviations
     for(t in 1:n.year) {
       dev.zeta[i, t] ~ dnorm(0, pow(sigma.z0, -2)) # Year-specific deviations in detectability from mean for each species
-      dev.delta[i, t] ~ dnorm(0, pow(sigma.d0, -2)) # Year-specific deviations in point colonization from mean for each species
-      dev.eta[i, t] ~ dnorm(0, pow(sigma.e0, -2)) # Year-specific deviations in point persistence from mean for each species
-      dev.DELTA[i, t] ~ dnorm(0, pow(sigma.D0, -2)) # Year-specific deviations in grid colonization from mean for each species
-      dev.ETA[i, t] ~ dnorm(0, pow(sigma.E0, -2)) # Year-specific deviations in grid persistence from mean for each species
+      dev.beta[i, t] ~ dnorm(0, pow(sigma.b0, -2)) # Year-specific deviations in point occupancy from mean for each species
+      dev.BETA[i, t] ~ dnorm(0, pow(sigma.B0, -2)) # Year-specific deviations in grid occupancy from mean for each species
     }
     
     # Species-specific covariate relationships
@@ -112,12 +63,6 @@ model {
       delta1.base[i, b] ~ dnorm(delta1.mu[b], pow(sigma.delta1[b], -2))
     }
 
-    for(b in 1:p.psi.dyn) {
-      eta1[i, b] <- eta1.base[i, b] +
-        inprod(eta1.offset[1:(n.guild-1), b], guildMem[i, 2:n.guild])
-      eta1.base[i, b] ~ dnorm(eta1.mu[b], pow(sigma.eta1[b], -2))
-    }
-
     for(b in 1:p.PSI) {
       BETA1[i, b] <- BETA1.base[i, b] +
         inprod(BETA1.offset[1:(n.guild-1), b], guildMem[i, 2:n.guild])
@@ -129,25 +74,22 @@ model {
         inprod(DELTA1.offset[1:(n.guild-1), b], guildMem[i, 2:n.guild])
       DELTA1.base[i, b] ~ dnorm(DELTA1.mu[b], pow(sigma.DELTA1[b], -2))
     }
-
-    for(b in 1:p.PSI) {
-      ETA1[i, b] <- ETA1.base[i, b] +
-        inprod(ETA1.offset[1:(n.guild-1), b], guildMem[i, 2:n.guild])
-      ETA1.base[i, b] ~ dnorm(ETA1.mu[b], pow(sigma.ETA1[b], -2))
+  }
+  
+  # Observation process (detections within minute intervals)
+  for(i in 1:n.int) {
+    Y.int[i, 1:K] ~ dmulti(pclass[i, 1:K], Y.sum[grdyrID.int[i], sppID.int[i]])
+    for(k in 1:K) {
+      pint[i, k] <- pow(1 - p[grdyrID.int[i], sppID.int[i]], (k - 1)) * p[grdyrID.int[i], sppID.int[i]]
+      pclass[i, k] <- pint[i, k] / sum(pint[i, 1:K])
     }
-
-    w[i] ~ dbern(omega)
   }
 
   ### Prior distributions ###
   
-  # parameter correlations
-  
-  rho.zb ~ dunif(-1,1) # Correlation between detectability and point occupancy
-  rho.bB ~ dunif(-1,1) # Correlation between point and grid occupancy
-  
-  # mean and precison for the parameter intercepts
-  
+  rho.zb ~ dunif(-1, 1) # Correlation between detectability and point occupancy
+  rho.bB ~ dunif(-1, 1) # Correlation between point and grid occupancy
+
   zeta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit detection probability intercept
   tvar.sigma.zeta0 ~ dt(0,1,1)  # Cauchy distribution
   sigma.zeta0 <- abs(tvar.sigma.zeta0)  # half-Cauchy distribution
@@ -158,39 +100,25 @@ model {
   beta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
   sigma.beta0 <- abs(tvar.sigma.beta0)  # half-Cauchy distribution
   tvar.sigma.beta0 ~ dt(0,1,1)  # Cauchy distribution
+  # Year effect point occupancy hyper-parameters #
+  tvar.sigma.b0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.b0 <- abs(tvar.sigma.b0)  # half-Cauchy distribution
 
   delta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
   sigma.delta0 <- abs(tvar.sigma.delta0)  # half-Cauchy distribution
   tvar.sigma.delta0 ~ dt(0,1,1)  # Cauchy distribution
-    # Year effect point occupancy hyper-parameters #
-  tvar.sigma.d0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.d0 <- abs(tvar.sigma.d0)  # half-Cauchy distribution
-
-  eta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
-  sigma.eta0 <- abs(tvar.sigma.eta0)  # half-Cauchy distribution
-  tvar.sigma.eta0 ~ dt(0,1,1)  # Cauchy distribution
-    # Year effect point occupancy hyper-parameters #
-  tvar.sigma.e0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.e0 <- abs(tvar.sigma.e0)  # half-Cauchy distribution
 
   BETA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
   sigma.BETA0 <- abs(tvar.sigma.BETA0)  # half-Cauchy distribution
   tvar.sigma.BETA0 ~ dt(0,1,1)  # Cauchy distribution
+    # Year effect point occupancy hyper-parameters #
+  tvar.sigma.B0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.B0 <- abs(tvar.sigma.B0)  # half-Cauchy distribution
 
   DELTA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
   sigma.DELTA0 <- abs(tvar.sigma.DELTA0)  # half-Cauchy distribution
   tvar.sigma.DELTA0 ~ dt(0,1,1)  # Cauchy distribution
-    # Year effect point occupancy hyper-parameters #
-  tvar.sigma.D0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.D0 <- abs(tvar.sigma.D0)  # half-Cauchy distribution
 
-  ETA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
-  sigma.ETA0 <- abs(tvar.sigma.ETA0)  # half-Cauchy distribution
-  tvar.sigma.ETA0 ~ dt(0,1,1)  # Cauchy distribution
-    # Year effect point occupancy hyper-parameters #
-  tvar.sigma.E0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.E0 <- abs(tvar.sigma.E0)  # half-Cauchy distribution
-  
   # Probability of species inclusion in the metacommunity
   omega ~ dunif(0,1)
   
@@ -218,13 +146,8 @@ model {
       beta1.offset[g, b] <- 0
     }
   }
-    # Derive binary gully variable
-  tpi.threshold ~ dunif(-0.4844142, 0.898147) # Bounds correspond with -7 to -1 min TPI within 125 m radius neighborhood
-  for(j in 1:n.point) {
-    gully[j] <- step(X.psi[j,1,ind.psi.tpi] > tpi.threshold)
-    }
 
-  # covariates for gamma (delta)
+  # covariates for lambda (delta)
   for(b in 1:p.psi.dyn) {
     delta1.mu[b] ~ dt(0, pow(t.sigma, -2), t.nu)
     sigma.delta1[b] <- abs(tvar.delta1[b]) # half-Cauchy distribution
@@ -239,24 +162,6 @@ model {
   for(b in ind.psi.dyn.no_offset) {
     for(g in 1:(n.guild-1)) {
       delta1.offset[g, b] <- 0
-    }
-  }
-
-  # covariates for phi (eta)
-  for(b in 1:p.psi.dyn) {
-    eta1.mu[b] ~ dt(0, pow(t.sigma, -2), t.nu)
-    sigma.eta1[b] <- abs(tvar.eta1[b]) # half-Cauchy distribution
-    tvar.eta1[b] ~ dt(0,1,1)  # Cauchy distribution
-  }
-    # Guild-level offsets
-  for(b in ind.psi.dyn.offset) {
-    for(g in 1:(n.guild-1)) {
-      eta1.offset[g, b] ~ dt(0, pow(t.sigma, -2), t.nu)
-    }
-  }
-  for(b in ind.psi.dyn.no_offset) {
-    for(g in 1:(n.guild-1)) {
-      eta1.offset[g, b] <- 0
     }
   }
 
@@ -278,7 +183,7 @@ model {
     }
   }
 
-  # covariates for GAMMA (DELTA)
+  # covariates for LAMBDA (DELTA)
   for(b in 1:p.PSI) {
     DELTA1.mu[b] ~ dt(0, pow(t.sigma, -2), t.nu)
     sigma.DELTA1[b] <- abs(tvar.DELTA1[b]) # half-Cauchy distribution
@@ -296,80 +201,6 @@ model {
     }
   }
 
-  # covariates for PHI (ETA)
-  for(b in 1:p.PSI) {
-    ETA1.mu[b] ~ dt(0, pow(t.sigma, -2), t.nu)
-    sigma.ETA1[b] <- abs(tvar.ETA1[b]) # half-Cauchy distribution
-    tvar.ETA1[b] ~ dt(0,1,1)  # Cauchy distribution
-  }
-    # Guild-level offsets
-  for(b in ind.PSI.offset) {
-    for(g in 1:(n.guild-1)) {
-      ETA1.offset[g, b] ~ dt(0, pow(t.sigma, -2), t.nu)
-    }
-  }
-  for(b in ind.PSI.no_offset) {
-    for(g in 1:(n.guild-1)) {
-      ETA1.offset[g, b] <- 0
-    }
-  }
-
   t.nu <- 7.763179      # Uniform prior
   t.sigma <- 1.566267   # Uniform prior
-  
-  ################################################
-  # Derived yearly richness by development level #
-  ################################################
-  
-  for(t in 1:n.year) {
-    for(j in 1:n.point) {
-      SR.point[j, t, 1] <- sum(z_bkg[j, t, 1:n.spp])
-      SR.point[j, t, 2] <- sum(z_dlo[j, t, 1:n.spp])
-      SR.point[j, t, 3] <- sum(z_dhi[j, t, 1:n.spp])
-      for(g in 1:n.guild) {
-        SR.pnt.guild[j, t, g, 1] <- sum(z_bkg[j, t, 1:n.spp] * guildMem[1:n.spp, g])
-        SR.pnt.guild[j, t, g, 2] <- sum(z_dlo[j, t, 1:n.spp] * guildMem[1:n.spp, g])
-        SR.pnt.guild[j, t, g, 3] <- sum(z_dhi[j, t, 1:n.spp] * guildMem[1:n.spp, g])
-      }
-    }
-    SR.pnt.yr[t, 1] <- sum(SR.point[1:n.point, t, 1]) / n.pnt.bkg
-    SR.pnt.yr[t, 2] <- sum(SR.point[1:n.point, t, 2]) / n.pnt.dlo
-    SR.pnt.yr[t, 3] <- sum(SR.point[1:n.point, t, 3]) / n.pnt.dhi
-    for(g in 1:n.guild) {
-      SR.pnt.gld.yr[t, g, 1] <- sum(SR.pnt.guild[1:n.point, t, g, 1]) / n.pnt.bkg
-      SR.pnt.gld.yr[t, g, 2] <- sum(SR.pnt.guild[1:n.point, t, g, 2]) / n.pnt.dlo
-      SR.pnt.gld.yr[t, g, 3] <- sum(SR.pnt.guild[1:n.point, t, g, 3]) / n.pnt.dhi
-    }
-    
-    for(k in 1:n.grid) {
-      SR.grid[k, t, 1] <- sum(Z_bkg[k, t, 1:n.spp])
-      SR.grid[k, t, 2] <- sum(Z_dlo[k, t, 1:n.spp])
-      SR.grid[k, t, 3] <- sum(Z_dhi[k, t, 1:n.spp])
-      for(g in 1:n.guild) {
-        SR.grd.guild[k, t, g, 1] <- sum(z_bkg[k, t, 1:n.spp] * guildMem[1:n.spp, g])
-        SR.grd.guild[k, t, g, 2] <- sum(z_dlo[k, t, 1:n.spp] * guildMem[1:n.spp, g])
-        SR.grd.guild[k, t, g, 3] <- sum(z_dhi[k, t, 1:n.spp] * guildMem[1:n.spp, g])
-      }
-    }
-    SR.grd.yr[t, 1] <- sum(SR.grid[1:n.grid, t, 1]) / n.grd.bkg
-    SR.grd.yr[t, 2] <- sum(SR.grid[1:n.grid, t, 2]) / n.grd.dlo
-    SR.grd.yr[t, 3] <- sum(SR.grid[1:n.grid, t, 3]) / n.grd.dhi
-    for(g in 1:n.guild) {
-      SR.grd.gld.yr[t, g, 1] <- sum(SR.grd.guild[1:n.grid, t, g, 1]) / n.grd.bkg
-      SR.grd.gld.yr[t, g, 2] <- sum(SR.grd.guild[1:n.grid, t, g, 2]) / n.grd.dlo
-      SR.grd.gld.yr[t, g, 3] <- sum(SR.grd.guild[1:n.grid, t, g, 3]) / n.grd.dhi
-    }
-  }
-  
-  #____ Sample sizes for derived occupancy estimates ____#
-  n.pnt.bkg <- sum(X.PSI[gridID, 1, ind.PSI.Dev_bg])
-  n.pnt.dlo <- sum(X.PSI[gridID, 1, ind.PSI.Dev_lo])
-  n.pnt.dhi <- (n.point - sum(X.PSI[gridID, 1, ind.PSI.Dev_bg]) -
-    sum(sum(X.PSI[gridID, 1, ind.PSI.Dev_lo])))
-  n.grd.bkg <- sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_bg])
-  n.grd.dlo <- sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo])
-  n.grd.dhi <- (n.grid - sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_bg]) -
-    sum(sum(X.PSI[1:n.grid, 1, ind.PSI.Dev_lo])))
-  #______________________________________________________#
-
 }

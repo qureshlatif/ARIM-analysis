@@ -7,10 +7,10 @@ load("Data_compiled.RData")
 
 #_____ Script inputs _____#
 scripts.loc <- "ARIM-analysis/"
-model.file <- str_c(scripts.loc, "model_community_mech_only_flat.jags") # "model_path_trend_flattened_marg.jags"
+model.file <- str_c(scripts.loc, "model_community_only.jags") # "model_path_trend_flattened_marg.jags"
 saveJAGS.loc <- "saveJAGS/"
-package <- "saveJAGS" # Set to jagsUI or saveJAGS
-mod.nam <- "mod_community_mech_only_flat"
+package <- "jagsUI" # Set to jagsUI or saveJAGS
+mod.nam <- "mod_community_mech"
 reduce.data.aug <- F # If TRUE, reduce data augmentation to 10 additional species.
 development <- F # Set to TRUE for running test model with only develop.spp, and FALSE to run the full model.
 develop.spp <- c("MODO", "MOPL", "HOLA", "WEME")
@@ -30,7 +30,7 @@ if(package == "jagsUI") {
 }
 
 # Compile data #
-source(str_c(scripts.loc, "Data_processing_path_flatten_to_grid.R"))
+source(str_c(scripts.loc, "Data_processing.R"))
 
 # Data objects to send to JAGS
   # Parameters to set up variance-covariance prior for PSI, psi, and p
@@ -50,7 +50,7 @@ data.nams <- c("Y.sum", "n.grdyr", "yearID.grdyr", #"gridID", "yearID", "pointID
                "X.zeta", "p.zeta",
                
                "guildMem", "n.guild")
-if(mod.nam == "mod_path_flatten_to_grid") {
+if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
   data.nams <- c(data.nams,
                  
                  "ind.PSI.Dev_bg", "ind.PSI.Dev_lo", "ind.Well_3km",
@@ -104,8 +104,8 @@ parameters <- c(# Bird community parameters
                 "alpha0.AHerb", "alpha.WellA_125m.AHerb",
                 "alpha.Road_125m.AHerb",
                 
-                "test.WellD_3km", "test.WellA_1km", "test.Road_1km",
-                "test.WellA_125m", "test.Road_125m", "test.AHerb")
+                "test.Well_3km", "test.Well_1km", "test.Road_1km",
+                "test.Well_125m", "test.AHerb", "test.Road_125m")
 
 # Function for setting initial values in JAGS
 inits <- function()

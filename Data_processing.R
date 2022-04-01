@@ -1,51 +1,110 @@
-#*** Need to convert to presence / absence of active well pad (Only 17 points with decom well pad within 125 m).
-
 # Primary data objects
-BETA.vars.cntrl <- c("PJ_area", "NDVI")
-BETA.vars.trt <- c("Develop_low", "Develop_high")
-BETA.vars.mech <- c("WellA_3x3km", "WellD_3x3km", "Road_1km")
+if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
+  PSI.vars.cntrl <- c("PJ_area", "NDVI")
+  PSI.vars.trt <- c("Dev_bg", "Dev_lo", "Well_3km", "Road_1km")
+  
+  beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
+  beta.vars.trt <- c("Dev_bg", "Dev_lo", "Well_1km", "Well_125m", "Road_125m", "AHerb")
+  
+  psi_dyn.vars.cntrl <- c("Sage", "Herb")
+  psi_dyn.vars.trt <- c("Dev_bg", "Dev_lo", "Well_1km", "Well_125m", "Road_125m", "AHerb")
+}
 
-DELTA.vars.cntrl <- c("PJ_area", "NDVI")
-DELTA.vars.trt <- c("Develop_low", "Develop_high")
-DELTA.vars.mech <- c("WellA_3x3km", "WellD_3x3km", "Road_1km")
+if(mod.nam == "mod_community_trend") {
+  PSI.vars.cntrl <- c("PJ_area", "NDVI")
+  PSI.vars.trt <- c("Dev_bg", "Dev_lo")
+  
+  beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
+  beta.vars.trt <- c("Dev_bg", "Dev_lo")
+  
+  psi_dyn.vars.cntrl <- c("Sage", "Herb")
+  psi_dyn.vars.trt <- c("Dev_bg", "Dev_lo")
+}
 
-ETA.vars.cntrl <- c("PJ_area", "NDVI")
-ETA.vars.trt <- c("Develop_low", "Develop_high")
-ETA.vars.mech <- c("WellA_3x3km", "WellD_3x3km", "Road_1km")
+if(mod.nam == "mod_community_mech") {
+  PSI.vars.cntrl <- c("PJ_area", "NDVI")
+  PSI.vars.trt <- c("Well_3km", "Road_1km")
+  
+  beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
+  beta.vars.trt <- c("Well_1km", "Well_125m", "Road_125m", "AHerb")
+  
+  psi_dyn.vars.cntrl <- c("Sage", "Herb")
+  psi_dyn.vars.trt <- c("Well_1km", "Well_125m", "Road_125m", "AHerb")
+}
 
-beta.vars.cntrl <- c("vrm_125m", "Sage", "Herb")
-beta.vars.trt <- c("Develop_low", "Develop_high")
-beta.vars.mech <- c("WellA_125m", "Road_125m", "AHerb", "WellA_1km", "WellD_1km", "Road_1km")
-
-delta.vars.cntrl <- c("Sage", "Herb")
-delta.vars.trt <- c("Develop_low", "Develop_high")
-delta.vars.mech <- c("WellA_125m", "Road_125m", "AHerb", "WellA_1km", "WellD_1km", "Road_1km")
-
-eta.vars.cntrl <- c("Sage", "Herb")
-eta.vars.trt <- c("Develop_low", "Develop_high")
-eta.vars.mech <- c("WellA_125m", "Road_125m", "AHerb", "WellA_1km", "WellD_1km", "Road_1km")
-
-zeta.vars <- c("CanCov", "ShrubCov", "DayOfYear", "Time_ssr")
+zeta.vars <- c("CanCov", "ShrubCov", "DOY", "Time_ssr")
 zeta.quad <- c(F, F, T, T)
 
-#p.beta <- length(beta.vars) # Number of covariates on grid-level occupancy
-#p.zeta <- length(zeta.vars) + sum(zeta.quad) # Number of covariates on detection
+# Flatten and attach point-level covariate values #
+Cov_point_flat <- matrix(NA, nrow = nrow(cov_pntyr), ncol = dim(Cov_point)[3],
+                         dimnames = list(NULL, dimnames(Cov_point)[[3]]))
+for(i in 1:nrow(cov_pntyr)) Cov_point_flat[i,] <-
+  Cov_point[cov_pntyr$pointIndex[i], cov_pntyr$YearInd[i], ]
 
 # Detection data #
-Y <- Y.mat
 TPeriod <- TR.mat
-gridID <- Cov_point[, "gridIndex"]
-yearID <- Cov_point[, "YearInd"]
-pointID <- Cov_point[, "pointInd"]
-#yearID.grid <- landscape_data$YearInd
-#gridID.grid <- landscape_data$gridIndex
-n.grid <- max(gridID)
-n.year <- max(yearID)
-n.point <- max(pointID)
-#n.gridXyear <- nrow(landscape_data)
-n.pntyr <- dim(Y)[1]
-n.spp <- dim(Y)[2]
+gridID.py <- cov_pntyr[, "gridIndex"]
+yearID.py <- cov_pntyr[, "YearInd"]
+grdyrID.py <- str_c(gridID.py, yearID.py, sep = "_") %>%
+  as.factor() %>% as.integer()
+n.grdyr <- max(grdyrID.py)
+n.spp <- dim(Y.mat)[2]
+K <- max(TPeriod)
+Y <- array(NA, dim = c(n.grdyr, n.spp, K))
+for(j in 1:n.grdyr) for(k in 1:K)
+  Y[j,,k] <-
+  apply(Y.mat[which(grdyrID.py == j),] *
+          (TPeriod[which(grdyrID.py == j),] == k), 2, sum)
+Y.sum <- apply(Y, c(1, 2), sum)
+gridID.grdyr <- tapply(gridID.py, grdyrID.py, unique)
+yearID.grdyr <- tapply(yearID.py, grdyrID.py, unique)
+n.year <- max(yearID.py)
 
+  # Detections within survey intervals #
+n.int <- sum(Y.sum > 0)
+grdyrID.int.long <- rep(1:n.grdyr, n.spp)
+sppID.int.long <- rep(1:n.spp, each = n.grdyr)
+Y.long <- Y[,1,]
+for(i in 2:n.spp) {
+  Y.long <- rbind(Y.long, Y[,i,])
+}
+ind.det <- which(Y.sum > 0)
+grdyrID.int <- grdyrID.int.long[ind.det]
+sppID.int <- sppID.int.long[ind.det]
+Y.int <- Y.long[ind.det,]
+rm(ind.det, Y.long, grdyrID.int.long, sppID.int.long, i)
+
+# Guild matrix #
+guilds <- unique(spp.out$Guild)
+n.guild <- length(guilds)
+guildMem <- matrix(0, nrow = length(spp.list), ncol = n.guild,
+                   dimnames = list(spp.list, guilds))
+for(g in 1:n.guild) guildMem[which(spp.out$Guild == guilds[g]), g] <- 1
+guildMem[which(spp.out$Guild == "Sagebrush"), "Shrubland"] <- 1 # Sagebrush dependent species are also shrubland species.
+
+# Subset for development runs #
+if(development) {
+  ind.spp <- which(spp.list %in% develop.spp)
+  Y <- Y[,ind.spp,]
+  n.spp <- dim(Y)[2]
+  guildMem <- guildMem[ind.spp,]
+
+  Y.sum <- apply(Y, c(1, 2), sum)
+  n.int <- sum(Y.sum > 0)
+  grdyrID.int.long <- rep(1:n.grdyr, n.spp)
+  sppID.int.long <- rep(1:n.spp, each = n.grdyr)
+  Y.long <- Y[,1,]
+  for(i in 2:n.spp) {
+    Y.long <- rbind(Y.long, Y[,i,])
+  }
+  ind.det <- which(Y.sum > 0)
+  grdyrID.int <- grdyrID.int.long[ind.det]
+  sppID.int <- sppID.int.long[ind.det]
+  Y.int <- Y.long[ind.det,]
+  rm(ind.det, Y.long, grdyrID.int.long, sppID.int.long, i)
+}
+
+# Compile covariates #
 X.scale.fn <- function(X) {
   mns <- apply(X, 3, mean, na.rm = T) %>%
     array(c(dim(X)[c(3, 1, 2)])) %>% aperm(perm = c(2, 3, 1))
@@ -55,162 +114,86 @@ X.scale.fn <- function(X) {
   return(X)
 }
 
-X.impute.fn <- function(X, groupID = NULL) {
-  require(QSLpersonal)
-  ind.all0s <- which(apply(X, 1, function(x) sum(!is.na(x))) == 0)
-  if(length(ind.all0s) > 0) X[ind.all0s,] <- mean(X, na.rm = T)
-  X.vec <- as.numeric(X)
-  rowID <- rep(1:nrow(X), ncol(X))
-  colID <- rep(1:ncol(X), each = nrow(X))
-  X.row.mean <- tapply(X.vec, rowID, function(x) mean(x, na.rm = T))[rowID]
-  X.col.mean <- tapply(X.vec, colID, function(x) mean(x, na.rm = T))[colID]
-  if(!is.null(groupID)) {
-    groupID <- rep(groupID, ncol(X))
-    X.group.mean <- tapply(X.vec, groupID, function(x) mean(x, na.rm = T))[groupID]
-    dat <- cbind(X.vec, X.row.mean, X.col.mean, X.group.mean)
-    v.inf <- c("X.row.mean", "X.col.mean", "X.group.mean")
-  } else {
-    v.inf <- c("X.row.mean", "X.col.mean")
-    dat <- cbind(X.vec, X.row.mean, X.col.mean)
-  }
-  dat <- Impute_missing_covs_rf(dat, v.fill = "X.vec",
-                                v.inform = v.inf)
-  X.vec.new <- dat[,"X.vec"]
-  X <- matrix(X.vec.new, nrow = max(rowID), ncol = max(colID))
-  return(X)
-}
-
-# Compile covariates #
   # Grid cell
-if(mod.nam == "mod_trt") {
-  vars <- c(BETA.vars.trt, BETA.vars.cntrl)
-} else {
-  vars <- c(BETA.vars.mech, BETA.vars.cntrl)
-}
-X.BETA <- X.scale.fn(Cov_grid[,,vars])
-dimnames(X.BETA)[[3]] <- vars
-p.BETA <- length(vars)
-if(any(vars %in% c("Develop_low", "Develop_high")))
-  for(v in vars[which(vars %in% c("Develop_low", "Develop_high"))]) {
-    vals <- apply(X.BETA[,,v], 1, function(x) unique(na.omit(x)))
-    X.BETA[,,v] <- vals
-  }
-for(v in 1:length(vars)) if(any(is.na(X.BETA[,,vars[v]]))) # Impute missing values where needed.
-  X.BETA[,,vars[v]] <- X.impute.fn(X.BETA[,,vars[v]])
-X.BETA <- X.BETA[,1,] # Just keep values for the first year
+vars <- c(PSI.vars.cntrl, PSI.vars.trt)
+p.PSI <- length(PSI.vars.cntrl) + length(PSI.vars.trt)
+X.PSI.raw <- Cov_grid[,,vars]
+X.PSI <- X.scale.fn(X.PSI.raw)
+X.PSI.mns <- apply(X.PSI.raw, 3, mean, na.rm = T) # Save for unscaling later
+X.PSI.sd <- apply(X.PSI.raw, 3, sd, na.rm = T) # Save for unscaling later
+dimnames(X.PSI)[[3]] <- vars
+ind.PSI.offset <- which(vars %in% PSI.vars.trt)
+ind.PSI.no_offset <- which(vars %in% PSI.vars.cntrl)
 
-if(mod.nam == "mod_trt") {
-  vars <- c(DELTA.vars.trt, DELTA.vars.cntrl)
-} else {
-  vars <- c(DELTA.vars.mech, DELTA.vars.cntrl)
-}
-X.DELTA <- X.scale.fn(Cov_grid[,,vars])
-dimnames(X.DELTA)[[3]] <- vars
-p.DELTA <- length(vars)
-if(any(vars %in% c("Develop_low", "Develop_high")))
-  for(v in vars[which(vars %in% c("Develop_low", "Develop_high"))]) {
-    vals <- apply(X.DELTA[,,v], 1, function(x) unique(na.omit(x)))
-    X.DELTA[,,v] <- vals
-  }
-for(v in 1:length(vars)) if(any(is.na(X.DELTA[,,vars[v]]))) # Impute missing values where needed.
-  X.DELTA[,,vars[v]] <- X.impute.fn(X.DELTA[,,vars[v]])
-X.DELTA <- X.DELTA[,-1,] # Just keep values for the first year
+    # Additional indices for intermediate path models #
+if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
+  ind.PSI.Dev_bg <- which(vars == "Dev_bg")
+  ind.PSI.Dev_lo <- which(vars == "Dev_lo")
+  ind.Well_3km <- which(vars == "Well_3km")
+  ind.Road_1km <- which(vars == "Road_1km")
+  X.PSI.raw[,,"Road_1km"] <- X.PSI.raw[,,"Road_1km"] + 0.01
 
-if(mod.nam == "mod_trt") {
-  vars <- c(ETA.vars.trt, ETA.vars.cntrl)
-} else {
-  vars <- c(ETA.vars.mech, ETA.vars.cntrl)
-}
-X.ETA <- X.scale.fn(Cov_grid[,,vars])
-dimnames(X.ETA)[[3]] <- vars
-p.ETA <- length(vars)
-if(any(vars %in% c("Develop_low", "Develop_high")))
-  for(v in vars[which(vars %in% c("Develop_low", "Develop_high"))]) {
-    vals <- apply(X.ETA[,,v], 1, function(x) unique(na.omit(x)))
-    X.ETA[,,v] <- vals
+  X.PSI.raw <- abind::abind(X.PSI.raw, Cov_grid[,,"Well_1km"], along = 3)
+  ind.Well_1km <- dim(X.PSI.raw)[3]
   }
-for(v in 1:length(vars)) if(any(is.na(X.ETA[,,vars[v]]))) # Impute missing values where needed.
-  X.ETA[,,vars[v]] <- X.impute.fn(X.ETA[,,vars[v]])
-X.ETA <- X.ETA[,-1,] # Just keep values for the first year
+
+    # Flatten to grdXyr
+X.PSI.flat <- matrix(NA, nrow = n.grdyr, ncol = dim(X.PSI)[3])
+X.PSI.raw.flat <- matrix(NA, nrow = n.grdyr, ncol = dim(X.PSI.raw)[3])
+for(j in 1:n.grdyr) {
+  X.PSI.flat[j, ] <- X.PSI[gridID.grdyr[j], yearID.grdyr[j],]
+  X.PSI.raw.flat[j, ] <- X.PSI.raw[gridID.grdyr[j], yearID.grdyr[j],]
+}
+dimnames(X.PSI.flat)[[2]] <- dimnames(X.PSI)[[3]]
+dimnames(X.PSI.raw.flat)[[2]] <- dimnames(X.PSI.raw)[[3]]
+X.PSI <- X.PSI.flat
+X.PSI.raw <- X.PSI.raw.flat
+rm(X.PSI.flat, X.PSI.raw.flat)
 
   # Point
-if(mod.nam == "mod_trt") {
-  vars <- c(beta.vars.trt, beta.vars.cntrl)
-} else {
-  vars <- c(beta.vars.mech, beta.vars.cntrl)
+vars <- c(beta.vars.cntrl, beta.vars.trt)
+X.psi.raw <- array(NA, dim = c(dim(Cov_point_flat)[1], length(vars)))
+dimnames(X.psi.raw)[[2]] <- vars
+ind.psi.dyn <- which(vars %in% c(psi_dyn.vars.cntrl, psi_dyn.vars.trt))
+ind.psi.point.vars <- which(vars %in% dimnames(Cov_point_flat)[[2]])
+X.psi.raw[,ind.psi.point.vars] <- Cov_point_flat[,vars[ind.psi.point.vars]]
+for(k in unique(gridID.py)) for(t in unique(yearID.py)) {
+  vals <- Cov_grid[k,t,vars[-ind.psi.point.vars]] %>%
+    array(dim = c(length(vars[-ind.psi.point.vars]), sum(gridID.py == k & yearID.py == t))) %>%
+    aperm(perm = c(2, 1))
+  X.psi.raw[which(gridID.py == k & yearID.py == t),-ind.psi.point.vars] <- vals
 }
-X.beta.long <- Cov_point[, vars] %>%
-  apply(2, (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))) %>%
-  (function(x) ifelse(is.na(x), 0, x))
-X.beta <- array(NA, dim = c(n.point, n.year, length(vars)))
-for(j in 1:n.pntyr) X.beta[pointID[j], yearID[j], ] <- X.beta.long[j,]
-dimnames(X.beta)[[3]] <- vars
-if(any(vars %in% c("Develop_low", "Develop_high"))) {
-  for(v in vars[which(vars %in% c("Develop_low", "Develop_high"))]) {
-    vals <- apply(X.beta[,,v], 1, function(x) unique(na.omit(x)))
-    X.beta[,,v] <- vals
-  }
+if(mod.nam %in% c("mod_path", "mod_community_mech", "mod_interm_paths")) {
+  X.psi.raw[,"Well_125m"] <- (X.psi.raw[,"Well_125m"] > 0) * 1 # Convert 125 m scale well pad count to presence/absence.
+  X.psi.raw <- apply(X.psi.raw, 2, function(x) tapply(x, grdyrID.py, mean))
+  X.psi.raw[,"Well_125m"] <- X.psi.raw[,"Well_125m"] *
+    tapply(grdyrID.py, grdyrID.py, length) # Make this the sum rather than mean of point values
 }
-grpID <- tapply(gridID, pointID, unique)
-for(v in 1:length(vars)) if(any(is.na(X.beta[,,vars[v]]))) # Impute missing values where needed.
-  X.beta[,,vars[v]] <- X.impute.fn(X.beta[,,vars[v]], grpID)
-X.beta <- X.beta[,1,]
-rm(X.beta.long, grpID)
-p.beta <- dim(X.beta)[2]
-tpi <- Cov_point[,"TPI_min"] %>%
-  (function(x) (x - mean(x)) / sd(x)) %>%
-  tapply(pointID, function(x) x[1])
+X.psi <- X.psi.raw %>% apply(2, function(x) (x - mean(x)) / sd(x))
+p.psi.init <- length(vars)
+p.psi.dyn <- length(c(psi_dyn.vars.cntrl, psi_dyn.vars.trt))
+ind.psi.init.offset <- which(vars %in% beta.vars.trt)
+ind.psi.init.no_offset <- which(vars %in% beta.vars.cntrl)
+ind.psi.dyn.offset <- which(vars[ind.psi.dyn] %in% psi_dyn.vars.trt)
+ind.psi.dyn.no_offset <- which(vars[ind.psi.dyn] %in% psi_dyn.vars.cntrl)
 
-if(mod.nam == "mod_trt") {
-  vars <- c(delta.vars.trt, delta.vars.cntrl)
-} else {
-  vars <- c(delta.vars.mech, delta.vars.cntrl)
-}
-X.delta.long <- Cov_point[, vars] %>%
-  apply(2, (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))) %>%
-  (function(x) ifelse(is.na(x), 0, x))
-X.delta <- array(NA, dim = c(n.point, n.year, length(vars)))
-for(j in 1:n.pntyr) X.delta[pointID[j], yearID[j], ] <- X.delta.long[j,]
-dimnames(X.delta)[[3]] <- vars
-if(any(vars %in% c("Develop_low", "Develop_high"))) {
-  for(v in vars[which(vars %in% c("Develop_low", "Develop_high"))]) {
-    vals <- apply(X.delta[,,v], 1, function(x) unique(na.omit(x)))
-    X.delta[,,v] <- vals
-  }
-}
-grpID <- tapply(gridID, pointID, unique)
-for(v in 1:length(vars)) if(any(is.na(X.delta[,,vars[v]]))) # Impute missing values where needed.
-  X.delta[,,vars[v]] <- X.impute.fn(X.delta[,,vars[v]], grpID)
-X.delta <- X.delta[,-1,]
-rm(X.delta.long, grpID)
-p.delta <- dim(X.delta)[3]
+X.psi.dyn <- X.psi[, ind.psi.dyn]
 
-if(mod.nam == "mod_trt") {
-  vars <- c(eta.vars.trt, eta.vars.cntrl)
-} else {
-  vars <- c(eta.vars.mech, eta.vars.cntrl)
+if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
+  # Additional variables for intermediate path models #
+  ind.Well_125m <- which(vars == "Well_125m")
+  
+  X.psi.raw[,"Road_125m"] <- X.psi.raw[,"Road_125m"] + 0.01
+  ind.Road_125m <- which(vars == "Road_125m")
+  
+  X.psi.raw[,"AHerb"] <- ((X.psi.raw[,"AHerb"] + 0.001) / 100)
+  ind.AHerb <- which(vars == "AHerb")
 }
-X.eta.long <- Cov_point[, vars] %>%
-  apply(2, (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T))) %>%
-  (function(x) ifelse(is.na(x), 0, x))
-X.eta <- array(NA, dim = c(n.point, n.year, length(vars)))
-for(j in 1:n.pntyr) X.eta[pointID[j], yearID[j], ] <- X.eta.long[j,]
-dimnames(X.eta)[[3]] <- vars
-if(any(vars %in% c("Develop_low", "Develop_high"))) {
-  for(v in vars[which(vars %in% c("Develop_low", "Develop_high"))]) {
-    vals <- apply(X.eta[,,v], 1, function(x) unique(na.omit(x)))
-    X.eta[,,v] <- vals
-  }
-}
-grpID <- tapply(gridID, pointID, unique)
-for(v in 1:length(vars)) if(any(is.na(X.eta[,,vars[v]]))) # Impute missing values where needed.
-  X.eta[,,vars[v]] <- X.impute.fn(X.eta[,,vars[v]], grpID)
-X.eta <- X.eta[,-1,]
-rm(X.eta.long, grpID)
-p.eta <- dim(X.eta)[3]
 
   # Detection
-X.zeta <- Cov_point[, zeta.vars] %>%
+X.zeta <- cov_pntyr[, zeta.vars] %>%
+  data.matrix %>%
+  apply(2, function(x) tapply(x, grdyrID.py, mean)) %>%
   apply(2, (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)))
 for(v in 1:length(zeta.vars)) {
   if(zeta.quad[v]) {
@@ -222,3 +205,4 @@ dimnames(X.zeta)[[2]] <- zeta.vars
 X.zeta[which(is.na(X.zeta))] <- 0
 p.zeta <- ncol(X.zeta)
 rm(v)
+n.point <- tapply(grdyrID.py, grdyrID.py, length)
