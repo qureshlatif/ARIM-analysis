@@ -131,33 +131,3 @@ for(i in 8:nrow(out)) {
 
 write.csv(out, "SumStats.csv", row.names = T)
 
-## Plot well pad counts and road density over time ##
-#***This still needs to be updated for current Covariate data structure***
-library(ggplot2)
-library(cowplot)
-theme_set(theme_bw())
-
-sum_grid <- cov_grid %>%
-  dplyr::group_by(Development, Year) %>%
-  summarise(Well_1km_mean = mean(WellA_1km),
-            Well_3x3km_mean = mean(WellA_3x3km),
-            Roads_mean = mean(Road_1km)) %>%
-  mutate(x = ifelse(Development == "HI", Year + 0.1,
-                    ifelse(Development == "LO", Year, Year - 0.1)))
-
-# Well pads #
-ggplot(sum_grid, aes(x = x, y = Well_1km_mean, color = Development)) +
-  geom_point() +
-  scale_x_continuous(breaks = 2010:2019, labels = 2010:2019) +
-  xlab("Year")
-
-ggplot(sum_grid, aes(x = x, y = Well_3x3km_mean, color = Development)) +
-  geom_point() +
-  scale_x_continuous(breaks = 2010:2019, labels = 2010:2019) +
-  xlab("Year")
-
-# Roads #
-ggplot(sum_grid, aes(x = Year, y = Roads_mean, color = Development)) +
-  geom_point() +
-  scale_x_continuous(breaks = 2010:2019, labels = 2010:2019) +
-  xlab("Year")

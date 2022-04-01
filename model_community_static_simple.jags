@@ -1,85 +1,118 @@
 model {
 
   for (i in 1:n.spp) {
-    # Observation process
     for(j in 1:n.pntyr) {
-      Y[j, i] ~ dbinom(p[j, i]*z[pointID[j], yearID[j], i], TPeriod[j, i])
+      # Observation process
+      Y[j, i] ~ dbinom(prob.y[j, i], TPeriod[j, i])
+      prob.y[j, i] <- ifelse(Y.point[j, i] == 1 && Y.grid[gridXyrID[j], i] == 1 && Y.spp[i] == 1,
+        prob.y1Y1YS1[j, i],
+        ifelse(Y.point[j, i] == 0 && Y.grid[gridXyrID[j], i] == 1 && Y.spp[i] == 1,
+          prob.y0Y1YS1[j, i],
+          ifelse(Y.grid[gridXyrID[j], i] == 0 && Y.spp[i] == 1,
+            prob.y0Y0YS1[j, i], prob.y0Y0YS0[j, i])))
+      prob.y1Y1YS1[j, i] <- p[j, i] * psi[j, i] * PSI[gridID[j], yearID[j], i] * omega
+      prob.y0Y1YS1[j, i] <- pow(1 - p[j, i], TPeriod[j, i]) * psi[j, i] *
+        PSI[gridID[j], yearID[j], i] * omega +
+        (1 - psi[j, i]) * PSI[gridID[j], yearID[j], i] * omega
+      prob.y0Y0YS1[j, i] <- pow(1 - p[j, i], TPeriod[j, i]) * psi[j, i] *
+        PSI[gridID[j], yearID[j], i] * omega +
+        (1 - psi[j, i]) * PSI[gridID[j], yearID[j], i] * omega +
+        (1 - PSI[gridID[j], yearID[j], i]) * omega
+      prob.y0Y0YS0[j, i] <- pow(1 - p[j, i], TPeriod[j, i]) * psi[j, i] *
+        PSI[gridID[j], yearID[j], i] * omega +
+        (1 - psi[j, i]) * PSI[gridID[j], yearID[j], i] * omega +
+        (1 - PSI[gridID[j], yearID[j], i]) * omega +
+        (1 - omega)
+        
       logit(p[j, i]) <- zeta0[i]
-    }
-
-    # Ecological state processes
-    for(j in 1:n.point) {
+      
+      # Point-level ecological process
       logit(psi[j, i]) <- beta0[i]
-      for(t in 1:n.year) {
-        z[j, t, i] ~ dbern(psi[j, i] * Z[gridID[j], t, i])
-      }
     }
     
+    # Grid-level ecological process
     for(k in 1:n.grid) {
-      logit(PSI[k, i]) <- BETA0[i]
       for(t in 1:n.year) {
-        Z[k, t, i] ~ dbern(PSI[k, i]*w[i])
+        logit(PSI[k, t, i]) <- BETA0[i]
       }
     }
 
     # Species-specific intercepts
-    #________Multivariate Wishart approach_____#
-    B[i, 1:3] ~ dmnorm(B.mu, invSigma.B)
+    #________Multivariate approach_____#
+    B[i, 1:3] ~ dmnorm.vcov(B.mu, Sigma.B)
     BETA0[i] <- B[i, 1]
     beta0[i] <- B[i, 2]
     zeta0[i] <- B[i, 3]
     #__________________________________________#
     
-    #__________Univariate approximation___________#
+    #__________Univariate approximation (old way of doing things)___________#
     #BETA0[i] ~ dnorm(BETA0.mu, pow(sigma.BETA0, -2))
     #beta0[i] ~ dnorm(beta0.mu + (rho.bB*sigma.beta0 / sigma.BETA0) * (BETA0[i] - BETA0.mu),
     #  pow(sigma.beta0, -2) / (1 - pow(rho.bB, 2)))
     #zeta0[i] ~ dnorm(zeta0.mu + (rho.zb*sigma.zeta0 / sigma.beta0) * (beta0[i] - beta0.mu),
     #  pow(sigma.zeta0, -2)/(1 - pow(rho.zb, 2)))
-    #_____________________________________________#
+    #_______________________________________________________________________#
 
-    w[i] ~ dbern(omega)
+    w[i] ~ dbern(omega) # Latent state for species inclusion in the super community.
   }
 
   ### Prior distributions ###
   
   # parameter correlations
   
-  rho.zb ~ dunif(-1,1) # Correlation between detectability and point occupancy
-  rho.bB ~ dunif(-1,1) # Correlation between point and grid occupancy
-  rho.zB ~ dunif(-1,1) # Correlation between detectability and grid occupancy
-  
   #____ Multivariate Wishart approach ____#
-  R[1,1] <- pow(sigma.BETA0, 2)
-  R[2,2] <- pow(sigma.beta0, 2)
-  R[3,3] <- pow(sigma.zeta0, 2)
-  R[1,2] <- rho.bB*sigma.BETA0*sigma.beta0
-  R[2,1] <- rho.bB*sigma.BETA0*sigma.beta0
-  R[2,3] <- rho.zb*sigma.beta0*sigma.zeta0
-  R[3,2] <- rho.zb*sigma.beta0*sigma.zeta0
-  R[1,3] <- rho.zB*sigma.BETA0*sigma.zeta0
-  R[3,1] <- rho.zB*sigma.BETA0*sigma.zeta0
-  invSigma.B ~ dwish(R, 3)
-  Sigma.B <- inverse(invSigma.B) # Not sure this is needed except possibly to be saved.
+  for (k in 1:3) {
+    sigma[k] ~ dgamma(1,1)
+    R[k,k] <- 1
+    S[k,k] <- sigma[k]
+  }
+
+  # Subset of correlations
+  R[1, 2] ~ dunif(-1, 1) # Uninformed prior
+  R[2, 1] <- R[1, 2]
+  R[2, 3] ~ dunif(-1, 1) # Uninformed prior
+  R[3, 2] <- R[2, 3]
+  R[1, 3] <- 0
+  R[3, 1] <- 0
+  
+  for (i in 2:3){
+    for (j in 1:(i-1)){
+      # All three correlations #
+      #R[i,j] ~ dunif(0,1) # Informed prior
+      #R[i,j] ~ dunif(-1,1) # Uninformed prior
+      #R[j,i] <- R[i,j] # All three correlations
+      S[i,j] <- 0
+      S[j,i] <- 0
+    }
+  }
+
+  Sigma.B[1:3, 1:3] <- S[,] %*% R[,] %*% S[,] 
 
   B.mu[1] <- BETA0.mu
   B.mu[2] <- beta0.mu
   B.mu[3] <- zeta0.mu
+
+  rho.zb <- R[2,3] # Correlation between detectability and point occupancy
+  rho.bB <- R[1,2] # Correlation between point and grid occupancy
+  rho.zB <- R[1,3] # Correlation between detectability and grid occupancy
   #_______________________________________#
   
   # mean and precison for the parameter intercepts
   
   zeta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit detection probability intercept
-  tvar.sigma.zeta0 ~ dt(0,1,1)  # Cauchy distribution
-  sigma.zeta0 <- abs(tvar.sigma.zeta0)  # half-Cauchy distribution
+  #tvar.sigma.zeta0 ~ dt(0,1,1)  # Cauchy distribution (old way)
+  #sigma.zeta0 <- abs(tvar.sigma.zeta0)  # half-Cauchy distribution (old way)
+  sigma.zeta0 <- Sigma.B[3, 3]
 
   beta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
-  sigma.beta0 <- abs(tvar.sigma.beta0)  # half-Cauchy distribution
-  tvar.sigma.beta0 ~ dt(0,1,1)  # Cauchy distribution
+  #sigma.beta0 <- abs(tvar.sigma.beta0)  # half-Cauchy distribution (old way)
+  #tvar.sigma.beta0 ~ dt(0,1,1)  # Cauchy distribution (old way)
+  sigma.beta0 <- Sigma.B[2, 2]
 
   BETA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
-  sigma.BETA0 <- abs(tvar.sigma.BETA0)  # half-Cauchy distribution
-  tvar.sigma.BETA0 ~ dt(0,1,1)  # Cauchy distribution
+  #sigma.BETA0 <- abs(tvar.sigma.BETA0)  # half-Cauchy distribution (old way)
+  #tvar.sigma.BETA0 ~ dt(0,1,1)  # Cauchy distribution (old way)
+  sigma.BETA0 <- Sigma.B[1, 1]
 
   # Probability of species inclusion in the metacommunity
   omega ~ dunif(0,1)

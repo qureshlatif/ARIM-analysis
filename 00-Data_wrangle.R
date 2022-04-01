@@ -131,10 +131,6 @@ rm(spp_guilds)
 spp.out <- spp.out %>%
   mutate(Guild = ifelse(common_name == "Cassin's Sparrow", "Grassland", Guild)) %>%
   mutate(Guild = ifelse(common_name == "Orchard Oriole",   "Generalist", Guild)) %>%
-  mutate(Guild = ifelse(common_name == "Vaux's Swift",     "Montane", Guild)) %>%
-  mutate(Guild = ifelse(common_name == "Cassin's Vireo",   "Woodland", Guild)) %>%
-  mutate(Guild = ifelse(common_name == "Pacific Wren",     "Generalist", Guild)) %>%
-  mutate(Guild = ifelse(common_name == "Purple Martin",    "Generalist", Guild)) %>%
   mutate(Guild = ifelse(common_name == "Bushtit",          "Generalist", Guild)) %>%
   mutate(Guild = ifelse(common_name == "Western Bluebird", "Generalist", Guild)) %>%
   filter(!common_name %in% c("Gray Vireo", "Varied Thrush",
@@ -142,7 +138,9 @@ spp.out <- spp.out %>%
                              "Northern Waterthrush", "Nashville Warbler",
                              "Yellow Grosbeak", "Greater Yellowlegs",
                              "Pileated Woodpecker", "Chestnut-backed Chickadee",
-                             "Boreal Chickadee")) # Excluded: breeding range nowhere near study area.
+                             "Boreal Chickadee","Vaux's Swift", "Calliope Hummingbird",
+                             "Rufous Hummingbird", "Cassin's Vireo", "Purple Martin",
+                             "Pacific Wren", "Bobolink", "Evening Grosbeak")) # Excluded: breeding range nowhere near study area.
   
 spp.excluded <- grab %>%
   select(BirdCode, Species) %>%
@@ -154,7 +152,9 @@ spp.excluded <- grab %>%
                           "Northern Waterthrush", "Nashville Warbler",
                           "Yellow Grosbeak", "Greater Yellowlegs",
                           "Pileated Woodpecker", "Chestnut-backed Chickadee",
-                          "Boreal Chickadee")) %>% # Excluded: breeding range nowhere near study area.
+                          "Boreal Chickadee","Vaux's Swift", "Calliope Hummingbird",
+                          "Rufous Hummingbird", "Cassin's Vireo", "Purple Martin",
+                          "Pacific Wren", "Bobolink", "Evening Grosbeak")) %>% # Excluded: breeding range nowhere near study area.
   select(BirdCode, Species) %>%
   unique %>%
   rename(common_name = Species) %>%
@@ -177,11 +177,10 @@ BCRDataAPI::add_columns(c('TransectNum|str',
                           'PointVisitStartTime|str',
                           'Stratum|str',
                           'radialDistance|int',
+                          'CL_ID|str',
                           'CL_count|int',
                           'BirdCode|str',
                           'Species|str',
-                          'How|str',
-                          'Sex|str',
                           'TimePeriod|int'
 ))
 
@@ -214,48 +213,6 @@ pointXyears.list <- unique(str_c(grab$TransectNum,
                                          side = "left", pad = "0"),
                                  grab$Year, sep = "-")) %>% sort
 
-## Add number of detections and count summaries to spp.out by stratum ##
-smry <- grab %>% select(BirdCode, TransectNum, Point, Year) %>%
-  unique %>% dplyr::group_by(BirdCode) %>% count() %>%
-  rename(Detections = n)
-spp.out <- spp.out %>% left_join(smry, by = "BirdCode")
-
-smry <- grab %>% select(BirdCode, CL_count) %>%
-  dplyr::group_by(BirdCode) %>%
-  summarise(sumCount = sum(CL_count))
-spp.out <- spp.out %>% left_join(smry, by = "BirdCode")
-
-spp.out <- spp.out %>% # replace NAs with zeros
-  mutate_at(vars(Detections, sumCount), (function(x) replace(x, is.na(x), 0)))
-
-maxDetPossible <- length(pointXyears.list) # max possible by stratum
-names(spp.out)[which(names(spp.out) == "Detections")] <-
-  str_c("Detections (max = ", maxDetPossible, ")")
-
-write.csv(spp.out, "Spp_list.csv", row.names = F)
-rm(smry)
-
-## Add number of detections and count summaries to excluded species ##
-smry <- grab %>% select(BirdCode, TransectNum, Point, Year) %>% unique %>%
-  dplyr::group_by(BirdCode) %>% count() %>%
-  rename(Detections = n)
-spp.excluded <- spp.excluded %>% left_join(smry, by = "BirdCode")
-
-smry <- grab %>% select(BirdCode, TransectNum, Point, CL_count) %>%
-  dplyr::group_by(BirdCode) %>%
-  summarise(sumCount = sum(CL_count))
-spp.excluded <- spp.excluded %>% left_join(smry, by = "BirdCode")
-
-spp.excluded <- spp.excluded %>% # replace NAs with zeros
-  mutate_at(vars(Detections, sumCount),
-            (function(x) replace(x, is.na(x), 0)))
-
-write.csv(spp.excluded, "Spp_excluded.csv", row.names = F)
-rm(smry)
-
-bird_data <- grab %>%  # Store bird survey data for later use.
-  mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year))
-
 ## Trim dates, compile day of year & start time in minutes ##
 library(lubridate)
 tab.datetime <- bird_data %>%
@@ -276,6 +233,61 @@ tab.datetime <- bird_data %>%
   mutate(Time_ssr = QSLpersonal::tssr(PointLatitude, PointLongitude, dateTime)) %>%
   select(Point_year, PointLatitude, PointLongitude, DOY, Time_ssr)
 
+bird_data <- grab %>%  # Store bird survey data for later use.
+  mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year))
+
+## Consolidate clusters and filter out large clusters for migratory species ##
+bird_data$CL_ID[which(is.na(grab$CL_ID))] <- 1:sum(is.na(bird_data$CL_ID))
+bird_data <- bird_data %>%
+  dplyr::group_by(TransectNum, Point, PointLatitude, PointLongitude, easting, northing,
+                  zone, Year, Date, PointVisitStartTime, Stratum, BirdCode, Species, CL_ID) %>%
+  summarise(CL_count = sum(CL_count),
+            TimePeriod = mean(TimePeriod),
+            radialDistance = mean(radialDistance)) %>%
+  ungroup()
+#tapply(bird_data$CL_count, bird_data$BirdCode, max)
+bird_data <- bird_data %>%
+  filter(!(BirdCode == "LARB" & CL_count > 8))
+
+## Add number of detections and count summaries to spp.out by stratum ##
+smry <- bird_data %>% select(BirdCode, TransectNum, Point, Year) %>%
+  unique %>% dplyr::group_by(BirdCode) %>% count() %>%
+  rename(Detections = n)
+spp.out <- spp.out %>% left_join(smry, by = "BirdCode")
+
+smry <- bird_data %>% select(BirdCode, CL_count) %>%
+  dplyr::group_by(BirdCode) %>%
+  summarise(sumCount = sum(CL_count))
+spp.out <- spp.out %>% left_join(smry, by = "BirdCode")
+
+spp.out <- spp.out %>% # replace NAs with zeros
+  mutate_at(vars(Detections, sumCount), (function(x) replace(x, is.na(x), 0)))
+
+maxDetPossible <- length(pointXyears.list) # max possible by stratum
+names(spp.out)[which(names(spp.out) == "Detections")] <-
+  str_c("Detections (max = ", maxDetPossible, ")")
+
+write.csv(spp.out, "Spp_list.csv", row.names = F)
+rm(smry)
+
+# ## Add number of detections and count summaries to excluded species (***This doesn't work.***) ##
+# smry <- grab %>% select(BirdCode, TransectNum, Point, Year) %>% unique %>%
+#   dplyr::group_by(BirdCode) %>% count() %>%
+#   rename(Detections = n)
+# spp.excluded <- spp.excluded %>% left_join(smry, by = "BirdCode")
+# 
+# smry <- grab %>% select(BirdCode, TransectNum, Point, CL_count) %>%
+#   dplyr::group_by(BirdCode) %>%
+#   summarise(sumCount = sum(CL_count))
+# spp.excluded <- spp.excluded %>% left_join(smry, by = "BirdCode")
+# 
+# spp.excluded <- spp.excluded %>% # replace NAs with zeros
+#   mutate_at(vars(Detections, sumCount),
+#             (function(x) replace(x, is.na(x), 0)))
+
+write.csv(spp.excluded, "Spp_excluded.csv", row.names = F)
+rm(grab)
+
 ## Compile multidimensional detection data array ##
 spp.list <- spp.out$BirdCode
 
@@ -283,13 +295,19 @@ bird_data <- bird_data %>%
   mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year))
 Y.mat <- matrix(NA, nrow = length(pointXyears.list), ncol = length(spp.list),
                 dimnames = list(pointXyears.list, spp.list))
-TR.mat <- matrix(6, nrow = length(pointXyears.list), ncol = length(spp.list),
+TR.mat <- matrix(3, nrow = length(pointXyears.list), ncol = length(spp.list),
                  dimnames = list(pointXyears.list, spp.list))
 for(sp in 1:length(spp.list)) {
   obs <- bird_data %>% filter(BirdCode == spp.list[sp] & Point_year %in% pointXyears.list)
   if(nrow(obs) > 0) {
     Y.mat[, sp] <- (pointXyears.list %in% obs$Point_year) %>% as.integer
-    tvec <- tapply(obs$TimePeriod, obs$Point_year, min)
+    tvec <- tapply(obs$TimePeriod, obs$Point_year, function(x) {  # Convert 1-min to 2-min intervals
+      x[which(x == 2)] <- 1
+      x[which(x %in% c(3, 4))] <- 2
+      x[which(x %in% c(5, 6))] <- 3
+      x <- min(x)
+      return(x)
+    })
     tvec <- tvec[order(names(tvec))]
     TR.mat[which(pointXyears.list %in% obs$Point_year), sp] <- tvec
   } else {
@@ -318,7 +336,7 @@ cov_grid <- data.frame(Grid = pointXyears.list %>% str_sub(1, -9),
       rename(Grid = TrnsctN,
              Road_1km_2009 = Road_length_Odonnell_km,
              Road_1km_2019 = Road_length_2019_km) %>%
-      select(Grid, PJ_area_2010:Road_1km_2019),
+      select(Grid, PJ_area_2010:PA_Well_count_3km_2019),
     by = "Grid"
   )
 
@@ -331,13 +349,17 @@ Cov_grid <- abind::abind(
     data.matrix,
   NDVI = cov_grid %>% select(NDVI_2010:NDVI_2019) %>%
     data.matrix,
+  Well_1km = (cov_grid %>% select(starts_with("Well_count_1km")) %>%
+    data.matrix) +
+    (cov_grid %>% select(starts_with("PA_Well_count_1km")) %>%
+       data.matrix),
+  Well_3km = (cov_grid %>% select(starts_with("Well_count_3km")) %>%
+    data.matrix) +
+    (cov_grid %>% select(starts_with("PA_Well_count_3km")) %>%
+       data.matrix),
   WellA_1km = cov_grid %>% select(starts_with("Well_count_1km")) %>%
     data.matrix,
   WellA_3km = cov_grid %>% select(starts_with("Well_count_3km")) %>%
-    data.matrix,
-  WellD_1km = cov_grid %>% select(starts_with("PA_Well_count_1km")) %>%
-    data.matrix,
-  WellD_3km = cov_grid %>% select(starts_with("PA_Well_count_3km")) %>%
     data.matrix,
   Road_1km = cov_grid$Road_1km_2009 %>%
     cbind(cov_grid$Road_1km_2019 %>%
@@ -375,6 +397,10 @@ cov_point <- data.frame(Grid = pointXyears.list %>% str_sub(1, -9),
   )
 
 Cov_point <- abind::abind(
+  Well_125m = (cov_point %>% select(starts_with("Well_count")) %>%
+    data.matrix) +
+    (cov_point %>% select(starts_with("PA_Well_count")) %>%
+       data.matrix),
   WellA_125m = cov_point %>% select(starts_with("Well_count")) %>%
     data.matrix,
   Road_125m = cov_point$Road_125m_2009 %>%

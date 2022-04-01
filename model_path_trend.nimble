@@ -1,4 +1,4 @@
-model {
+model <<- nimbleCode({
   ########################
   # Bird community model #
   ########################
@@ -480,4 +480,4 @@ model {
   alpha.WellA_125m.AHerb ~ dnorm(0, 0.66667)
   alpha.Road_125m.AHerb ~ dnorm(0, 0.66667)
   phi.AHerb ~ dgamma(.1,.1)
-}
+})
