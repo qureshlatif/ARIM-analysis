@@ -1,0 +1,34 @@
+model {
+
+  #####################################
+  # Intermediate mechanistic pathways #
+  #####################################
+  
+  for(j in 1:n.grdyr) {
+    # Point scale pathways #
+    X.psi.raw[j, ind.Well_125m] ~ dbin(pred.Well_125m[j], n.point[j])
+    logit(pred.Well_125m[j]) <- alpha0.Well_125m +
+      alpha.Dev_lo.Well_125m * X.PSI[j, ind.PSI.Dev_lo] +
+      alpha.Dev_bg.Well_125m * X.PSI[j, ind.PSI.Dev_bg]
+    #_____ GOF _____#
+    LLobs.Well_125m[j] <- logdensity.bin(X.psi.raw[j, ind.Well_125m],
+      pred.Well_125m[j], n.point[j])
+    X.sim.Well_125m[j] ~ dbin(pred.Well_125m[j], n.point[j])
+    LLsim.Well_125m[j] <- logdensity.bin(X.sim.Well_125m[j],
+      pred.Well_125m[j], n.point[j])
+    #_______________#
+  }
+
+  ### Prior distributions ###
+  ## Grid cell level models ##
+  ## Point level models ##
+  alpha0.Well_125m ~ dnorm(0, 0.66667)
+  alpha.Dev_lo.Well_125m ~ dnorm(0, 0.66667)
+  alpha.Dev_bg.Well_125m ~ dnorm(0, 0.66667)
+
+  #_______ GOF _______#
+  dev.obs.Well_125m <- -2 * sum(LLobs.Well_125m[1:n.grdyr])
+  dev.sim.Well_125m <- -2 * sum(LLsim.Well_125m[1:n.grdyr])
+  test.Well_125m <- step(dev.sim.Well_125m - dev.obs.Well_125m)
+  #___________________#
+}

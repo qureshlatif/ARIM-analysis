@@ -52,27 +52,19 @@ model <<- nimbleCode({
     }
 
     for(b in 1:p.psi.init) {
-      beta1[i, b] <- beta1.base[i, b] +
-        inprod(beta1.offset[1:(n.guild-1), b], guildMem[i, 2:n.guild])
-      beta1.base[i, b] ~ dnorm(beta1.mu[b], pow(sigma.beta1[b], -2))
+      beta1[i, b] ~ dnorm(beta1.mu[b], pow(sigma.beta1[b], -2))
     }
 
     for(b in 1:p.psi.dyn) {
-      delta1[i, b] <- delta1.base[i, b] +
-        inprod(delta1.offset[1:(n.guild-1), b], guildMem[i, 2:n.guild])
-      delta1.base[i, b] ~ dnorm(delta1.mu[b], pow(sigma.delta1[b], -2))
+      delta1[i, b] ~ dnorm(delta1.mu[b], pow(sigma.delta1[b], -2))
     }
 
     for(b in 1:p.PSI) {
-      BETA1[i, b] <- BETA1.base[i, b] +
-        inprod(BETA1.offset[1:(n.guild-1), b], guildMem[i, 2:n.guild])
-      BETA1.base[i, b] ~ dnorm(BETA1.mu[b], pow(sigma.BETA1[b], -2))
+      BETA1[i, b] ~ dnorm(BETA1.mu[b], pow(sigma.BETA1[b], -2))
     }
 
     for(b in 1:p.PSI) {
-      DELTA1[i, b] <- DELTA1.base[i, b] +
-        inprod(DELTA1.offset[1:(n.guild-1), b], guildMem[i, 2:n.guild])
-      DELTA1.base[i, b] ~ dnorm(DELTA1.mu[b], pow(sigma.DELTA1[b], -2))
+      DELTA1[i, b] ~ dnorm(DELTA1.mu[b], pow(sigma.DELTA1[b], -2))
     }
   }
   
@@ -137,34 +129,12 @@ model <<- nimbleCode({
     sigma.beta1[b] <- abs(tvar.beta1[b]) # half-Cauchy distribution
     tvar.beta1[b] ~ dt(0,1,1)  # Cauchy distribution
   }
-    # Guild-level offsets
-  for(ib in 1:length(ind.psi.init.offset)) {
-    for(g in 1:(n.guild-1)) {
-      beta1.offset[g, ind.psi.init.offset[ib]] ~ dt(0, pow(t.sigma, -2), t.nu)
-    }
-  }
-  for(ib in 1:length(ind.psi.init.no_offset)) {
-    for(g in 1:(n.guild-1)) {
-      beta1.offset[g, ind.psi.init.no_offset[ib]] <- 0
-    }
-  }
 
   # covariates for lambda (delta)
   for(b in 1:p.psi.dyn) {
     delta1.mu[b] ~ dt(0, pow(t.sigma, -2), t.nu)
     sigma.delta1[b] <- abs(tvar.delta1[b]) # half-Cauchy distribution
     tvar.delta1[b] ~ dt(0,1,1)  # Cauchy distribution
-  }
-    # Guild-level offsets
-  for(ib in 1:length(ind.psi.dyn.offset)) {
-    for(g in 1:(n.guild-1)) {
-      delta1.offset[g, ind.psi.dyn.offset[ib]] ~ dt(0, pow(t.sigma, -2), t.nu)
-    }
-  }
-  for(ib in 1:length(ind.psi.dyn.no_offset)) {
-    for(g in 1:(n.guild-1)) {
-      delta1.offset[g, ind.psi.dyn.no_offset[ib]] <- 0
-    }
   }
 
   # covariates for PSI (BETA)
@@ -173,34 +143,12 @@ model <<- nimbleCode({
     sigma.BETA1[b] <- abs(tvar.BETA1[b]) # half-Cauchy distribution
     tvar.BETA1[b] ~ dt(0,1,1)  # Cauchy distribution
   }
-    # Guild-level offsets
-  for(ib in 1:length(ind.PSI.offset)) {
-    for(g in 1:(n.guild-1)) {
-      BETA1.offset[g, ind.PSI.offset[ib]] ~ dt(0, pow(t.sigma, -2), t.nu)
-    }
-  }
-  for(ib in 1:length(ind.PSI.no_offset)) {
-    for(g in 1:(n.guild-1)) {
-      BETA1.offset[g, ind.PSI.no_offset[ib]] <- 0
-    }
-  }
 
   # covariates for LAMBDA (DELTA)
   for(b in 1:p.PSI) {
     DELTA1.mu[b] ~ dt(0, pow(t.sigma, -2), t.nu)
     sigma.DELTA1[b] <- abs(tvar.DELTA1[b]) # half-Cauchy distribution
     tvar.DELTA1[b] ~ dt(0,1,1)  # Cauchy distribution
-  }
-    # Guild-level offsets
-  for(ib in 1:length(ind.PSI.offset)) {
-    for(g in 1:(n.guild-1)) {
-      DELTA1.offset[g, ind.PSI.offset[ib]] ~ dt(0, pow(t.sigma, -2), t.nu)
-    }
-  }
-  for(ib in 1:length(ind.PSI.no_offset)) {
-    for(g in 1:(n.guild-1)) {
-      DELTA1.offset[g, ind.PSI.no_offset[ib]] <- 0
-    }
   }
 
   t.nu <- 7.763179      # Uniform prior
@@ -212,38 +160,33 @@ model <<- nimbleCode({
   
   for(j in 1:n.grdyr) {
     # Grid cell scale pathways #
-    X.PSI.raw[j, ind.Well_3km] ~ dnegbin(pred.Well_3km[j], r.Well_3km)
+    X.PSI.raw[j, ind.PSI.Well_3km] ~ dnegbin(pred.Well_3km[j], r.Well_3km)
     pred.Well_3km[j] <- r.Well_3km / (r.Well_3km + lambda.Well_3km[j])
     log(lambda.Well_3km[j]) <- ALPHA0.Well_3km +
       ALPHA.Dev_lo.Well_3km * X.PSI[j, ind.PSI.Dev_lo] +
       ALPHA.Dev_bg.Well_3km * X.PSI[j, ind.PSI.Dev_bg]
 
-    X.PSI.raw[j, ind.Well_1km] ~ dnegbin(pred.Well_1km[j], r.Well_1km)
+    X.PSI.raw[j, ind.PSI.Well_1km] ~ dnegbin(pred.Well_1km[j], r.Well_1km)
     pred.Well_1km[j] <- r.Well_1km / (r.Well_1km + lambda.Well_1km[j])
     log(lambda.Well_1km[j]) <- ALPHA0.Well_1km +
       ALPHA.Dev_lo.Well_1km * X.PSI[j, ind.PSI.Dev_lo] +
       ALPHA.Dev_bg.Well_1km * X.PSI[j, ind.PSI.Dev_bg]
 
-    X.PSI.raw[j, ind.Road_1km] ~ dgamma(shape.Road_1km,
+    X.PSI.raw[j, ind.PSI.Road_1km] ~ dgamma(shape.Road_1km,
       shape.Road_1km / exp(pred.Road_1km[j]))
     pred.Road_1km[j] <- ALPHA0.Road_1km +
       ALPHA.Dev_lo.Road_1km * X.PSI[j, ind.PSI.Dev_lo] +
       ALPHA.Dev_bg.Road_1km * X.PSI[j, ind.PSI.Dev_bg]
-      
-    # Point scale pathways #
-    X.psi.raw[j, ind.Well_125m] ~ dbin(pred.Well_125m[j], n.point[j])
-    logit(pred.Well_125m[j]) <- alpha0.Well_125m +
-      alpha.Dev_lo.Well_125m * X.PSI[j, ind.PSI.Dev_lo] +
-      alpha.Dev_bg.Well_125m * X.PSI[j, ind.PSI.Dev_bg]
 
-    X.psi.raw[j, ind.AHerb] ~ dbeta(a.AHerb[j], b.AHerb[j])
+    # Point scale pathways #
+    X.psi.raw[j, ind.psi.AHerb] ~ dbeta(a.AHerb[j], b.AHerb[j])
     a.AHerb[j] <- pred.AHerb[j] * phi.AHerb
     b.AHerb[j] <- (1 - pred.AHerb[j]) * phi.AHerb
     logit(pred.AHerb[j]) <- alpha0.AHerb +
-      alpha.WellA_125m.AHerb * X.psi[j, ind.Well_125m] +
-      alpha.Road_125m.AHerb * X.psi[j, ind.Road_125m]
+      alpha.Well_1km.AHerb * X.psi[j, ind.psi.Well_1km] +
+      alpha.Road_1km.AHerb * X.psi[j, ind.psi.Road_125m]
 
-    X.psi.raw[j, ind.Road_125m] ~ dgamma(shape.Road_125m,
+    X.psi.raw[j, ind.psi.Road_125m] ~ dgamma(shape.Road_125m,
       shape.Road_125m / exp(pred.Road_125m[j]))
     pred.Road_125m[j] <- alpha0.Road_125m +
       alpha.Dev_lo.Road_125m * X.PSI[j, ind.PSI.Dev_lo] +
@@ -268,17 +211,13 @@ model <<- nimbleCode({
   shape.Road_1km ~ dunif(0, 100)
 
   ## Point level models ##
-  alpha0.Well_125m ~ dnorm(0, 0.66667)
-  alpha.Dev_lo.Well_125m ~ dnorm(0, 0.66667)
-  alpha.Dev_bg.Well_125m ~ dnorm(0, 0.66667)
-
+  alpha0.AHerb ~ dnorm(0, 0.66667)
+  alpha.Well_1km.AHerb ~ dnorm(0, 0.66667)
+  alpha.Road_1km.AHerb ~ dnorm(0, 0.66667)
+  phi.AHerb ~ dgamma(.1,.1)
+  
   alpha0.Road_125m ~ dnorm(0, 1)
   alpha.Dev_lo.Road_125m ~ dnorm(0, 1)
   alpha.Dev_bg.Road_125m ~ dnorm(0, 1)
   shape.Road_125m ~ dunif(0, 100)
-
-  alpha0.AHerb ~ dnorm(0, 0.66667)
-  alpha.WellA_125m.AHerb ~ dnorm(0, 0.66667)
-  alpha.Road_125m.AHerb ~ dnorm(0, 0.66667)
-  phi.AHerb ~ dgamma(.1,.1)
 })

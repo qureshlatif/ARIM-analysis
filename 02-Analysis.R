@@ -7,19 +7,19 @@ load("Data_compiled.RData")
 
 #_____ Script inputs _____#
 scripts.loc <- "ARIM-analysis/"
-model.file <- str_c(scripts.loc, "model_community_only.jags") # "model_path_trend_flattened_marg.jags"
+model.file <- str_c(scripts.loc, "model_community_trend_only.jags") # "model_path_trend_flattened_marg.jags"
 saveJAGS.loc <- "saveJAGS/"
-package <- "jagsUI" # Set to jagsUI or saveJAGS
-mod.nam <- "mod_community_mech"
+package <- "saveJAGS" # Set to jagsUI or saveJAGS
+mod.nam <- "mod_community_trend"
 reduce.data.aug <- F # If TRUE, reduce data augmentation to 10 additional species.
 development <- F # Set to TRUE for running test model with only develop.spp, and FALSE to run the full model.
 develop.spp <- c("MODO", "MOPL", "HOLA", "WEME")
 
 # MCMC values
-nc <- 2 #3 # number of chains
-nb <- 10 #1000 # burn in
-ni <- 20 #11000 # number of iterations
-nt <- 1 #10 # thinning
+nc <- 2 # number of chains
+nb <- 1000 # burn in
+ni <- 6000 # number of iterations
+nt <- 1 # thinning
 ns <- 220 # number of saveJAGS chunks
 #_________________________#
 
@@ -53,10 +53,10 @@ data.nams <- c("Y.sum", "n.grdyr", "yearID.grdyr", #"gridID", "yearID", "pointID
 if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
   data.nams <- c(data.nams,
                  
-                 "ind.PSI.Dev_bg", "ind.PSI.Dev_lo", "ind.Well_3km",
-                 "ind.Well_1km", "ind.Road_1km",
+                 "ind.PSI.Dev_bg", "ind.PSI.Dev_lo", "ind.PSI.Well_3km",
+                 "ind.PSI.Well_1km", "ind.PSI.Road_1km",
                  
-                 "ind.Well_125m", "ind.Road_125m", "ind.AHerb") # "ind.D_Road_125m", "ind.PA_Road_125m",
+                 "ind.psi.Road_125m", "ind.psi.Well_1km", "ind.psi.AHerb") # "ind.D_Road_125m", "ind.PA_Road_125m", "ind.Well_125m"
 }
 # "X.ETA", "p.ETA", "X.DELTA", "p.DELTA", "X.eta", "p.eta", "X.delta", "p.delta",
 
@@ -89,8 +89,8 @@ parameters <- c(# Bird community parameters
                 "ALPHA0.Road_1km", "ALPHA.Dev_lo.Road_1km",
                 "ALPHA.Dev_bg.Road_1km", "shape.Road_1km",
                 
-                "alpha0.Well_125m", "alpha.Dev_lo.Well_125m",
-                "alpha.Dev_bg.Well_125m",
+                #"alpha0.Well_125m", "alpha.Dev_lo.Well_125m",
+                #"alpha.Dev_bg.Well_125m",
                 
                 #"alpha0.PA_Road_125m", "alpha.Dev_lo.PA_Road_125m",
                 #"alpha.Dev_bg.PA_Road_125m",
@@ -101,8 +101,8 @@ parameters <- c(# Bird community parameters
                 "alpha.Dev_lo.Road_125m", "alpha.Dev_bg.Road_125m",
                 "shape.Road_125m",
                 
-                "alpha0.AHerb", "alpha.WellA_125m.AHerb",
-                "alpha.Road_125m.AHerb",
+                "alpha0.AHerb", "alpha.Well_1km.AHerb",
+                "alpha.Road_1km.AHerb",
                 
                 "test.Well_3km", "test.Well_1km", "test.Road_1km",
                 "test.Well_125m", "test.AHerb", "test.Road_125m")

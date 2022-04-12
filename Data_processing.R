@@ -4,10 +4,10 @@ if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
   PSI.vars.trt <- c("Dev_bg", "Dev_lo", "Well_3km", "Road_1km")
   
   beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
-  beta.vars.trt <- c("Dev_bg", "Dev_lo", "Well_1km", "Well_125m", "Road_125m", "AHerb")
+  beta.vars.trt <- c("Dev_bg", "Dev_lo", "Well_1km", "Road_125m", "AHerb")
   
   psi_dyn.vars.cntrl <- c("Sage", "Herb")
-  psi_dyn.vars.trt <- c("Dev_bg", "Dev_lo", "Well_1km", "Well_125m", "Road_125m", "AHerb")
+  psi_dyn.vars.trt <- c("Dev_bg", "Dev_lo", "Well_1km", "Road_125m", "AHerb")
 }
 
 if(mod.nam == "mod_community_trend") {
@@ -26,10 +26,10 @@ if(mod.nam == "mod_community_mech") {
   PSI.vars.trt <- c("Well_3km", "Road_1km")
   
   beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
-  beta.vars.trt <- c("Well_1km", "Well_125m", "Road_125m", "AHerb")
+  beta.vars.trt <- c("Well_1km", "Road_125m", "AHerb")
   
   psi_dyn.vars.cntrl <- c("Sage", "Herb")
-  psi_dyn.vars.trt <- c("Well_1km", "Well_125m", "Road_125m", "AHerb")
+  psi_dyn.vars.trt <- c("Well_1km", "Road_125m", "AHerb")
 }
 
 zeta.vars <- c("CanCov", "ShrubCov", "DOY", "Time_ssr")
@@ -129,12 +129,13 @@ ind.PSI.no_offset <- which(vars %in% PSI.vars.cntrl)
 if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
   ind.PSI.Dev_bg <- which(vars == "Dev_bg")
   ind.PSI.Dev_lo <- which(vars == "Dev_lo")
-  ind.Well_3km <- which(vars == "Well_3km")
-  ind.Road_1km <- which(vars == "Road_1km")
+  ind.PSI.Well_3km <- which(vars == "Well_3km")
+  ind.PSI.Road_1km <- which(vars == "Road_1km")
   X.PSI.raw[,,"Road_1km"] <- X.PSI.raw[,,"Road_1km"] + 0.01
 
   X.PSI.raw <- abind::abind(X.PSI.raw, Cov_grid[,,"Well_1km"], along = 3)
-  ind.Well_1km <- dim(X.PSI.raw)[3]
+  ind.PSI.Well_1km <- dim(X.PSI.raw)[3]
+  dimnames(X.PSI.raw)[[3]][ind.PSI.Well_1km] <- "Well_1km"
   }
 
     # Flatten to grdXyr
@@ -163,12 +164,12 @@ for(k in unique(gridID.py)) for(t in unique(yearID.py)) {
     aperm(perm = c(2, 1))
   X.psi.raw[which(gridID.py == k & yearID.py == t),-ind.psi.point.vars] <- vals
 }
-if(mod.nam %in% c("mod_path", "mod_community_mech", "mod_interm_paths")) {
-  X.psi.raw[,"Well_125m"] <- (X.psi.raw[,"Well_125m"] > 0) * 1 # Convert 125 m scale well pad count to presence/absence.
-  X.psi.raw <- apply(X.psi.raw, 2, function(x) tapply(x, grdyrID.py, mean))
-  X.psi.raw[,"Well_125m"] <- X.psi.raw[,"Well_125m"] *
-    tapply(grdyrID.py, grdyrID.py, length) # Make this the sum rather than mean of point values
-}
+# if(mod.nam %in% c("mod_path", "mod_community_mech", "mod_interm_paths")) # Not needed after dropping Well_125m
+#   X.psi.raw[,"Well_125m"] <- (X.psi.raw[,"Well_125m"] > 0) * 1 # Convert 125 m scale well pad count to presence/absence.
+X.psi.raw <- apply(X.psi.raw, 2, function(x) tapply(x, grdyrID.py, mean))
+# if(mod.nam %in% c("mod_path", "mod_community_mech", "mod_interm_paths")) # Not needed after dropping Well_125m
+#   X.psi.raw[,"Well_125m"] <- X.psi.raw[,"Well_125m"] *
+#     tapply(grdyrID.py, grdyrID.py, length) # Make this the sum rather than mean of point values
 X.psi <- X.psi.raw %>% apply(2, function(x) (x - mean(x)) / sd(x))
 p.psi.init <- length(vars)
 p.psi.dyn <- length(c(psi_dyn.vars.cntrl, psi_dyn.vars.trt))
@@ -181,13 +182,15 @@ X.psi.dyn <- X.psi[, ind.psi.dyn]
 
 if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
   # Additional variables for intermediate path models #
-  ind.Well_125m <- which(vars == "Well_125m")
+  #ind.psi.Well_125m <- which(vars == "Well_125m") # Not needed after dropping Well_125m
+  
+  ind.psi.Well_1km <- which(vars == "Well_1km")
   
   X.psi.raw[,"Road_125m"] <- X.psi.raw[,"Road_125m"] + 0.01
-  ind.Road_125m <- which(vars == "Road_125m")
+  ind.psi.Road_125m <- which(vars == "Road_125m")
   
   X.psi.raw[,"AHerb"] <- ((X.psi.raw[,"AHerb"] + 0.001) / 100)
-  ind.AHerb <- which(vars == "AHerb")
+  ind.psi.AHerb <- which(vars == "AHerb")
 }
 
   # Detection

@@ -1,4 +1,4 @@
-model {
+model <<- nimbleCode({
   ########################
   # Bird community model #
   ########################
@@ -17,7 +17,7 @@ model {
         inprod(beta1[i, 1:p.psi.init], X.psi[j, 1:p.psi.init]) +
         lambda[j, i] * (yearID.grdyr[j] - 1)
       lambda[j, i] <- delta0[i] +
-        inprod(delta1[i, 1:p.psi.dyn], X.psi[j, ind.psi.dyn])
+        inprod(delta1[i, 1:p.psi.dyn], X.psi.dyn[j, 1:p.psi.dyn])
         
       # Grid-level ecological process
       Z[j, i] ~ dbern(PSI[j, i] * w[i])
@@ -27,7 +27,7 @@ model {
       LAMBDA[j, i] <- DELTA0[i] +
         inprod(DELTA1[i, 1:p.PSI], X.PSI[j, 1:p.PSI])
       }
-    
+      
     w[i] ~ dbern(omega) # Species inclusion in community
 
     # Species-specific intercepts
@@ -87,6 +87,8 @@ model {
 
   ### Prior distributions ###
   
+  # parameter correlations
+  
   rho.zb ~ dunif(-1, 1) # Correlation between detectability and point occupancy
   rho.bB ~ dunif(-1, 1) # Correlation between point and grid occupancy
 
@@ -100,7 +102,7 @@ model {
   beta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
   sigma.beta0 <- abs(tvar.sigma.beta0)  # half-Cauchy distribution
   tvar.sigma.beta0 ~ dt(0,1,1)  # Cauchy distribution
-  # Year effect point occupancy hyper-parameters #
+    # Year effect point occupancy hyper-parameters #
   tvar.sigma.b0 ~ dt(0,1,1)  # Cauchy distribution
   sigma.b0 <- abs(tvar.sigma.b0)  # half-Cauchy distribution
 
@@ -136,14 +138,14 @@ model {
     tvar.beta1[b] ~ dt(0,1,1)  # Cauchy distribution
   }
     # Guild-level offsets
-  for(b in ind.psi.init.offset) {
+  for(ib in 1:length(ind.psi.init.offset)) {
     for(g in 1:(n.guild-1)) {
-      beta1.offset[g, b] ~ dt(0, pow(t.sigma, -2), t.nu)
+      beta1.offset[g, ind.psi.init.offset[ib]] ~ dt(0, pow(t.sigma, -2), t.nu)
     }
   }
-  for(b in ind.psi.init.no_offset) {
+  for(ib in 1:length(ind.psi.init.no_offset)) {
     for(g in 1:(n.guild-1)) {
-      beta1.offset[g, b] <- 0
+      beta1.offset[g, ind.psi.init.no_offset[ib]] <- 0
     }
   }
 
@@ -154,14 +156,14 @@ model {
     tvar.delta1[b] ~ dt(0,1,1)  # Cauchy distribution
   }
     # Guild-level offsets
-  for(b in ind.psi.dyn.offset) {
+  for(ib in 1:length(ind.psi.dyn.offset)) {
     for(g in 1:(n.guild-1)) {
-      delta1.offset[g, b] ~ dt(0, pow(t.sigma, -2), t.nu)
+      delta1.offset[g, ind.psi.dyn.offset[ib]] ~ dt(0, pow(t.sigma, -2), t.nu)
     }
   }
-  for(b in ind.psi.dyn.no_offset) {
+  for(ib in 1:length(ind.psi.dyn.no_offset)) {
     for(g in 1:(n.guild-1)) {
-      delta1.offset[g, b] <- 0
+      delta1.offset[g, ind.psi.dyn.no_offset[ib]] <- 0
     }
   }
 
@@ -172,14 +174,14 @@ model {
     tvar.BETA1[b] ~ dt(0,1,1)  # Cauchy distribution
   }
     # Guild-level offsets
-  for(b in ind.PSI.offset) {
+  for(ib in 1:length(ind.PSI.offset)) {
     for(g in 1:(n.guild-1)) {
-      BETA1.offset[g, b] ~ dt(0, pow(t.sigma, -2), t.nu)
+      BETA1.offset[g, ind.PSI.offset[ib]] ~ dt(0, pow(t.sigma, -2), t.nu)
     }
   }
-  for(b in ind.PSI.no_offset) {
+  for(ib in 1:length(ind.PSI.no_offset)) {
     for(g in 1:(n.guild-1)) {
-      BETA1.offset[g, b] <- 0
+      BETA1.offset[g, ind.PSI.no_offset[ib]] <- 0
     }
   }
 
@@ -190,14 +192,14 @@ model {
     tvar.DELTA1[b] ~ dt(0,1,1)  # Cauchy distribution
   }
     # Guild-level offsets
-  for(b in ind.PSI.offset) {
+  for(ib in 1:length(ind.PSI.offset)) {
     for(g in 1:(n.guild-1)) {
-      DELTA1.offset[g, b] ~ dt(0, pow(t.sigma, -2), t.nu)
+      DELTA1.offset[g, ind.PSI.offset[ib]] ~ dt(0, pow(t.sigma, -2), t.nu)
     }
   }
-  for(b in ind.PSI.no_offset) {
+  for(ib in 1:length(ind.PSI.no_offset)) {
     for(g in 1:(n.guild-1)) {
-      DELTA1.offset[g, b] <- 0
+      DELTA1.offset[g, ind.PSI.no_offset[ib]] <- 0
     }
   }
 
@@ -270,4 +272,4 @@ model {
   alpha.Dev_lo.Road_125m ~ dnorm(0, 1)
   alpha.Dev_bg.Road_125m ~ dnorm(0, 1)
   shape.Road_125m ~ dunif(0, 100)
-}
+})
