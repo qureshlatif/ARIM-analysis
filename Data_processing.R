@@ -3,34 +3,31 @@ if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
   PSI.vars.cntrl <- c("PJ_area", "NDVI")
   PSI.vars.trt <- c("Dev_bg", "Dev_lo", "Well_3km", "Road_1km")
   
-  beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
-  beta.vars.trt <- c("Dev_bg", "Dev_lo", "Well_1km", "Road_125m", "AHerb")
-  
-  psi_dyn.vars.cntrl <- c("Sage", "Herb")
-  psi_dyn.vars.trt <- c("Dev_bg", "Dev_lo", "Well_1km", "Road_125m", "AHerb")
+  psi.vars.cntrl <- c("TPI_min", "Sage", "Herb")
+  psi.vars.trt <- c("Dev_bg", "Dev_lo", "Well_1km", "Road_125m", "AHerb")
 }
 
-if(mod.nam == "mod_community_trend") {
-  PSI.vars.cntrl <- c("PJ_area", "NDVI")
-  PSI.vars.trt <- c("Dev_bg", "Dev_lo")
-  
-  beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
-  beta.vars.trt <- c("Dev_bg", "Dev_lo")
-  
-  psi_dyn.vars.cntrl <- c("Sage", "Herb")
-  psi_dyn.vars.trt <- c("Dev_bg", "Dev_lo")
-}
-
-if(mod.nam == "mod_community_mech") {
-  PSI.vars.cntrl <- c("PJ_area", "NDVI")
-  PSI.vars.trt <- c("Well_3km", "Road_1km")
-  
-  beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
-  beta.vars.trt <- c("Well_1km", "Road_125m", "AHerb")
-  
-  psi_dyn.vars.cntrl <- c("Sage", "Herb")
-  psi_dyn.vars.trt <- c("Well_1km", "Road_125m", "AHerb")
-}
+# if(mod.nam == "mod_community_trend") {
+#   PSI.vars.cntrl <- c("PJ_area", "NDVI")
+#   PSI.vars.trt <- c("Dev_bg", "Dev_lo")
+#   
+#   beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
+#   beta.vars.trt <- c("Dev_bg", "Dev_lo")
+#   
+#   psi_dyn.vars.cntrl <- c("Sage", "Herb")
+#   psi_dyn.vars.trt <- c("Dev_bg", "Dev_lo")
+# }
+# 
+# if(mod.nam == "mod_community_mech") {
+#   PSI.vars.cntrl <- c("PJ_area", "NDVI")
+#   PSI.vars.trt <- c("Well_3km", "Road_1km")
+#   
+#   beta.vars.cntrl <- c("TPI_min", "Sage", "Herb")
+#   beta.vars.trt <- c("Well_1km", "Road_125m", "AHerb")
+#   
+#   psi_dyn.vars.cntrl <- c("Sage", "Herb")
+#   psi_dyn.vars.trt <- c("Well_1km", "Road_125m", "AHerb")
+# }
 
 zeta.vars <- c("CanCov", "ShrubCov", "DOY", "Time_ssr")
 zeta.quad <- c(F, F, T, T)
@@ -47,6 +44,7 @@ gridID.py <- cov_pntyr[, "gridIndex"]
 yearID.py <- cov_pntyr[, "YearInd"]
 grdyrID.py <- str_c(gridID.py, yearID.py, sep = "_") %>%
   as.factor() %>% as.integer()
+observerID.py <- cov_pntyr[, "ObserverID"]
 n.grdyr <- max(grdyrID.py)
 n.spp <- dim(Y.mat)[2]
 K <- max(TPeriod)
@@ -58,7 +56,10 @@ for(j in 1:n.grdyr) for(k in 1:K)
 Y.sum <- apply(Y, c(1, 2), sum)
 gridID.grdyr <- tapply(gridID.py, grdyrID.py, unique)
 yearID.grdyr <- tapply(yearID.py, grdyrID.py, unique)
+observerID <- tapply(observerID.py, grdyrID.py, unique)
 n.year <- max(yearID.py)
+n.point <- tapply(grdyrID.py, grdyrID.py, length)
+n.observer <- max(observerID)
 
   # Detections within survey intervals #
 n.int <- sum(Y.sum > 0)
@@ -74,20 +75,20 @@ sppID.int <- sppID.int.long[ind.det]
 Y.int <- Y.long[ind.det,]
 rm(ind.det, Y.long, grdyrID.int.long, sppID.int.long, i)
 
-# Guild matrix #
-guilds <- unique(spp.out$Guild)
-n.guild <- length(guilds)
-guildMem <- matrix(0, nrow = length(spp.list), ncol = n.guild,
-                   dimnames = list(spp.list, guilds))
-for(g in 1:n.guild) guildMem[which(spp.out$Guild == guilds[g]), g] <- 1
-guildMem[which(spp.out$Guild == "Sagebrush"), "Shrubland"] <- 1 # Sagebrush dependent species are also shrubland species.
+# # Guild matrix #
+# guilds <- unique(spp.out$Guild)
+# n.guild <- length(guilds)
+# guildMem <- matrix(0, nrow = length(spp.list), ncol = n.guild,
+#                    dimnames = list(spp.list, guilds))
+# for(g in 1:n.guild) guildMem[which(spp.out$Guild == guilds[g]), g] <- 1
+# guildMem[which(spp.out$Guild == "Sagebrush"), "Shrubland"] <- 1 # Sagebrush dependent species are also shrubland species.
 
 # Subset for development runs #
 if(development) {
   ind.spp <- which(spp.list %in% develop.spp)
   Y <- Y[,ind.spp,]
   n.spp <- dim(Y)[2]
-  guildMem <- guildMem[ind.spp,]
+  # guildMem <- guildMem[ind.spp,]
 
   Y.sum <- apply(Y, c(1, 2), sum)
   n.int <- sum(Y.sum > 0)
@@ -122,8 +123,8 @@ X.PSI <- X.scale.fn(X.PSI.raw)
 X.PSI.mns <- apply(X.PSI.raw, 3, mean, na.rm = T) # Save for unscaling later
 X.PSI.sd <- apply(X.PSI.raw, 3, sd, na.rm = T) # Save for unscaling later
 dimnames(X.PSI)[[3]] <- vars
-ind.PSI.offset <- which(vars %in% PSI.vars.trt)
-ind.PSI.no_offset <- which(vars %in% PSI.vars.cntrl)
+#ind.PSI.offset <- which(vars %in% PSI.vars.trt)
+#ind.PSI.no_offset <- which(vars %in% PSI.vars.cntrl)
 
     # Additional indices for intermediate path models #
 if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
@@ -151,11 +152,14 @@ X.PSI <- X.PSI.flat
 X.PSI.raw <- X.PSI.raw.flat
 rm(X.PSI.flat, X.PSI.raw.flat)
 
+X.LAMBDA <- X.PSI[,PSI.vars.trt]
+p.LAMBDA <- length(PSI.vars.trt)
+
   # Point
-vars <- c(beta.vars.cntrl, beta.vars.trt)
+vars <- c(psi.vars.cntrl, psi.vars.trt)
 X.psi.raw <- array(NA, dim = c(dim(Cov_point_flat)[1], length(vars)))
 dimnames(X.psi.raw)[[2]] <- vars
-ind.psi.dyn <- which(vars %in% c(psi_dyn.vars.cntrl, psi_dyn.vars.trt))
+#ind.psi.dyn <- which(vars %in% c(psi_dyn.vars.cntrl, psi_dyn.vars.trt))
 ind.psi.point.vars <- which(vars %in% dimnames(Cov_point_flat)[[2]])
 X.psi.raw[,ind.psi.point.vars] <- Cov_point_flat[,vars[ind.psi.point.vars]]
 for(k in unique(gridID.py)) for(t in unique(yearID.py)) {
@@ -171,14 +175,15 @@ X.psi.raw <- apply(X.psi.raw, 2, function(x) tapply(x, grdyrID.py, mean))
 #   X.psi.raw[,"Well_125m"] <- X.psi.raw[,"Well_125m"] *
 #     tapply(grdyrID.py, grdyrID.py, length) # Make this the sum rather than mean of point values
 X.psi <- X.psi.raw %>% apply(2, function(x) (x - mean(x)) / sd(x))
-p.psi.init <- length(vars)
-p.psi.dyn <- length(c(psi_dyn.vars.cntrl, psi_dyn.vars.trt))
-ind.psi.init.offset <- which(vars %in% beta.vars.trt)
-ind.psi.init.no_offset <- which(vars %in% beta.vars.cntrl)
-ind.psi.dyn.offset <- which(vars[ind.psi.dyn] %in% psi_dyn.vars.trt)
-ind.psi.dyn.no_offset <- which(vars[ind.psi.dyn] %in% psi_dyn.vars.cntrl)
+p.psi <- length(vars)
+X.lambda <- X.psi[,psi.vars.trt]
+p.lambda <- length(psi.vars.trt)
+# ind.psi.init.offset <- which(vars %in% beta.vars.trt)
+# ind.psi.init.no_offset <- which(vars %in% beta.vars.cntrl)
+# ind.psi.dyn.offset <- which(vars[ind.psi.dyn] %in% psi_dyn.vars.trt)
+# ind.psi.dyn.no_offset <- which(vars[ind.psi.dyn] %in% psi_dyn.vars.cntrl)
 
-X.psi.dyn <- X.psi[, ind.psi.dyn]
+#X.psi.dyn <- X.psi[, ind.psi.dyn]
 
 if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
   # Additional variables for intermediate path models #
@@ -193,6 +198,9 @@ if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
   ind.psi.AHerb <- which(vars == "AHerb")
 }
 
+  # Trend covariate
+X.trend <- (years - mean(years)) / sd(years)
+
   # Detection
 X.zeta <- cov_pntyr[, zeta.vars] %>%
   data.matrix %>%
@@ -206,6 +214,7 @@ for(v in 1:length(zeta.vars)) {
 }
 dimnames(X.zeta)[[2]] <- zeta.vars
 X.zeta[which(is.na(X.zeta))] <- 0
+#X.zeta <- cbind(X.zeta, X.trend[cov_pntyr$YearInd])
 p.zeta <- ncol(X.zeta)
+#dimnames(X.zeta)[[2]][p.zeta] <- "Trend"
 rm(v)
-n.point <- tapply(grdyrID.py, grdyrID.py, length)

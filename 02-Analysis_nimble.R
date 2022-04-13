@@ -16,9 +16,9 @@ develop.spp <- c("MODO", "MOPL", "HOLA", "WEME")
 
 # MCMC values
 nc <- 2 # number of chains
-nb <- 10000 # burn in
-ni <- 50000 # number of iterations
-nt <- 10 # thinning
+nb <- 10 #10000 # burn in
+ni <- 20 #50000 # number of iterations
+nt <- 1 #10 # thinning
 #_________________________#
 
 # Compile data #
@@ -34,15 +34,16 @@ data.nams <- c("Y.sum", "Y.int", "X.PSI.raw", "X.psi.raw")
 constant.nams <- c("n.grdyr", "yearID.grdyr", #"gridID", "yearID", "pointID", "Y.point", "Y.grid", "Y.spp", "TPeriod", 
                    "n.year", "n.point", "K", "n.spp", #"n.grid", "n.pntyr", "gridXyrID",  "R", "Sig_df",
                    "n.int", "grdyrID.int", "sppID.int",
+                   "n.observer", "observerID",
                    
-                   "X.PSI", "p.PSI",
+                   "X.PSI", "p.PSI", "X.LAMBDA", "p.LAMBDA", "X.trend",
                    # "ind.PSI.offset", "ind.PSI.no_offset",
                    
-                   "X.psi", "X.psi.dyn", "p.psi.init", "p.psi.dyn", "X.psi.dyn",
+                   "X.psi", "p.psi", "X.lambda", "p.lambda",
                    #"ind.psi.init.offset", "ind.psi.init.no_offset",
                    #"ind.psi.dyn.offset", "ind.psi.dyn.no_offset",
                    
-                   "X.zeta", "p.zeta")#,
+                   "X.zeta", "p.zeta") #,
 
 #"guildMem", "n.guild")
 if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
@@ -58,15 +59,15 @@ if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
 parameters <- c(# Bird community parameters
   "omega", "rho.zb", "rho.bB",# "rho.zB",
   
-  "BETA0.mu", "sigma.BETA0", "sigma.B0", "BETA1.mu", "sigma.BETA1",
+  "BETA0.mu", "sigma.BETA0", "BETA1.mu", "sigma.BETA1", # "sigma.B0", 
   "DELTA0.mu", "sigma.DELTA0", "DELTA1.mu", "sigma.DELTA1",
-  "beta0.mu", "sigma.beta0", "sigma.b0", "beta1.mu", "sigma.beta1",
+  "beta0.mu", "sigma.beta0", "beta1.mu", "sigma.beta1", # "sigma.b0", 
   "delta0.mu", "sigma.delta0", "delta1.mu", "sigma.delta1",
   "zeta0.mu", "sigma.zeta0", "sigma.z0", "zeta1.mu", "sigma.zeta1",
   
-  "BETA0", "dev.BETA", "BETA1",# "BETA1.offset",
+  "BETA0", "BETA1",# "BETA1.offset", "dev.BETA", 
   "DELTA0", "DELTA1",# "DELTA1.offset",
-  "beta0", "dev.beta", "beta1",# "beta1.offset",
+  "beta0", "beta1",# "beta1.offset", "dev.beta", 
   "delta0", "delta1",# "delta1.offset",
   "zeta0", "dev.zeta", "zeta1",
   
@@ -95,18 +96,18 @@ inits <- function()
        tvar.zeta1 = rnorm(p.zeta),
        
        tvar.sigma.BETA0 = rnorm(1),
-       tvar.sigma.B0 = rnorm(1),
+       #tvar.sigma.B0 = rnorm(1),
        tvar.BETA1 = rnorm(p.PSI),
        
        tvar.sigma.DELTA0 = rnorm(1),
        tvar.DELTA1 = rnorm(p.PSI),
        
        tvar.sigma.beta0 = rnorm(1),
-       tvar.sigma.b0 = rnorm(1),
-       tvar.beta1 = rnorm(p.psi.init),
+       #tvar.sigma.b0 = rnorm(1),
+       tvar.beta1 = rnorm(p.psi),
        
        tvar.sigma.delta0 = rnorm(1),
-       tvar.delta1 = rnorm(p.psi.dyn),
+       tvar.delta1 = rnorm(p.lambda),
        
        # Needed for full initialization #
        BETA0 = BETA0.init, #rnorm(n.spp),
@@ -114,23 +115,23 @@ inits <- function()
        #BETA1.base = matrix(0, nrow = n.spp, ncol = p.PSI), #rnorm(n.spp * p.PSI)
        #BETA1.offset = matrix(0, nrow = (n.guild-1), ncol = p.PSI),
        DELTA0 = rep(0, n.spp), #rnorm(n.spp),
-       DELTA1 = matrix(0, nrow = n.spp, ncol = p.PSI), #rnorm(n.spp * p.PSI)
+       DELTA1 = matrix(0, nrow = n.spp, ncol = p.LAMBDA), #rnorm(n.spp * p.PSI)
        #DELTA1.base = matrix(0, nrow = n.spp, ncol = p.PSI), #rnorm(n.spp * p.PSI)
        #DELTA1.offset = matrix(0, nrow = (n.guild-1), ncol = p.PSI),
        beta0 = beta0.init, #rnorm(n.spp),
-       beta1 = matrix(0, nrow = n.spp, ncol = p.psi.init), #rnorm(n.spp * p.psi.init)
+       beta1 = matrix(0, nrow = n.spp, ncol = p.psi), #rnorm(n.spp * p.psi.init)
        #beta1.base = matrix(0, nrow = n.spp, ncol = p.psi.init), #rnorm(n.spp * p.psi.init)
        #beta1.offset = matrix(0, nrow = (n.guild-1), ncol = p.psi.init),
        delta0 = rep(0, n.spp), #rnorm(n.spp),
-       delta1 = matrix(0, nrow = n.spp, ncol = p.psi.dyn), # rnorm(n.spp * p.psi.dyn)
+       delta1 = matrix(0, nrow = n.spp, ncol = p.lambda), # rnorm(n.spp * p.psi.dyn)
        #delta1.base = matrix(0, nrow = n.spp, ncol = p.psi.dyn), # rnorm(n.spp * p.psi.dyn)
        #delta1.offset = matrix(0, nrow = (n.guild-1), ncol = p.psi.dyn),
        zeta0 = rep(2, n.spp),
        zeta1 = matrix(0, nrow = n.spp, ncol = p.zeta),
        
-       dev.zeta = matrix(0, nrow = n.spp, ncol = n.year),
-       dev.beta = matrix(0, nrow = n.spp, ncol = n.year),
-       dev.BETA = matrix(0, nrow = n.spp, ncol = n.year),
+       dev.zeta = matrix(0, nrow = n.spp, ncol = n.observer),
+       #dev.beta = matrix(0, nrow = n.spp, ncol = n.year),
+       #dev.BETA = matrix(0, nrow = n.spp, ncol = n.year),
        
        rho.zb = runif(1, -1, 1),
        rho.bB = runif(1, -1, 1),
@@ -138,13 +139,13 @@ inits <- function()
        zeta0.mu = 2,
        zeta1.mu = rep(0, p.zeta), #rnorm(p.zeta),
        beta0.mu = mean(beta0.init),
-       beta1.mu = rep(0, p.psi.init), #rnorm(p.psi.init),
+       beta1.mu = rep(0, p.psi), #rnorm(p.psi.init),
        delta0.mu = 0, #rnorm(1),
-       delta1.mu = rep(0, p.psi.dyn), #rnorm(p.psi.dyn),
+       delta1.mu = rep(0, p.lambda), #rnorm(p.psi.dyn),
        BETA0.mu = mean(BETA0.init),
        BETA1.mu = rep(0, p.PSI), #rnorm(p.PSI),
        DELTA0.mu = 0, #rnorm(1),
-       DELTA1.mu = rep(0, p.PSI), #rnorm(p.PSI),
+       DELTA1.mu = rep(0, p.LAMBDA), #rnorm(p.PSI),
        
        omega = runif(1, 0.8201439, 0.99),
        
@@ -200,23 +201,23 @@ source(model.file)
 rm(.Random.seed, envir=.GlobalEnv)
 
 # All at once using built-in wrapper... #
-# st.time <- Sys.time()
-# out <- nimbleMCMC(code = model,
-#                   constants = constants,
-#                   data=data,
-#                   inits=inits, 
-#                   nchains = nc,
-#                   nburnin = nb,
-#                   niter = ni,
-#                   thin = nt,
-#                   samplesAsCodaMCMC = T,
-#                   summary = FALSE,
-#                   WAIC = FALSE,
-#                   monitors = parameters)
-# end.time <- Sys.time()
-# run.time <- end.time - st.time
-# run.time
-# rm(st.time,end.time)
+st.time <- Sys.time()
+out <- nimbleMCMC(code = model,
+                  constants = constants,
+                  data=data,
+                  inits=inits,
+                  nchains = nc,
+                  nburnin = nb,
+                  niter = ni,
+                  thin = nt,
+                  samplesAsCodaMCMC = T,
+                  summary = FALSE,
+                  WAIC = FALSE,
+                  monitors = parameters)
+end.time <- Sys.time()
+run.time <- end.time - st.time
+run.time
+rm(st.time,end.time)
 # R.utils::saveObject(out, str_c(mod.nam, "_samples")) # If running chains in parallel.
 
 

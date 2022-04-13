@@ -174,6 +174,7 @@ BCRDataAPI::add_columns(c('TransectNum|str',
                           'zone|int',
                           'Year|int',
                           'Date|str',
+                          'TransectVisitObserver|str',
                           'PointVisitStartTime|str',
                           'Stratum|str',
                           'radialDistance|int',
@@ -196,7 +197,8 @@ BCRDataAPI::filter_on(c(str_c('Stratum in ', str_c(strata, collapse = ",")),
                         'TimePeriod > -1',
                         'radialDistance < 125'))
 grab <- BCRDataAPI::get_data(interpolate_effort = T) %>%
-  mutate(BirdCode = ss[BirdCode] %>% as.character)
+  mutate(BirdCode = ss[BirdCode] %>% as.character) %>%
+  rename(Observer = TransectVisitObserver)
 
 point.coords <- grab %>%
   select(TransectNum, Point, easting, northing, zone) %>%
@@ -215,11 +217,11 @@ pointXyears.list <- unique(str_c(grab$TransectNum,
 
 ## Trim dates, compile day of year & start time in minutes ##
 library(lubridate)
-tab.datetime <- bird_data %>%
+tab.datetime <- grab %>%
   mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year)) %>%
   filter(Point_year %in% pointXyears.list) %>%
   arrange(Point_year) %>%
-  select(Point_year, PointLatitude, PointLongitude, Date, PointVisitStartTime) %>%
+  select(Point_year, PointLatitude, PointLongitude, Date, PointVisitStartTime, Observer) %>%
   distinct() %>%
   mutate(Date = str_sub(Date, 6, -14) %>% dmy) %>%
   mutate(DOY = yday(Date)) %>%
@@ -231,7 +233,8 @@ tab.datetime <- bird_data %>%
   mutate(Time = str_c(HR, MIN, "00", sep = ":")) %>%
   mutate(dateTime = str_c(Date, Time, sep = " ")) %>%
   mutate(Time_ssr = QSLpersonal::tssr(PointLatitude, PointLongitude, dateTime)) %>%
-  select(Point_year, PointLatitude, PointLongitude, DOY, Time_ssr)
+  mutate(ObserverID = Observer %>% as.factor %>% as.integer) %>%
+  select(Point_year, Observer, ObserverID, PointLatitude, PointLongitude, DOY, Time_ssr)
 
 bird_data <- grab %>%  # Store bird survey data for later use.
   mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year))
@@ -490,7 +493,7 @@ cov_pntyr <- cov_pntyr %>%
   ) %>%
   left_join(
     tab.datetime %>%
-      select(Point_year, DOY, Time_ssr),
+      select(Point_year, DOY, Time_ssr, ObserverID),
     by = "Point_year"
   )
 
