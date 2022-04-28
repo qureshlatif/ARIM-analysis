@@ -8,12 +8,12 @@ model <<- nimbleCode({
       # Observation process (total detected)
       Y.sum[j, i] ~ dbin(p_star[j, i], z[j, i])
       p_star[j, i] <- 1 - pow(1 - p[j, i], K)
-      logit(p[j, i]) <- zeta0[i] + dev.zeta[i, observerID[j]] +
+      logit(p[j, i]) <- zeta0[i] + dev.zeta[i, yearID.grdyr[j]] +
         inprod(zeta1[i, 1:p.zeta], X.zeta[j, 1:p.zeta])
       
       # Point-level ecological process
       z[j, i] ~ dbin(psi[j, i] * Z[j, i], n.point[j])
-      logit(psi[j, i]) <- beta0[i] +
+      logit(psi[j, i]) <- beta0[i] + dev.beta[i, yearID.grdyr[j]] +
         inprod(beta1[i, 1:p.psi], X.psi[j, 1:p.psi]) +
         lambda[j, i] * X.trend[yearID.grdyr[j]]
       lambda[j, i] <- delta0[i] +
@@ -21,7 +21,7 @@ model <<- nimbleCode({
         
       # Grid-level ecological process
       Z[j, i] ~ dbern(PSI[j, i] * w[i])
-      logit(PSI[j, i]) <- BETA0[i] +
+      logit(PSI[j, i]) <- BETA0[i] + dev.BETA[i, yearID.grdyr[j]] +
         inprod(BETA1[i, 1:p.PSI], X.PSI[j, 1:p.PSI]) +
         LAMBDA[j, i] * X.trend[yearID.grdyr[j]]
       LAMBDA[j, i] <- DELTA0[i] +
@@ -39,9 +39,11 @@ model <<- nimbleCode({
     zeta0[i] ~ dnorm(zeta0.mu + (rho.zb*sigma.zeta0 / sigma.beta0) * (beta0[i] - beta0.mu),
       pow(sigma.zeta0, -2)/(1 - pow(rho.zb, 2)))
 
-    # Species-specific observer deviations in detectability
-    for(o in 1:n.observer) {
-      dev.zeta[i, o] ~ dnorm(0, pow(sigma.z0, -2)) # Observer-specific deviations in detectability from mean for each species
+    # Species-specific yearly deviations
+    for(t in 1:n.year) {
+      dev.zeta[i, t] ~ dnorm(0, pow(sigma.z0, -2)) # Year-specific deviations in detectability from mean for each species
+      dev.beta[i, t] ~ dnorm(0, pow(sigma.b0, -2)) # Year-specific deviations in point occupancy from mean for each species
+      dev.BETA[i, t] ~ dnorm(0, pow(sigma.B0, -2)) # Year-specific deviations in grid occupancy from mean for each species
     }
     
     # Species-specific covariate relationships
@@ -85,13 +87,16 @@ model <<- nimbleCode({
   zeta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit detection probability intercept
   tvar.sigma.zeta0 ~ dt(0,1,1)  # Cauchy distribution
   sigma.zeta0 <- abs(tvar.sigma.zeta0)  # half-Cauchy distribution
-    # Observer effect detectability hyper-parameters #
+    # Year effect detectability hyper-parameters #
   tvar.sigma.z0 ~ dt(0,1,1)  # Cauchy distribution
   sigma.z0 <- abs(tvar.sigma.z0)  # half-Cauchy distribution
 
   beta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
   sigma.beta0 <- abs(tvar.sigma.beta0)  # half-Cauchy distribution
   tvar.sigma.beta0 ~ dt(0,1,1)  # Cauchy distribution
+    # Year effect point occupancy hyper-parameters #
+  tvar.sigma.b0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.b0 <- abs(tvar.sigma.b0)  # half-Cauchy distribution
 
   delta0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
   sigma.delta0 <- abs(tvar.sigma.delta0)  # half-Cauchy distribution
@@ -100,6 +105,9 @@ model <<- nimbleCode({
   BETA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
   sigma.BETA0 <- abs(tvar.sigma.BETA0)  # half-Cauchy distribution
   tvar.sigma.BETA0 ~ dt(0,1,1)  # Cauchy distribution
+    # Year effect point occupancy hyper-parameters #
+  tvar.sigma.B0 ~ dt(0,1,1)  # Cauchy distribution
+  sigma.B0 <- abs(tvar.sigma.B0)  # half-Cauchy distribution
 
   DELTA0.mu ~  dt(0, pow(t.sigma, -2), t.nu) # logit point occupancy intercept
   sigma.DELTA0 <- abs(tvar.sigma.DELTA0)  # half-Cauchy distribution
@@ -176,7 +184,7 @@ model <<- nimbleCode({
     b.AHerb[j] <- (1 - pred.AHerb[j]) * phi.AHerb
     logit(pred.AHerb[j]) <- alpha0.AHerb +
       alpha.Well_1km.AHerb * X.psi[j, ind.psi.Well_1km] +
-      alpha.Road_1km.AHerb * X.psi[j, ind.psi.Road_125m]
+      alpha.Road_125m.AHerb * X.psi[j, ind.psi.Road_125m]
 
     X.psi.raw[j, ind.psi.Road_125m] ~ dgamma(shape.Road_125m,
       shape.Road_125m / exp(pred.Road_125m[j]))
@@ -205,7 +213,7 @@ model <<- nimbleCode({
   ## Point level models ##
   alpha0.AHerb ~ dnorm(0, 0.66667)
   alpha.Well_1km.AHerb ~ dnorm(0, 0.66667)
-  alpha.Road_1km.AHerb ~ dnorm(0, 0.66667)
+  alpha.Road_125m.AHerb ~ dnorm(0, 0.66667)
   phi.AHerb ~ dgamma(.1,.1)
   
   alpha0.Road_125m ~ dnorm(0, 1)

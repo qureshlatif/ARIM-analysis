@@ -14,6 +14,22 @@ out.vals <- c("est", "f")
 #______________________________________#
 
 mod$summary %>% write.csv(str_c("Params_all.csv"), row.names = F) # Save full table of parameter estimates
+mod$summary %>%
+  filter(!str_detect(Parameter, "BETA0\\[") &
+           !str_detect(Parameter, "BETA1\\[") &
+           !str_detect(Parameter, "dev.BETA\\[") &
+           !str_detect(Parameter, "DELTA0\\[") &
+           !str_detect(Parameter, "DELTA1\\[") &
+           !str_detect(Parameter, "beta0\\[") &
+           !str_detect(Parameter, "beta1\\[") &
+           !str_detect(Parameter, "dev.beta\\[") &
+           !str_detect(Parameter, "delta0\\[") &
+           !str_detect(Parameter, "delta1\\[") &
+           !str_detect(Parameter, "zeta0\\[") &
+           !str_detect(Parameter, "zeta1\\[") &
+           !str_detect(Parameter, "dev.zeta\\[") &
+           !str_detect(Parameter, "w\\[")) %>%
+  write.csv(str_c("HyperParams.csv"), row.names = F)
 
 # Compile data to get covariate names #
 reduce.data.aug <- F # If TRUE, reduce data augmentation to 10 additional species.
@@ -21,9 +37,9 @@ development <- F # Set to TRUE for running test model with only develop.spp, and
 source(str_c(scripts.loc, "Data_processing.R"))
 
 params <- c("PSI0", str_c("BETA.", dimnames(X.PSI)[[2]]),
-            "LAMBDA0", str_c("DELTA.", dimnames(X.PSI)[[2]]),
+            "LAMBDA0", str_c("DELTA.", dimnames(X.LAMBDA)[[2]]),
             "psi0", str_c("beta.", dimnames(X.psi)[[2]]),
-            "lambda0", str_c("delta.", dimnames(X.psi.dyn)[[2]]),
+            "lambda0", str_c("delta.", dimnames(X.lambda)[[2]]),
             "pStar", str_c("zeta.", dimnames(X.zeta)[[2]]))
 cols <- (expand.grid(out.vals, params, stringsAsFactors = F) %>%
   select(Var2, Var1) %>%
@@ -45,7 +61,7 @@ out[, "PSI0.est"] <- str_c(
   apply(parm, 2, function(x) quantile(x, prob = 0.975, type = 8)) %>% round(digits = 2),
   ")")
 
-parm <- QSLpersonal::expit(mod$mcmcOutput$DELTA0)
+parm <- mod$mcmcOutput$DELTA0
 out[, "LAMBDA0.est"] <- str_c(
   apply(parm, 2, median) %>% round(digits = 2),
   "(",
@@ -63,7 +79,7 @@ out[, "psi0.est"] <- str_c(
   apply(parm, 2, function(x) quantile(x, prob = 0.975, type = 8)) %>% round(digits = 2),
   ")")
 
-parm <- QSLpersonal::expit(mod$mcmcOutput$delta0)
+parm <- mod$mcmcOutput$delta0
 out[, "lambda0.est"] <- str_c(
   apply(parm, 2, median) %>% round(digits = 2),
   "(",
@@ -72,7 +88,7 @@ out[, "lambda0.est"] <- str_c(
   apply(parm, 2, function(x) quantile(x, prob = 0.975, type = 8)) %>% round(digits = 2),
   ")")
 
-parm <- QSLpersonal::expit(mod$mcmcOutput$zeta0) %>% (function(x) 1 - (1-x)^6)
+parm <- QSLpersonal::expit(mod$mcmcOutput$zeta0) %>% (function(x) 1 - (1-x)^3)
 out[, "pStar.est"] <- str_c(
   apply(parm, 2, median) %>% round(digits = 2),
   "(",

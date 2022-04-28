@@ -22,7 +22,7 @@ for(t in years[-1]) dat <- rbind(dat, Cov_grid[,as.character(t),])
 cor(dat) %>% # All of these can be included in analysis
   write.csv("Cor_grid.csv", row.names = T)
 QSLpersonal::VIF(dat %>% as.data.frame() %>%
-                   select(Dev_lo:NDVI, WellA_3km, WellD_3km, Road_1km)) # Max VIF = 1.411699 for Dev_lo.
+                   select(Dev_lo:NDVI, Well_3km, Road_1km)) # Max VIF = 1.411699 for Dev_lo.
 
 # plot(cov_grid %>% filter(Year == 2010) %>% pull(Road_length_km), # Old. Need to load raw data for this.
 #      cov_grid %>% filter(Year == 2010) %>% pull(Road_length_2009_km),
