@@ -10,9 +10,6 @@ load("Data_compiled.RData")
 scripts.loc <- "ARIM-analysis/"
 model.file <- str_c(scripts.loc, "model_path.nimble")
 mod.nam <- "mod_path"
-reduce.data.aug <- F # If TRUE, reduce data augmentation to 10 additional species.
-development <- F # Set to TRUE for running test model with only develop.spp, and FALSE to run the full model.
-develop.spp <- c("MODO", "MOPL", "HOLA", "WEME")
 
 # MCMC values
 nc <- 2 # number of chains

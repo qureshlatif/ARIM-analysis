@@ -52,27 +52,6 @@ sppID.int <- sppID.int.long[ind.det]
 Y.int <- Y.long[ind.det,]
 rm(ind.det, Y.long, grdyrID.int.long, sppID.int.long, i)
 
-# Subset for development runs #
-if(development) {
-  ind.spp <- which(spp.list %in% develop.spp)
-  Y <- Y[,ind.spp,]
-  n.spp <- dim(Y)[2]
-
-  Y.sum <- apply(Y, c(1, 2), sum)
-  n.int <- sum(Y.sum > 0)
-  grdyrID.int.long <- rep(1:n.grdyr, n.spp)
-  sppID.int.long <- rep(1:n.spp, each = n.grdyr)
-  Y.long <- Y[,1,]
-  for(i in 2:n.spp) {
-    Y.long <- rbind(Y.long, Y[,i,])
-  }
-  ind.det <- which(Y.sum > 0)
-  grdyrID.int <- grdyrID.int.long[ind.det]
-  sppID.int <- sppID.int.long[ind.det]
-  Y.int <- Y.long[ind.det,]
-  rm(ind.det, Y.long, grdyrID.int.long, sppID.int.long, i)
-}
-
 # Compile covariates #
 X.scale.fn <- function(X) {
   mns <- apply(X, 3, mean, na.rm = T) %>%

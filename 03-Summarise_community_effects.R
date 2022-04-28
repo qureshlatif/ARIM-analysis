@@ -14,9 +14,6 @@ nsims <- dim(mod$mcmcOutput)[1]
 out.vals <- c("est", "f")
 
 # Data processing
-reduce.data.aug <- F # If TRUE, reduce data augmentation to 10 additional species.
-development <- F # Set to TRUE for running test model with only develop.spp, and FALSE to run the full model.
-#develop.spp <- c("MODO", "MOPL", "HOLA", "WEME")
 source(str_c(scripts.loc, "Data_processing.R"))
 #______________________________________#
 

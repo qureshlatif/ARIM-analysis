@@ -32,8 +32,6 @@ mod$summary %>%
   write.csv(str_c("HyperParams.csv"), row.names = F)
 
 # Compile data to get covariate names #
-reduce.data.aug <- F # If TRUE, reduce data augmentation to 10 additional species.
-development <- F # Set to TRUE for running test model with only develop.spp, and FALSE to run the full model.
 source(str_c(scripts.loc, "Data_processing.R"))
 
 params <- c("PSI0", str_c("BETA.", dimnames(X.PSI)[[2]]),

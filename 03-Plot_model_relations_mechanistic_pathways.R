@@ -8,7 +8,6 @@ load("Data_compiled.RData")
 #_____ Script setup _____#
 scripts.loc <- "ARIM-analysis/"
 mod.nam <- "mod_path"
-development <- reduce.data.aug <- FALSE
 mod <- R.utils::loadObject(mod.nam)
 source(str_c(scripts.loc, "Data_processing.R"))
 #________________________#
