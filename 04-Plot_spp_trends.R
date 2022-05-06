@@ -47,15 +47,15 @@ plot.table.fn <- function(B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$PSI.yr[which(out.plot$Development == "High")] <-
     apply(PSI.yr, 2, median)
   out.plot$PSI.yr.lo[which(out.plot$Development == "High")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.025, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.05, type = 8)
   out.plot$PSI.yr.hi[which(out.plot$Development == "High")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.975, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.95, type = 8)
   out.plot$PSI.pred[which(out.plot$Development == "High")] <-
     apply(PSI.pred, 2, median)
   out.plot$PSI.pred.lo[which(out.plot$Development == "High")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.025, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.05, type = 8)
   out.plot$PSI.pred.hi[which(out.plot$Development == "High")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.975, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.95, type = 8)
 
   # Low development #
   BETA <- B0 + apply(B1 * X.B.lo, 1, sum)
@@ -69,15 +69,15 @@ plot.table.fn <- function(B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$PSI.yr[which(out.plot$Development == "Low")] <-
     apply(PSI.yr, 2, median)
   out.plot$PSI.yr.lo[which(out.plot$Development == "Low")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.025, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.05, type = 8)
   out.plot$PSI.yr.hi[which(out.plot$Development == "Low")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.975, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.95, type = 8)
   out.plot$PSI.pred[which(out.plot$Development == "Low")] <-
     apply(PSI.pred, 2, median)
   out.plot$PSI.pred.lo[which(out.plot$Development == "Low")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.025, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.05, type = 8)
   out.plot$PSI.pred.hi[which(out.plot$Development == "Low")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.975, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.95, type = 8)
   
   # Background #
   BETA <- B0 + apply(B1 * X.B.bg, 1, sum)
@@ -91,24 +91,28 @@ plot.table.fn <- function(B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$PSI.yr[which(out.plot$Development == "Background")] <-
     apply(PSI.yr, 2, median)
   out.plot$PSI.yr.lo[which(out.plot$Development == "Background")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.025, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.05, type = 8)
   out.plot$PSI.yr.hi[which(out.plot$Development == "Background")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.975, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.95, type = 8)
   out.plot$PSI.pred[which(out.plot$Development == "Background")] <-
     apply(PSI.pred, 2, median)
   out.plot$PSI.pred.lo[which(out.plot$Development == "Background")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.025, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.05, type = 8)
   out.plot$PSI.pred.hi[which(out.plot$Development == "Background")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.975, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.95, type = 8)
   
   return(out.plot)
 }
 
-spp.plot <- c("CONI", "KILL", "HOLA", "ROWR", "HOWR", "SATH", "AMRO", "BRSP",
-              "SABS", "GTTO", "WEME", "BHCO")
-spp.names <- c("Common nighthawk", "Killdeer", "Horned lark", "Rock wren", "House wren",
-               "Sage thrasher", "American robin", "Brewer's sparrow", "Sagebrush sparrow",
-               "Green-tailed towhee", "Western meadowlark", "Brown-headed cowbird")
+spp.plot <- R.utils::loadObject("Spp_plot_trends")
+spp.plot <- c(spp.plot, "GTTO") # Add Green-tailed Towhee
+spp.names <- read.csv("C:/Users/Quresh.Latif/files/data/Alpha_codes_tax_20220324.csv", stringsAsFactors = F) %>%
+  filter(SPEC %in% spp.plot) %>%
+  pull(COMMONNAME)
+names(spp.names) <- read.csv("C:/Users/Quresh.Latif/files/data/Alpha_codes_tax_20220324.csv", stringsAsFactors = F) %>%
+  filter(SPEC %in% spp.plot) %>%
+  pull(SPEC)
+spp.names <- spp.names[spp.plot]
 
 for(sp in 1:length(spp.plot)) {
   spp.name <- spp.names[sp]
@@ -209,14 +213,18 @@ p <- ggdraw() +
 save_plot("Figure_focal_spp_trends.jpg", p, ncol = 1.5, nrow = 3.5, dpi = 600)
 
 p <- ggdraw() +
-  draw_plot(p.CONI, x = 0,   y = 0.7625, width = 0.5, height = 0.2375) +
-  draw_plot(p.KILL, x = 0,   y = 0.5250, width = 0.5, height = 0.2375) +
-  draw_plot(p.HOLA, x = 0,   y = 0.2875, width = 0.5, height = 0.2375) +
-  draw_plot(p.ROWR, x = 0,   y = 0.05,   width = 0.5, height = 0.2375) +
-  draw_plot(p.HOWR, x = 0.5, y = 0.7625, width = 0.5, height = 0.2375) +
-  draw_plot(p.AMRO, x = 0.5, y = 0.5250, width = 0.5, height = 0.2375) +
-  draw_plot(p.BHCO, x = 0.5, y = 0.2875, width = 0.5, height = 0.2375) +
-  draw_plot(p.WEME, x = 0.5, y = 0.05,   width = 0.5, height = 0.2375) +
+  draw_plot(p.HOLA, x = 0,   y = 0.8416667, width = 0.5, height = 0.1583333) +
+  draw_plot(p.WEME, x = 0,   y = 0.6833333, width = 0.5, height = 0.1583333) +
+  draw_plot(p.CONI, x = 0,   y = 0.5250000, width = 0.5, height = 0.1583333) +
+  draw_plot(p.KILL, x = 0,   y = 0.3666667, width = 0.5, height = 0.1583333) +
+  draw_plot(p.BRBL, x = 0,   y = 0.2083333, width = 0.5, height = 0.1583333) +
+  draw_plot(p.BHCO, x = 0,   y = 0.05,      width = 0.5, height = 0.1583333) +
+  draw_plot(p.HOWR, x = 0.5, y = 0.8416667, width = 0.5, height = 0.1583333) +
+  draw_plot(p.COGR, x = 0.5, y = 0.6833333, width = 0.5, height = 0.1583333) +
+  draw_plot(p.CORA, x = 0.5, y = 0.5250000, width = 0.5, height = 0.1583333) +
+  draw_plot(p.AMRO, x = 0.5, y = 0.3666667, width = 0.5, height = 0.1583333) +
+  draw_plot(p.VGSW, x = 0.5, y = 0.2083333, width = 0.5, height = 0.1583333) +
+  draw_plot(p.ROWR, x = 0.5, y = 0.05,      width = 0.5, height = 0.1583333) +
   draw_plot_label("Year", x = 0.5, y = 0.05, angle = 0, hjust = 0)
 
-save_plot("Figure_other_spp_neg_trends.jpg", p, ncol = 3, nrow = 3, dpi = 600)
+save_plot("Figure_other_spp_neg_trends.jpg", p, ncol = 3, nrow = 5, dpi = 600)

@@ -19,204 +19,429 @@ nsims <- dim(mod$mcmcOutput)[1]
 source(str_c(scripts.loc, "Data_processing.R"))
 #______________________________________#
 
+# Tabulate parameter estimates
+pars <- c(str_c("BETA.", dimnames(X.PSI)[[2]]),
+          str_c("DELTA.", dimnames(X.LAMBDA)[[2]]),
+          str_c("beta.", dimnames(X.psi)[[2]]),
+          str_c("delta.", dimnames(X.lambda)[[2]]))
+cols <- (c("", ".lo", ".hi") %>%
+           expand.grid(pars, stringsAsFactors = F) %>%
+           mutate(Var3 = str_c(Var2, Var1, sep = "")))$Var3
+tbl_pars <- matrix(NA, nrow = length(spp.list), ncol = length(cols), dimnames = list(NULL, cols))
 
-## Stratum covariate values ##
-source(str_c(scripts.loc, "Calculate_mech_path_covariate_values.R"))
-
-plot.table.fn <- function(B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
-                          D0, D1, X.D.hi, X.D.lo, X.D.bg, X.trend) {
-  # Setup #
-  out.plot <- expand.grid(Development = c("High", "Low", "Background"), Year = 2010:2019, stringsAsFactors = F) %>%
-    mutate(PSI.yr = 0,
-           PSI.yr.lo = 0,
-           PSI.yr.hi = 0,
-           PSI.pred = 0,
-           PSI.pred.lo = 0,
-           PSI.pred.hi = 0)
-  nyr <- ncol(dev.B)
-
-  # High development #
-  BETA <- B0 + apply(B1 * X.B.hi, 1, sum)
-  DELTA <- D0 + apply(D1 * X.D.hi, 1, sum)
-  PSI.pred <- PSI.yr <- matrix(NA, nrow = nsims, ncol = nyr)
-  for(t in 1:nyr) {
-    PSI.pred[,t] <- QSLpersonal::expit(BETA + DELTA * X.trend[t])
-    PSI.yr[,t] <- QSLpersonal::expit(BETA + dev.B[,t] +
-                                       DELTA * X.trend[t])
-  }
-  out.plot$PSI.yr[which(out.plot$Development == "High")] <-
-    apply(PSI.yr, 2, median)
-  out.plot$PSI.yr.lo[which(out.plot$Development == "High")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.025, type = 8)
-  out.plot$PSI.yr.hi[which(out.plot$Development == "High")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.975, type = 8)
-  out.plot$PSI.pred[which(out.plot$Development == "High")] <-
-    apply(PSI.pred, 2, median)
-  out.plot$PSI.pred.lo[which(out.plot$Development == "High")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.025, type = 8)
-  out.plot$PSI.pred.hi[which(out.plot$Development == "High")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.975, type = 8)
-
-  # Low development #
-  BETA <- B0 + apply(B1 * X.B.lo, 1, sum)
-  DELTA <- D0 + apply(D1 * X.D.lo, 1, sum)
-  PSI.pred <- PSI.yr <- matrix(NA, nrow = nsims, ncol = nyr)
-  for(t in 1:nyr) {
-    PSI.pred[,t] <- QSLpersonal::expit(BETA + DELTA * X.trend[t])
-    PSI.yr[,t] <- QSLpersonal::expit(BETA + dev.B[,t] +
-                                       DELTA * X.trend[t])
-  }
-  out.plot$PSI.yr[which(out.plot$Development == "Low")] <-
-    apply(PSI.yr, 2, median)
-  out.plot$PSI.yr.lo[which(out.plot$Development == "Low")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.025, type = 8)
-  out.plot$PSI.yr.hi[which(out.plot$Development == "Low")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.975, type = 8)
-  out.plot$PSI.pred[which(out.plot$Development == "Low")] <-
-    apply(PSI.pred, 2, median)
-  out.plot$PSI.pred.lo[which(out.plot$Development == "Low")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.025, type = 8)
-  out.plot$PSI.pred.hi[which(out.plot$Development == "Low")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.975, type = 8)
-  
-  # Background #
-  BETA <- B0 + apply(B1 * X.B.bg, 1, sum)
-  DELTA <- D0 + apply(D1 * X.D.bg, 1, sum)
-  PSI.pred <- PSI.yr <- matrix(NA, nrow = nsims, ncol = nyr)
-  for(t in 1:nyr) {
-    PSI.pred[,t] <- QSLpersonal::expit(BETA + DELTA * X.trend[t])
-    PSI.yr[,t] <- QSLpersonal::expit(BETA + dev.B[,t] +
-                                       DELTA * X.trend[t])
-  }
-  out.plot$PSI.yr[which(out.plot$Development == "Background")] <-
-    apply(PSI.yr, 2, median)
-  out.plot$PSI.yr.lo[which(out.plot$Development == "Background")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.025, type = 8)
-  out.plot$PSI.yr.hi[which(out.plot$Development == "Background")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.975, type = 8)
-  out.plot$PSI.pred[which(out.plot$Development == "Background")] <-
-    apply(PSI.pred, 2, median)
-  out.plot$PSI.pred.lo[which(out.plot$Development == "Background")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.025, type = 8)
-  out.plot$PSI.pred.hi[which(out.plot$Development == "Background")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.975, type = 8)
-  
-  return(out.plot)
+pars.ind <- which(str_detect(pars, "BETA"))
+for(i in 1:length(pars.ind)) {
+  parm <- mod$mcmcOutput$BETA1[,,i]
+  tbl_pars[, pars[pars.ind[i]]] <- apply(parm, 2, median)
+  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
 }
 
-spp.plot <- c("CONI", "KILL", "HOLA", "ROWR", "HOWR", "SATH", "AMRO", "BRSP",
-              "SABS", "GTTO", "WEME", "BHCO")
-spp.names <- c("Common nighthawk", "Killdeer", "Horned lark", "Rock wren", "House wren",
-               "Sage thrasher", "American robin", "Brewer's sparrow", "Sagebrush sparrow",
-               "Green-tailed towhee", "Western meadowlark", "Brown-headed cowbird")
-
-for(sp in 1:length(spp.plot)) {
-  spp.name <- spp.names[sp]
-  spp <- spp.plot[sp]
-  ind.spp <- which(spp.list == spp)
-  
-  # Grid cell occupancy #
-  dat.plot <- plot.table.fn(B0 = mod$mcmcOutput$BETA0[,ind.spp],
-                            B1 = mod$mcmcOutput$BETA1[,ind.spp,],
-                            X.B.hi = X.PSI.pred.hi,
-                            X.B.lo = X.PSI.pred.lo,
-                            X.B.bg = X.PSI.pred.bg,
-                            dev.B = mod$mcmcOutput$dev.BETA[,ind.spp,],
-                            D0 = mod$mcmcOutput$DELTA0[,ind.spp],
-                            D1 = mod$mcmcOutput$DELTA1[,ind.spp,],
-                            X.D.hi = X.LAMBDA.pred.hi,
-                            X.D.lo = X.LAMBDA.pred.lo,
-                            X.D.bg = X.LAMBDA.pred.bg,
-                            X.trend = X.trend) %>%
-    mutate(Development = factor(Development, levels = c("High", "Low", "Background")),
-           Year.jitter = ifelse(Development == "High", Year + 0.1,
-                                ifelse(Development == "Background", Year - 0.1,
-                                       Year)))
-  
-  p.grid <- ggplot(dat.plot, aes(x = Year, y = PSI.pred)) +
-    geom_ribbon(aes(ymin = PSI.pred.lo, ymax = PSI.pred.hi, fill = Development),
-                size = 0, alpha = 0.3) +
-    geom_line(aes(color = Development), size = 1) +
-    geom_errorbar(aes(x = Year.jitter, ymin = PSI.yr.lo, ymax = PSI.yr.hi,
-                      color = Development), width = 0.1) +
-    geom_point(aes(x = Year.jitter, y = PSI.yr,
-                   color = Development, shape = Development)) +
-    scale_color_manual(values = c("#D55E00", "#009E73", "#000000")) +
-    scale_fill_manual(values = c("#D55E00", "#009E73", "#000000")) +
-    scale_shape_manual(values = c(15, 17, 16)) +
-    scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
-    ylim(0, 1)
-  if(spp %in% c("HOLA", "BRSP")) {
-    p.grid <- p.grid +
-      theme(legend.position = c(1,0), legend.justification = c(1,0)) +
-      xlab(NULL) + ylab("Grid-cell occupancy")  
-  } else {
-    p.grid <- p.grid +
-      guides(color = F, fill = F, shape = F) +
-      xlab(NULL) + ylab("Grid-cell occupancy")  
-  }
-
-  # Point occupancy #
-  dat.plot <- plot.table.fn(B0 = mod$mcmcOutput$beta0[,ind.spp],
-                            B1 = mod$mcmcOutput$beta1[,ind.spp,],
-                            X.B.hi = X.psi.pred.hi,
-                            X.B.lo = X.psi.pred.lo,
-                            X.B.bg = X.psi.pred.bg,
-                            dev.B = mod$mcmcOutput$dev.beta[,ind.spp,],
-                            D0 = mod$mcmcOutput$delta0[,ind.spp],
-                            D1 = mod$mcmcOutput$delta1[,ind.spp,],
-                            X.D.hi = X.lambda.pred.hi,
-                            X.D.lo = X.lambda.pred.lo,
-                            X.D.bg = X.lambda.pred.bg,
-                            X.trend = X.trend) %>%
-    mutate(Development = factor(Development, levels = c("High", "Low", "Background")),
-           Year.jitter = ifelse(Development == "High", Year + 0.1,
-                                ifelse(Development == "Background", Year - 0.1,
-                                       Year)))
-  
-  p.point <- ggplot(dat.plot, aes(x = Year, y = PSI.pred)) +
-    geom_ribbon(aes(ymin = PSI.pred.lo, ymax = PSI.pred.hi, fill = Development),
-                size = 0, alpha = 0.3) +
-    geom_line(aes(color = Development), size = 1) +
-    geom_errorbar(aes(x = Year.jitter, ymin = PSI.yr.lo, ymax = PSI.yr.hi,
-                      color = Development), width = 0.1) +
-    geom_point(aes(x = Year.jitter, y = PSI.yr,
-                   color = Development, shape = Development)) +
-    scale_color_manual(values = c("#D55E00", "#009E73", "#000000")) +
-    scale_fill_manual(values = c("#D55E00", "#009E73", "#000000")) +
-    scale_shape_manual(values = c(15, 17, 16)) +
-    scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
-    ylim(0, 1) +
-    #theme(legend.position = c(1,0), legend.justification = c(1,0)) +
-    guides(color = F, fill = F, shape = F) +
-    xlab(NULL) + ylab("Point occupancy")
-  
-  # Put everything together
-  p.spp <- ggdraw() +
-    draw_plot(p.grid,  x = 0,   y = 0, width = 0.5, height = 0.95) +
-    draw_plot(p.point, x = 0.5, y = 0, width = 0.5, height = 0.95) +
-    draw_plot_label(spp.name, x = 0.45, y = 1, angle = 0, hjust = 0, size = 15)
-  assign(str_c("p.", spp), p.spp)
+pars.ind <- which(str_detect(pars, "DELTA"))
+for(i in 1:length(pars.ind)) {
+  parm <- mod$mcmcOutput$DELTA1[,,i]
+  tbl_pars[, pars[pars.ind[i]]] <- apply(parm, 2, median)
+  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
 }
 
-p <- ggdraw() +
-  draw_plot(p.BRSP, x = 0, y = 0.7625, width = 1, height = 0.2375) +
-  draw_plot(p.SABS, x = 0, y = 0.5250, width = 1, height = 0.2375) +
-  draw_plot(p.GTTO, x = 0, y = 0.2875, width = 1, height = 0.2375) +
-  draw_plot(p.SATH, x = 0, y = 0.05,   width = 1, height = 0.2375) +
-  draw_plot_label("Year", x = 0.5, y = 0.05, angle = 0, hjust = 0)
+pars.ind <- which(str_detect(pars, "beta"))
+for(i in 1:length(pars.ind)) {
+  parm <- mod$mcmcOutput$beta1[,,i]
+  tbl_pars[, pars[pars.ind[i]]] <- apply(parm, 2, median)
+  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
+}
 
-save_plot("Figure_focal_spp_trends.jpg", p, ncol = 1.5, nrow = 3.5, dpi = 600)
+pars.ind <- which(str_detect(pars, "delta"))
+for(i in 1:length(pars.ind)) {
+  parm <- mod$mcmcOutput$delta1[,,i]
+  tbl_pars[, pars[pars.ind[i]]] <- apply(parm, 2, median)
+  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
+}
 
-p <- ggdraw() +
-  draw_plot(p.CONI, x = 0,   y = 0.7625, width = 0.5, height = 0.2375) +
-  draw_plot(p.KILL, x = 0,   y = 0.5250, width = 0.5, height = 0.2375) +
-  draw_plot(p.HOLA, x = 0,   y = 0.2875, width = 0.5, height = 0.2375) +
-  draw_plot(p.ROWR, x = 0,   y = 0.05,   width = 0.5, height = 0.2375) +
-  draw_plot(p.HOWR, x = 0.5, y = 0.7625, width = 0.5, height = 0.2375) +
-  draw_plot(p.AMRO, x = 0.5, y = 0.5250, width = 0.5, height = 0.2375) +
-  draw_plot(p.BHCO, x = 0.5, y = 0.2875, width = 0.5, height = 0.2375) +
-  draw_plot(p.WEME, x = 0.5, y = 0.05,   width = 0.5, height = 0.2375) +
-  draw_plot_label("Year", x = 0.5, y = 0.05, angle = 0, hjust = 0)
+rm(parm)
+spp.detected <- apply(Y.mat, 2, function(x) any(x > 0))
+tbl_pars <- tbl_pars[which(spp.detected),]
 
-save_plot("Figure_other_spp_neg_trends.jpg", p, ncol = 3, nrow = 3, dpi = 600)
+#### Stratum effects on trend ####
+pars.sub <- c("DELTA.Dev_lo", "DELTA.Dev_bg", "delta.Dev_lo", "delta.Dev_bg")
+dat.plt <- tbl_pars %>% as_tibble() %>%
+  select(contains(pars.sub, ignore.case = F))%>%
+  mutate(Spp = spp.list[which(spp.detected)]) %>%
+  mutate(index = row_number() %>% rev())
+
+dat.plt.supp <- dat.plt %>%
+  filter_at(vars(ends_with(".lo")), any_vars(. > 0)) %>%
+  bind_rows(
+    dat.plt %>%
+      filter_at(vars(ends_with(".hi")), any_vars(. < 0))
+  ) %>%
+  distinct() %>%
+  arrange(index %>% desc()) %>%
+  mutate(index = row_number() %>% rev())
+
+cols <- pars.sub %>% str_c(".supp")
+dat.supp <- matrix("none", nrow = nrow(dat.plt.supp), ncol = length(cols),
+                   dimnames = list(NULL, cols))
+for(i in 1:length(cols)) {
+  col.chck <- str_sub(cols[i], 1, -6)
+  chck <- dat.plt.supp[, which(str_detect(names(dat.plt.supp), col.chck))]
+  dat.supp[which(chck[, 2] > 0), cols[i]] <- "pos"
+  dat.supp[which(chck[, 3] < 0), cols[i]] <- "neg"
+}
+dat.plt.supp <- dat.plt.supp %>%
+  bind_cols(
+    dat.supp %>% data.frame(stringsAsFactors = F)
+  )
+
+p.DDlo <- ggplot(dat = dat.plt.supp, aes(x = index, y = DELTA.Dev_lo)) +
+  geom_errorbar(aes(ymin = DELTA.Dev_lo.lo, ymax = DELTA.Dev_lo.hi, color = DELTA.Dev_lo.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = DELTA.Dev_lo.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#000000", "#D55E00")) +
+  ylab(expression(hat(Delta)["Low-development"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=30)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.DDbg <- ggplot(dat = dat.plt.supp, aes(x = index, y = DELTA.Dev_bg)) +
+  geom_errorbar(aes(ymin = DELTA.Dev_bg.lo, ymax = DELTA.Dev_bg.hi, color = DELTA.Dev_bg.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = DELTA.Dev_bg.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#000000", "#D55E00")) +
+  ylab(expression(hat(Delta)["Background"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=30)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.dDlo <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Dev_lo)) +
+  geom_errorbar(aes(ymin = delta.Dev_lo.lo, ymax = delta.Dev_lo.hi, color = delta.Dev_lo.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = delta.Dev_lo.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#000000", "#D55E00")) +
+  ylab(expression(hat(delta)["Low-development"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=30)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.dDbg <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Dev_bg)) +
+  geom_errorbar(aes(ymin = delta.Dev_bg.lo, ymax = delta.Dev_bg.hi, color = delta.Dev_bg.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = delta.Dev_bg.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(delta)["Background"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=30)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p <- ggdraw() + 
+  draw_plot(p.DDlo, x = 0.0500, y = 0, width = 0.2375, height = 1) +
+  draw_plot(p.DDbg, x = 0.2875, y = 0, width = 0.2375, height = 1) +
+  draw_plot(p.dDlo, x = 0.5250, y = 0, width = 0.2375, height = 1) +
+  draw_plot(p.dDbg, x = 0.7625, y = 0, width = 0.2375, height = 1) +
+  draw_plot_label("Species", x = 0, y = 0.5, size = 40, angle = 90, hjust = 0)
+
+save_plot("Plot_TrendStrataEffects.jpg", p, ncol = 3, nrow = 3.5, dpi = 200)
+
+#### Mechanistic covariate effects on occupancy and trend ####
+pars.sub <- c("BETA.Well_3km", "BETA.Road_1km", "DELTA.Well_3km",
+              "beta.Well_1km", "beta.Road_125m", "beta.AHerb",
+              "delta.Well_1km", "delta.Road_125m", "delta.AHerb")
+dat.plt <- tbl_pars %>% as_tibble() %>%
+  select(contains(pars.sub, ignore.case = F))%>%
+  mutate(Spp = spp.list[which(spp.detected)]) %>%
+  mutate(index = row_number() %>% rev())
+
+dat.plt.supp <- dat.plt %>%
+  filter_at(vars(ends_with(".lo")), any_vars(. > 0)) %>%
+  bind_rows(
+    dat.plt %>%
+      filter_at(vars(ends_with(".hi")), any_vars(. < 0))
+  ) %>%
+  distinct() %>%
+  arrange(index %>% desc()) %>%
+  mutate(index = row_number() %>% rev())
+
+cols <- pars.sub %>% str_c(".supp")
+dat.supp <- matrix("none", nrow = nrow(dat.plt.supp), ncol = length(cols),
+                   dimnames = list(NULL, cols))
+for(i in 1:length(cols)) {
+  col.chck <- str_sub(cols[i], 1, -6)
+  chck <- dat.plt.supp[, which(str_detect(names(dat.plt.supp), col.chck))]
+  dat.supp[which(chck[, 2] > 0), cols[i]] <- "pos"
+  dat.supp[which(chck[, 3] < 0), cols[i]] <- "neg"
+}
+dat.plt.supp <- dat.plt.supp %>%
+  bind_cols(
+    dat.supp %>% data.frame(stringsAsFactors = F)
+  )
+
+p.BWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.Well_3km)) +
+  geom_errorbar(aes(ymin = BETA.Well_3km.lo, ymax = BETA.Well_3km.hi, color = BETA.Well_3km.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = BETA.Well_3km.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(Beta)["Well density (900 ha)"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.BRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.Road_1km)) +
+  geom_errorbar(aes(ymin = BETA.Road_1km.lo, ymax = BETA.Road_1km.hi, color = BETA.Road_1km.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = BETA.Road_1km.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(Beta)["Road density (100 ha)"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.DWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = DELTA.Well_3km)) +
+  geom_errorbar(aes(ymin = DELTA.Well_3km.lo, ymax = DELTA.Well_3km.hi, color = DELTA.Well_3km.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = DELTA.Well_3km.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#000000", "#D55E00")) +
+  ylab(expression(hat(Delta)["Well density (900 ha)"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.bWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Well_1km)) +
+  geom_errorbar(aes(ymin = beta.Well_1km.lo, ymax = beta.Well_1km.hi, color = beta.Well_1km.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = beta.Well_1km.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(beta)["Well density (100 ha)"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.bRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Road_125m)) +
+  geom_errorbar(aes(ymin = beta.Road_125m.lo, ymax = beta.Road_125m.hi, color = beta.Road_125m.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = beta.Road_125m.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(beta)["Road density (5 ha)"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.bAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.AHerb)) +
+  geom_errorbar(aes(ymin = beta.AHerb.lo, ymax = beta.AHerb.hi, color = beta.AHerb.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = beta.AHerb.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(beta)["Annual herb cover"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.dWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Well_1km)) +
+  geom_errorbar(aes(ymin = delta.Well_1km.lo, ymax = delta.Well_1km.hi, color = delta.Well_1km.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = delta.Well_1km.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(delta)["Well density (100 ha)"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.dRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Road_125m)) +
+  geom_errorbar(aes(ymin = delta.Road_125m.lo, ymax = delta.Road_125m.hi, color = delta.Road_125m.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = delta.Road_125m.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#000000", "#D55E00")) +
+  ylab(expression(hat(delta)["Road density (5 ha)"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.dAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.AHerb)) +
+  geom_errorbar(aes(ymin = delta.AHerb.lo, ymax = delta.AHerb.hi, color = delta.AHerb.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = delta.AHerb.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(delta)["Annual herb cover"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p <- ggdraw() + 
+  draw_plot(p.BWell,  x = 0.05,      y = 0, width = 0.1055556, height = 1) +
+  draw_plot(p.DWell,  x = 0.1555556, y = 0, width = 0.1055556, height = 1) +
+  draw_plot(p.BRoad,  x = 0.2611111, y = 0, width = 0.1055556, height = 1) +
+  draw_plot(p.bWell,  x = 0.3666667, y = 0, width = 0.1055556, height = 1) +
+  draw_plot(p.dWell,  x = 0.4722222, y = 0, width = 0.1055556, height = 1) +
+  draw_plot(p.bRoad,  x = 0.5777778, y = 0, width = 0.1055556, height = 1) +
+  draw_plot(p.dRoad,  x = 0.6833333, y = 0, width = 0.1055556, height = 1) +
+  draw_plot(p.bAHerb, x = 0.7888889, y = 0, width = 0.1055556, height = 1) +
+  draw_plot(p.dAHerb, x = 0.8944444, y = 0, width = 0.1055556, height = 1) +
+  draw_plot_label("Species", x = 0, y = 0.5, size = 40, angle = 90, hjust = 0)
+
+save_plot("Plot_MechEffects.jpg", p, ncol = 5, nrow = 3.5, dpi = 200)
+
+#### Control covariate effects on occupancy ####
+pars.sub <- c("BETA.PJ_area", "BETA.NDVI", "beta.TPI_min",
+              "beta.Sage", "beta.Herb")
+dat.plt <- tbl_pars %>% as_tibble() %>%
+  select(contains(pars.sub, ignore.case = F))%>%
+  mutate(Spp = spp.list[which(spp.detected)]) %>%
+  mutate(index = row_number() %>% rev())
+
+dat.plt.supp <- dat.plt %>%
+  filter_at(vars(ends_with(".lo")), any_vars(. > 0)) %>%
+  bind_rows(
+    dat.plt %>%
+      filter_at(vars(ends_with(".hi")), any_vars(. < 0))
+  ) %>%
+  distinct() %>%
+  arrange(index %>% desc()) %>%
+  mutate(index = row_number() %>% rev())
+
+cols <- pars.sub %>% str_c(".supp")
+dat.supp <- matrix("none", nrow = nrow(dat.plt.supp), ncol = length(cols),
+                   dimnames = list(NULL, cols))
+for(i in 1:length(cols)) {
+  col.chck <- str_sub(cols[i], 1, -6)
+  chck <- dat.plt.supp[, which(str_detect(names(dat.plt.supp), col.chck))]
+  dat.supp[which(chck[, 2] > 0), cols[i]] <- "pos"
+  dat.supp[which(chck[, 3] < 0), cols[i]] <- "neg"
+}
+dat.plt.supp <- dat.plt.supp %>%
+  bind_cols(
+    dat.supp %>% data.frame(stringsAsFactors = F)
+  )
+
+p.BPJA <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.PJ_area)) +
+  geom_errorbar(aes(ymin = BETA.PJ_area.lo, ymax = BETA.PJ_area.hi, color = BETA.PJ_area.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = BETA.PJ_area.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(Beta)["Pinyon-juniper forest"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.BNDVI <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.NDVI)) +
+  geom_errorbar(aes(ymin = BETA.NDVI.lo, ymax = BETA.NDVI.hi, color = BETA.NDVI.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = BETA.NDVI.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(Beta)["NDVI"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.bTPI <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.TPI_min)) +
+  geom_errorbar(aes(ymin = beta.TPI_min.lo, ymax = beta.TPI_min.hi, color = beta.TPI_min.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = beta.TPI_min.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(beta)["Min TPI"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.bSage <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Sage)) +
+  geom_errorbar(aes(ymin = beta.Sage.lo, ymax = beta.Sage.hi, color = beta.Sage.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = beta.Sage.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(beta)["Sagebrush cover"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p.bHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Herb)) +
+  geom_errorbar(aes(ymin = beta.Herb.lo, ymax = beta.Herb.hi, color = beta.Herb.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = beta.Herb.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
+  ylab(expression(hat(beta)["Herbaceous cover"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
+p <- ggdraw() + 
+  draw_plot(p.BPJA,  x = 0.05, y = 0, width = 0.19, height = 1) +
+  draw_plot(p.BNDVI, x = 0.24, y = 0, width = 0.19, height = 1) +
+  draw_plot(p.bTPI,  x = 0.43, y = 0, width = 0.19, height = 1) +
+  draw_plot(p.bSage, x = 0.62, y = 0, width = 0.19, height = 1) +
+  draw_plot(p.bHerb, x = 0.81, y = 0, width = 0.19, height = 1) +
+  draw_plot_label("Species", x = 0, y = 0.5, size = 40, angle = 90, hjust = 0)
+
+save_plot("Plot_ControlEffects.jpg", p, ncol = 4, nrow = 4.5, dpi = 200)
