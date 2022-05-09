@@ -33,32 +33,32 @@ pars.ind <- which(str_detect(pars, "BETA"))
 for(i in 1:length(pars.ind)) {
   parm <- mod$mcmcOutput$BETA1[,,i]
   tbl_pars[, pars[pars.ind[i]]] <- apply(parm, 2, median)
-  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
-  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8))
 }
 
 pars.ind <- which(str_detect(pars, "DELTA"))
 for(i in 1:length(pars.ind)) {
   parm <- mod$mcmcOutput$DELTA1[,,i]
   tbl_pars[, pars[pars.ind[i]]] <- apply(parm, 2, median)
-  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
-  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8))
 }
 
 pars.ind <- which(str_detect(pars, "beta"))
 for(i in 1:length(pars.ind)) {
   parm <- mod$mcmcOutput$beta1[,,i]
   tbl_pars[, pars[pars.ind[i]]] <- apply(parm, 2, median)
-  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
-  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8))
 }
 
 pars.ind <- which(str_detect(pars, "delta"))
 for(i in 1:length(pars.ind)) {
   parm <- mod$mcmcOutput$delta1[,,i]
   tbl_pars[, pars[pars.ind[i]]] <- apply(parm, 2, median)
-  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8))
-  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".lo")] <- apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8))
+  tbl_pars[, str_c(pars[pars.ind[i]], ".hi")] <- apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8))
 }
 
 rm(parm)
@@ -161,10 +161,9 @@ p <- ggdraw() +
 
 save_plot("Plot_TrendStrataEffects.jpg", p, ncol = 3, nrow = 3.5, dpi = 200)
 
-#### Mechanistic covariate effects on occupancy and trend ####
-pars.sub <- c("BETA.Well_3km", "BETA.Road_1km", "DELTA.Well_3km",
-              "beta.Well_1km", "beta.Road_125m", "beta.AHerb",
-              "delta.Well_1km", "delta.Road_125m", "delta.AHerb")
+#### Mechanistic covariate effects on occupancy ####
+pars.sub <- c("BETA.Well_3km", "BETA.Road_1km",
+              "beta.Well_1km", "beta.Road_125m", "beta.AHerb")
 dat.plt <- tbl_pars %>% as_tibble() %>%
   select(contains(pars.sub, ignore.case = F))%>%
   mutate(Spp = spp.list[which(spp.detected)]) %>%
@@ -222,20 +221,6 @@ p.BRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.Road_1km)) +
   theme(axis.text.y=element_text(size=15)) +
   guides(color = F)
 
-p.DWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = DELTA.Well_3km)) +
-  geom_errorbar(aes(ymin = DELTA.Well_3km.lo, ymax = DELTA.Well_3km.hi, color = DELTA.Well_3km.supp), size=1, width=0) +
-  geom_point(size = 2.5, aes(color = DELTA.Well_3km.supp)) + 
-  geom_hline(yintercept = 0) +
-  coord_flip() +
-  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
-                     expand=c(0, 1)) +
-  scale_color_manual(values = c("#000000", "#D55E00")) +
-  ylab(expression(hat(Delta)["Well density (900 ha)"])) + xlab(NULL) +
-  theme(axis.title.x=element_text(size=25)) +
-  theme(axis.text.x=element_text(size=15)) +
-  theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
-
 p.bWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Well_1km)) +
   geom_errorbar(aes(ymin = beta.Well_1km.lo, ymax = beta.Well_1km.hi, color = beta.Well_1km.supp), size=1, width=0) +
   geom_point(size = 2.5, aes(color = beta.Well_1km.supp)) + 
@@ -278,6 +263,61 @@ p.bAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.AHerb)) +
   theme(axis.text.y=element_text(size=15)) +
   guides(color = F)
 
+p <- ggdraw() + 
+  draw_plot(p.BWell,  x = 0.05, y = 0, width = 0.19, height = 1) +
+  draw_plot(p.BRoad,  x = 0.24, y = 0, width = 0.19, height = 1) +
+  draw_plot(p.bWell,  x = 0.43, y = 0, width = 0.19, height = 1) +
+  draw_plot(p.bRoad,  x = 0.62, y = 0, width = 0.19, height = 1) +
+  draw_plot(p.bAHerb, x = 0.81, y = 0, width = 0.19, height = 1) +
+  draw_plot_label("Species", x = 0, y = 0.5, size = 40, angle = 90, hjust = 0)
+
+save_plot("Plot_MechEffects_occupancy.jpg", p, ncol = 3, nrow = 3.5, dpi = 200)
+
+#### Mechanistic covariate effects on trend ####
+pars.sub <- c("DELTA.Well_3km", "delta.Well_1km", "delta.Road_125m", "delta.AHerb")
+dat.plt <- tbl_pars %>% as_tibble() %>%
+  select(contains(pars.sub, ignore.case = F))%>%
+  mutate(Spp = spp.list[which(spp.detected)]) %>%
+  mutate(index = row_number() %>% rev())
+
+dat.plt.supp <- dat.plt %>%
+  filter_at(vars(ends_with(".lo")), any_vars(. > 0)) %>%
+  bind_rows(
+    dat.plt %>%
+      filter_at(vars(ends_with(".hi")), any_vars(. < 0))
+  ) %>%
+  distinct() %>%
+  arrange(index %>% desc()) %>%
+  mutate(index = row_number() %>% rev())
+
+cols <- pars.sub %>% str_c(".supp")
+dat.supp <- matrix("none", nrow = nrow(dat.plt.supp), ncol = length(cols),
+                   dimnames = list(NULL, cols))
+for(i in 1:length(cols)) {
+  col.chck <- str_sub(cols[i], 1, -6)
+  chck <- dat.plt.supp[, which(str_detect(names(dat.plt.supp), col.chck))]
+  dat.supp[which(chck[, 2] > 0), cols[i]] <- "pos"
+  dat.supp[which(chck[, 3] < 0), cols[i]] <- "neg"
+}
+dat.plt.supp <- dat.plt.supp %>%
+  bind_cols(
+    dat.supp %>% data.frame(stringsAsFactors = F)
+  )
+
+p.DWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = DELTA.Well_3km)) +
+  geom_errorbar(aes(ymin = DELTA.Well_3km.lo, ymax = DELTA.Well_3km.hi, color = DELTA.Well_3km.supp), size=1, width=0) +
+  geom_point(size = 2.5, aes(color = DELTA.Well_3km.supp)) + 
+  geom_hline(yintercept = 0) +
+  coord_flip() +
+  scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
+                     expand=c(0, 1)) +
+  scale_color_manual(values = c("#000000", "#D55E00")) +
+  ylab(expression(hat(Delta)["Well density (900 ha)"])) + xlab(NULL) +
+  theme(axis.title.x=element_text(size=25)) +
+  theme(axis.text.x=element_text(size=15)) +
+  theme(axis.text.y=element_text(size=15)) +
+  guides(color = F)
+
 p.dWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Well_1km)) +
   geom_errorbar(aes(ymin = delta.Well_1km.lo, ymax = delta.Well_1km.hi, color = delta.Well_1km.supp), size=1, width=0) +
   geom_point(size = 2.5, aes(color = delta.Well_1km.supp)) + 
@@ -299,7 +339,7 @@ p.dRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Road_125m)) +
   coord_flip() +
   scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
                      expand=c(0, 1)) +
-  scale_color_manual(values = c("#000000", "#D55E00")) +
+  scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
   ylab(expression(hat(delta)["Road density (5 ha)"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
@@ -321,18 +361,13 @@ p.dAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.AHerb)) +
   guides(color = F)
 
 p <- ggdraw() + 
-  draw_plot(p.BWell,  x = 0.05,      y = 0, width = 0.1055556, height = 1) +
-  draw_plot(p.DWell,  x = 0.1555556, y = 0, width = 0.1055556, height = 1) +
-  draw_plot(p.BRoad,  x = 0.2611111, y = 0, width = 0.1055556, height = 1) +
-  draw_plot(p.bWell,  x = 0.3666667, y = 0, width = 0.1055556, height = 1) +
-  draw_plot(p.dWell,  x = 0.4722222, y = 0, width = 0.1055556, height = 1) +
-  draw_plot(p.bRoad,  x = 0.5777778, y = 0, width = 0.1055556, height = 1) +
-  draw_plot(p.dRoad,  x = 0.6833333, y = 0, width = 0.1055556, height = 1) +
-  draw_plot(p.bAHerb, x = 0.7888889, y = 0, width = 0.1055556, height = 1) +
-  draw_plot(p.dAHerb, x = 0.8944444, y = 0, width = 0.1055556, height = 1) +
+  draw_plot(p.DWell,  x = 0.0500, y = 0, width = 0.2375, height = 1) +
+  draw_plot(p.dWell,  x = 0.2875, y = 0, width = 0.2375, height = 1) +
+  draw_plot(p.dRoad,  x = 0.5250, y = 0, width = 0.2375, height = 1) +
+  draw_plot(p.dAHerb, x = 0.7625, y = 0, width = 0.2375, height = 1) +
   draw_plot_label("Species", x = 0, y = 0.5, size = 40, angle = 90, hjust = 0)
 
-save_plot("Plot_MechEffects.jpg", p, ncol = 5, nrow = 3.5, dpi = 200)
+save_plot("Plot_MechEffects_trend.jpg", p, ncol = 2.5, nrow = 3.5, dpi = 200)
 
 #### Control covariate effects on occupancy ####
 pars.sub <- c("BETA.PJ_area", "BETA.NDVI", "beta.TPI_min",

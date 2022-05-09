@@ -56,9 +56,9 @@ for(sp in 1:n.spp) {
 ## Grid-cell trend ##
 PSI1 <- QSLpersonal::expit(BETA_hi + DELTA_hi * X.trend[1])
 PSI10 <- QSLpersonal::expit(BETA_hi + DELTA_hi * X.trend[10])
-TREND_hi <- (PSI10 / (1 - PSI10)) / (PSI1 / (1 - PSI1))
+TREND_hi <- PSI10 / PSI1
 out[, "TREND_hi"] <- TREND_hi %>%
-  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 90)
+  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 80)
 out[,"p_Tlt100_hi"] <- TREND_hi %>%
   apply(2, function(x) sum(x < 1)/nsims) %>%
   round(digits = 2)
@@ -68,9 +68,9 @@ out[,"p_Tlt75_hi"] <- TREND_hi %>%
 
 PSI1 <- QSLpersonal::expit(BETA_lo + DELTA_lo * X.trend[1])
 PSI10 <- QSLpersonal::expit(BETA_lo + DELTA_lo * X.trend[10])
-TREND_lo <- (PSI10 / (1 - PSI10)) / (PSI1 / (1 - PSI1))
+TREND_lo <- PSI10 / PSI1
 out[, "TREND_lo"] <- TREND_lo %>%
-  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 90)
+  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 80)
 DIFF <- TREND_hi - TREND_lo
 out[,"p_Thi_lt_Tlo"] <- DIFF %>%
   apply(2, function(x) sum(x < 0)/nsims) %>%
@@ -81,9 +81,9 @@ out[,"p_Thi_2lt_Tlo"] <- DIFF %>%
 
 PSI1 <- QSLpersonal::expit(BETA_bg + DELTA_bg * X.trend[1])
 PSI10 <- QSLpersonal::expit(BETA_bg + DELTA_bg * X.trend[10])
-TREND_bg <- (PSI10 / (1 - PSI10)) / (PSI1 / (1 - PSI1))
+TREND_bg <- PSI10 / PSI1
 out[, "TREND_bg"] <- TREND_bg %>%
-  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 90)
+  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 80)
 DIFF <- TREND_hi - TREND_bg
 out[,"p_Thi_lt_Tbg"] <- DIFF %>%
   apply(2, function(x) sum(x < 0)/nsims) %>%
@@ -95,9 +95,9 @@ out[,"p_Thi_2lt_Tbg"] <- DIFF %>%
 ## Point-scale trend ##
 psi1 <- QSLpersonal::expit(beta_hi + delta_hi * X.trend[1])
 psi10 <- QSLpersonal::expit(beta_hi + delta_hi * X.trend[10])
-trend_hi <- (psi10 / (1 - psi10)) / (psi1 / (1 - psi1))
+trend_hi <- psi10 / psi1
 out[, "trend_hi"] <- trend_hi %>%
-  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 90)
+  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 80)
 out[,"p_tlt100_hi"] <- trend_hi %>%
   apply(2, function(x) sum(x < 1)/nsims) %>%
   round(digits = 2)
@@ -107,9 +107,9 @@ out[,"p_tlt90_hi"] <- trend_hi %>%
 
 psi1 <- QSLpersonal::expit(beta_lo + delta_lo * X.trend[1])
 psi10 <- QSLpersonal::expit(beta_lo + delta_lo * X.trend[10])
-trend_lo <- (psi10 / (1 - psi10)) / (psi1 / (1 - psi1))
+trend_lo <- psi10 / psi1
 out[, "trend_lo"] <- trend_lo %>%
-  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 90)
+  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 80)
 DIFF <- trend_hi - trend_lo
 out[,"p_thi_lt_tlo"] <- DIFF %>%
   apply(2, function(x) sum(x < 0)/nsims) %>%
@@ -120,9 +120,9 @@ out[,"p_thi_2lt_tlo"] <- DIFF %>%
 
 psi1 <- QSLpersonal::expit(beta_bg + delta_bg * X.trend[1])
 psi10 <- QSLpersonal::expit(beta_bg + delta_bg * X.trend[10])
-trend_bg <- (psi10 / (1 - psi10)) / (psi1 / (1 - psi1))
+trend_bg <- psi10 / psi1
 out[, "trend_bg"] <- trend_bg %>%
-  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 90)
+  apply(2, QSLpersonal::BCI, flag.sig = F, BCIpercent = 80)
 DIFF <- trend_hi - trend_bg
 out[,"p_thi_lt_tbg"] <- DIFF %>%
   apply(2, function(x) sum(x < 0)/nsims) %>%
@@ -161,6 +161,8 @@ out %>%
            p_Thi_lt_Tbg >= 0.9 | p_Thi_lt_Tbg <= 0.1 |
            p_thi_lt_tlo >= 0.9 | p_thi_lt_tlo <= 0.1 |
            p_thi_lt_tbg >= 0.9 | p_thi_lt_tbg <= 0.1) %>%
+  left_join(spp.out %>% select(BirdCode, Guild),
+            by = c("Spp" = "BirdCode")) %>%
   write.csv("Summary_spp_development_effects.csv", row.names = T)
 out %>%
   filter(p_Thi_lt_Tlo >= 0.9 |

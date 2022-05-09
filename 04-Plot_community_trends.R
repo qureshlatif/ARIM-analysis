@@ -30,7 +30,7 @@ guild.mem <- matrix(NA, nrow = length(spp.list), ncol = length(guilds),
 guild.mem[,"All"] <- TRUE
 for(g in 2:length(guilds)) guild.mem[,g] <- spp.out$Guild == guilds[g]
 # Classify sagebrush species also as shrubland species.
-guild.mem[which(guild.mem["Sagebrush"]), "Shrubland"] <- TRUE
+guild.mem[which(guild.mem[,"Sagebrush"]), "Shrubland"] <- TRUE
 
 #__________ Table compilation functions __________#
 plot.table.grid.fn <- function(w, B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
@@ -63,15 +63,15 @@ plot.table.grid.fn <- function(w, B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$SR.yr[which(out.plot$Development == "High")] <-
     PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.yr.lo[which(out.plot$Development == "High")] <-
-    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.yr.hi[which(out.plot$Development == "High")] <-
-    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   out.plot$SR.pred[which(out.plot$Development == "High")] <-
     PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.pred.lo[which(out.plot$Development == "High")] <-
-    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.pred.hi[which(out.plot$Development == "High")] <-
-    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
 
   # Low development #
   BETA <- B0
@@ -89,15 +89,15 @@ plot.table.grid.fn <- function(w, B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$SR.yr[which(out.plot$Development == "Low")] <-
     PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.yr.lo[which(out.plot$Development == "Low")] <-
-    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.yr.hi[which(out.plot$Development == "Low")] <-
-    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   out.plot$SR.pred[which(out.plot$Development == "Low")] <-
     PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.pred.lo[which(out.plot$Development == "Low")] <-
-    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.pred.hi[which(out.plot$Development == "Low")] <-
-    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   
   # Background #
   BETA <- B0
@@ -115,15 +115,15 @@ plot.table.grid.fn <- function(w, B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$SR.yr[which(out.plot$Development == "Background")] <-
     PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.yr.lo[which(out.plot$Development == "Background")] <-
-    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.yr.hi[which(out.plot$Development == "Background")] <-
-    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    PSI.yr %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   out.plot$SR.pred[which(out.plot$Development == "Background")] <-
     PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.pred.lo[which(out.plot$Development == "Background")] <-
-    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.pred.hi[which(out.plot$Development == "Background")] <-
-    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    PSI.pred %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   
   return(out.plot)
 }
@@ -172,15 +172,15 @@ plot.table.point.fn <- function(w, B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$SR.yr[which(out.plot$Development == "High")] <-
     (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.yr.lo[which(out.plot$Development == "High")] <-
-    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.yr.hi[which(out.plot$Development == "High")] <-
-    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   out.plot$SR.pred[which(out.plot$Development == "High")] <-
     (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.pred.lo[which(out.plot$Development == "High")] <-
-    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.pred.hi[which(out.plot$Development == "High")] <-
-    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   
   # Low development #
   BETA <- B0
@@ -210,15 +210,15 @@ plot.table.point.fn <- function(w, B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$SR.yr[which(out.plot$Development == "Low")] <-
     (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.yr.lo[which(out.plot$Development == "Low")] <-
-    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.yr.hi[which(out.plot$Development == "Low")] <-
-    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   out.plot$SR.pred[which(out.plot$Development == "Low")] <-
     (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.pred.lo[which(out.plot$Development == "Low")] <-
-    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.pred.hi[which(out.plot$Development == "Low")] <-
-    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   
   # Background #
   BETA <- B0
@@ -248,22 +248,22 @@ plot.table.point.fn <- function(w, B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$SR.yr[which(out.plot$Development == "Background")] <-
     (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.yr.lo[which(out.plot$Development == "Background")] <-
-    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.yr.hi[which(out.plot$Development == "Background")] <-
-    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    (PSI.yr * psi.yr) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   out.plot$SR.pred[which(out.plot$Development == "Background")] <-
     (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.pred.lo[which(out.plot$Development == "Background")] <-
-    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.pred.hi[which(out.plot$Development == "Background")] <-
-    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    (PSI.pred * psi.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   
   return(out.plot)
 }
 #_____________________________________________#
 
 # Generate plots for each guild #
-for(g in 1:length(guilds)) {
+for(g in 1:length(guilds)[-which(guilds == "Shrubland")]) {
   gld <- guilds[g]
   gld.nam <- str_c(gld, " species")
   ind.spp <- which(guild.mem[,gld])
@@ -366,14 +366,15 @@ for(g in 1:length(guilds)) {
 
 # Put it all together #
 p <- ggdraw() +
-  draw_plot(p.All,        x = 0, y = 0.81,   width = 1, height = 0.19) +
-  draw_plot(p.Sagebrush,  x = 0, y = 0.62,   width = 1, height = 0.19) +
-  draw_plot(p.Shrubland,  x = 0, y = 0.43,   width = 1, height = 0.19) +
-  draw_plot(p.Grassland,  x = 0, y = 0.24,   width = 1, height = 0.19) +
-  draw_plot(p.Generalist, x = 0, y = 0.05,   width = 1, height = 0.19) +
+  draw_plot(p.All,        x = 0,   y = 0.6833333, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Sagebrush,  x = 0.5, y = 0.6833333, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Grassland,  x = 0,   y = 0.3666667, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Generalist, x = 0.5, y = 0.3666667, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Montane,    x = 0,   y = 0.05,      width = 0.5, height = 0.3166667) +
+  draw_plot(p.Riparian,   x = 0.5, y = 0.05,      width = 0.5, height = 0.3166667) +
   draw_plot_label("Year", x = 0.5, y = 0.05, angle = 0, hjust = 0)
 
-save_plot("Figure_guild_trends_supported.jpg", p, ncol = 1.5, nrow = 4.5, dpi = 600)
+save_plot("Figure_guild_trends_supported.jpg", p, ncol = 2.5, nrow = 4.5, dpi = 600)
 
 # p <- ggdraw() +
 #   draw_plot(p.All,        x = 0, y = 0.8944444, width = 1, height = 0.1055556) +

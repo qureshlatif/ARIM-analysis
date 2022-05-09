@@ -26,7 +26,7 @@ guild.mem <- matrix(NA, nrow = length(spp.list), ncol = length(guilds),
 guild.mem[,"All"] <- TRUE
 for(g in 2:length(guilds)) guild.mem[,g] <- spp.out$Guild == guilds[g]
 # Classify sagebrush species also as shrubland species.
-guild.mem[which(guild.mem["Sagebrush"]), "Shrubland"] <- TRUE
+guild.mem[which(guild.mem[,"Sagebrush"]), "Shrubland"] <- TRUE
 
 ## Compile evidence for mechanisms ##
 cols <- c("DIFF_lo", "DIFF_plo",
@@ -35,7 +35,6 @@ cols <- c("DIFF_lo", "DIFF_plo",
           "Well_3km_contrib_Dbg", "Well_3km_pcont_Dbg",
           "Diff_lo", "Diff_plo",
           "Well_1km_contrib_dlo", "Well_1km_pcont_dlo",
-          "AHerb_contrib_dlo", "AHerb_pcont_dlo",
           "Diff_bg", "Diff_pbg",
           "Well_1km_contrib_dbg", "Well_1km_pcont_dbg",
           "Road_125m_contrib_dbg", "Road_125m_pcont_dbg",
@@ -105,7 +104,7 @@ for(g in guilds) {
     mod$mcmcOutput$w[, spp.ind]
   TREND_lo <- apply(PSI10, 1, sum) / apply(PSI1, 1, sum)
   DIFF_lo <- TREND_hi - TREND_lo
-  out[g, "DIFF_lo"] <- QSLpersonal::BCI(DIFF_lo, BCIpercent = 90)
+  out[g, "DIFF_lo"] <- QSLpersonal::BCI(DIFF_lo, BCIpercent = 80)
   out[g, "DIFF_plo"] <- round(sum(DIFF_lo < 0) / nsims, digits = 2)
 
   PSI1 <- QSLpersonal::expit(BETA_bg + DELTA_bg * X.trend[1]) *
@@ -114,7 +113,7 @@ for(g in guilds) {
     mod$mcmcOutput$w[, spp.ind]
   TREND_bg <- apply(PSI10, 1, sum) / apply(PSI1, 1, sum)
   DIFF_bg <- TREND_hi - TREND_bg
-  out[g, "DIFF_bg"] <- QSLpersonal::BCI(DIFF_bg, BCIpercent = 90)
+  out[g, "DIFF_bg"] <- QSLpersonal::BCI(DIFF_bg, BCIpercent = 80)
   out[g, "DIFF_pbg"] <- round(sum(DIFF_bg < 0) / nsims, digits = 2)
 
   # Evidence for mechanisms #
@@ -138,7 +137,7 @@ for(g in guilds) {
       mod$mcmcOutput$w[, spp.ind]
     trend_hi.rmx <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
     diff_lo.rmx <- trend_hi.rmx - TREND_lo
-    out[g, "Well_3km_contrib_Dlo"] <- QSLpersonal::BCI(((DIFF_lo - diff_lo.rmx) / DIFF_lo) * 100, BCIpercent = 90)
+    out[g, "Well_3km_contrib_Dlo"] <- QSLpersonal::BCI(((DIFF_lo - diff_lo.rmx) / DIFF_lo) * 100, BCIpercent = 80)
     out[g, "Well_3km_pcont_Dlo"] <- round(sum(((DIFF_lo - diff_lo.rmx) / DIFF_lo) > 0) / nsims, digits = 2)
   } else {
     out[g, "Well_3km_contrib_Dlo"] <- "not considered"
@@ -164,7 +163,7 @@ for(g in guilds) {
       mod$mcmcOutput$w[, spp.ind]
     trend_hi.rmx <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
     diff_bg.rmx <- trend_hi.rmx - TREND_bg
-    out[g, "Well_3km_contrib_Dbg"] <- QSLpersonal::BCI(((DIFF_bg - diff_bg.rmx) / DIFF_bg) * 100, BCIpercent = 90)
+    out[g, "Well_3km_contrib_Dbg"] <- QSLpersonal::BCI(((DIFF_bg - diff_bg.rmx) / DIFF_bg) * 100, BCIpercent = 80)
     out[g, "Well_3km_pcont_Dbg"] <- round(sum(((DIFF_bg - diff_bg.rmx) / DIFF_bg) > 0) / nsims, digits = 2)
   } else {
     out[g, "Well_3km_contrib_Dbg"] <- "not considered"
@@ -189,7 +188,7 @@ for(g in guilds) {
     mod$mcmcOutput$w[, spp.ind]
   trend_lo <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
   diff_lo <- trend_hi - trend_lo
-  out[g, "Diff_lo"] <- QSLpersonal::BCI(diff_lo, BCIpercent = 90)
+  out[g, "Diff_lo"] <- QSLpersonal::BCI(diff_lo, BCIpercent = 80)
   out[g, "Diff_plo"] <- round(sum(diff_lo < 0) / nsims, digits = 2)
 
   psi1 <- QSLpersonal::expit(BETA_bg + DELTA_bg * X.trend[1]) *
@@ -200,7 +199,7 @@ for(g in guilds) {
     mod$mcmcOutput$w[, spp.ind]
   trend_bg <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
   diff_bg <- trend_hi - trend_bg
-  out[g, "Diff_bg"] <- QSLpersonal::BCI(diff_bg, BCIpercent = 90)
+  out[g, "Diff_bg"] <- QSLpersonal::BCI(diff_bg, BCIpercent = 80)
   out[g, "Diff_pbg"] <- round(sum(diff_bg < 0) / nsims, digits = 2)
 
   # Evidence for mechanisms #
@@ -226,38 +225,11 @@ for(g in guilds) {
       mod$mcmcOutput$w[, spp.ind]
     trend_hi.rmx <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
     diff_lo.rmx <- trend_hi.rmx - trend_lo
-    out[g, "Well_1km_contrib_dlo"] <- QSLpersonal::BCI(((diff_lo - diff_lo.rmx) / diff_lo) * 100, BCIpercent = 90)
+    out[g, "Well_1km_contrib_dlo"] <- QSLpersonal::BCI(((diff_lo - diff_lo.rmx) / diff_lo) * 100, BCIpercent = 80)
     out[g, "Well_1km_pcont_dlo"] <- round(sum(((diff_lo - diff_lo.rmx) / diff_lo) > 0) / nsims, digits = 2)
-    
-    # Annual herbaceous contribution to difference from low development
-    ind.bx <- which(dimnames(X.psi)[[2]] == "AHerb")
-    ind.dx <- which(dimnames(X.lambda)[[2]] == "AHerb")
-    bhi.rmx <- mod$mcmcOutput$beta0[,spp.ind]
-    dhi.rmx <- mod$mcmcOutput$delta0[,spp.ind]
-    for(i in 1:length(spp.ind)) {
-      bhi.rmx[,i] <- bhi.rmx[,i] + apply(mod$mcmcOutput$beta1[,spp.ind[i],-ind.bx] *
-                                           X.psi.pred.hi[,-ind.bx], 1, sum) +
-        mod$mcmcOutput$beta1[,spp.ind[i],ind.bx] * X.psi.pred.lo[,ind.bx]
-      dhi.rmx[,i] <- dhi.rmx[,i] + apply(mod$mcmcOutput$delta1[,spp.ind[i],-ind.dx] *
-                                           X.lambda.pred.hi[,-ind.dx], 1, sum) +
-        mod$mcmcOutput$delta1[,spp.ind[i],ind.dx] * X.lambda.pred.lo[,ind.dx]
-    }
-    psi1 <- QSLpersonal::expit(BETA_hi + DELTA_hi * X.trend[1]) *
-      QSLpersonal::expit(bhi.rmx + dhi.rmx * X.trend[1]) *
-      mod$mcmcOutput$w[, spp.ind]
-    psi10 <- QSLpersonal::expit(BETA_hi + DELTA_hi * X.trend[10]) *
-      QSLpersonal::expit(bhi.rmx + dhi.rmx * X.trend[10]) *
-      mod$mcmcOutput$w[, spp.ind]
-    trend_hi.rmx <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
-    diff_lo.rmx <- trend_hi.rmx - trend_lo
-    out[g, "AHerb_contrib_dlo"] <- QSLpersonal::BCI(((diff_lo - diff_lo.rmx) / diff_lo) * 100, BCIpercent = 90)
-    out[g, "AHerb_pcont_dlo"] <- round(sum(((diff_lo - diff_lo.rmx) / diff_lo) > 0) / nsims, digits = 2)
-    
   } else {
     out[g, "Well_1km_contrib_dlo"] <- "not considered"
     out[g, "Well_1km_pcont_dlo"] <-  "not considered"
-    out[g, "AHerb_contrib_dlo"] <- "not considered"
-    out[g, "AHerb_pcont_dlo"] <-  "not considered"
   }
   if(out[g, "Diff_pbg"] >= 0.9) {
     # Well density contribution to difference from background
@@ -281,7 +253,7 @@ for(g in guilds) {
       mod$mcmcOutput$w[, spp.ind]
     trend_hi.rmx <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
     diff_bg.rmx <- trend_hi.rmx - trend_bg
-    out[g, "Well_1km_contrib_dbg"] <- QSLpersonal::BCI(((diff_bg - diff_bg.rmx) / diff_bg) * 100, BCIpercent = 90)
+    out[g, "Well_1km_contrib_dbg"] <- QSLpersonal::BCI(((diff_bg - diff_bg.rmx) / diff_bg) * 100, BCIpercent = 80)
     out[g, "Well_1km_pcont_dbg"] <- round(sum(((diff_bg - diff_bg.rmx) / diff_bg) > 0) / nsims, digits = 2)
 
     # Road density contribution to difference from background
@@ -305,7 +277,7 @@ for(g in guilds) {
       mod$mcmcOutput$w[, spp.ind]
     trend_hi.rmx <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
     diff_bg.rmx <- trend_hi.rmx - trend_bg
-    out[g, "Road_125m_contrib_dbg"] <- QSLpersonal::BCI(((diff_bg - diff_bg.rmx) / diff_bg) * 100, BCIpercent = 90)
+    out[g, "Road_125m_contrib_dbg"] <- QSLpersonal::BCI(((diff_bg - diff_bg.rmx) / diff_bg) * 100, BCIpercent = 80)
     out[g, "Road_125m_pcont_dbg"] <- round(sum(((diff_bg - diff_bg.rmx) / diff_bg) > 0) / nsims, digits = 2)
     
     # Well density contribution to difference from background
@@ -329,7 +301,7 @@ for(g in guilds) {
       mod$mcmcOutput$w[, spp.ind]
     trend_hi.rmx <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
     diff_bg.rmx <- trend_hi.rmx - trend_bg
-    out[g, "AHerb_contrib_dbg"] <- QSLpersonal::BCI(((diff_bg - diff_bg.rmx) / diff_bg) * 100, BCIpercent = 90)
+    out[g, "AHerb_contrib_dbg"] <- QSLpersonal::BCI(((diff_bg - diff_bg.rmx) / diff_bg) * 100, BCIpercent = 80)
     out[g, "AHerb_pcont_dbg"] <- round(sum(((diff_bg - diff_bg.rmx) / diff_bg) > 0) / nsims, digits = 2)
   } else {
     out[g, "Well_1km_contrib_dbg"] <- "not considered"

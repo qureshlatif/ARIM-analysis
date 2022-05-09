@@ -47,15 +47,15 @@ plot.table.fn <- function(B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$PSI.yr[which(out.plot$Development == "High")] <-
     apply(PSI.yr, 2, median)
   out.plot$PSI.yr.lo[which(out.plot$Development == "High")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.05, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.1, type = 8)
   out.plot$PSI.yr.hi[which(out.plot$Development == "High")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.95, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.9, type = 8)
   out.plot$PSI.pred[which(out.plot$Development == "High")] <-
     apply(PSI.pred, 2, median)
   out.plot$PSI.pred.lo[which(out.plot$Development == "High")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.05, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.1, type = 8)
   out.plot$PSI.pred.hi[which(out.plot$Development == "High")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.95, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.9, type = 8)
 
   # Low development #
   BETA <- B0 + apply(B1 * X.B.lo, 1, sum)
@@ -69,15 +69,15 @@ plot.table.fn <- function(B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$PSI.yr[which(out.plot$Development == "Low")] <-
     apply(PSI.yr, 2, median)
   out.plot$PSI.yr.lo[which(out.plot$Development == "Low")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.05, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.1, type = 8)
   out.plot$PSI.yr.hi[which(out.plot$Development == "Low")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.95, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.9, type = 8)
   out.plot$PSI.pred[which(out.plot$Development == "Low")] <-
     apply(PSI.pred, 2, median)
   out.plot$PSI.pred.lo[which(out.plot$Development == "Low")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.05, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.1, type = 8)
   out.plot$PSI.pred.hi[which(out.plot$Development == "Low")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.95, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.9, type = 8)
   
   # Background #
   BETA <- B0 + apply(B1 * X.B.bg, 1, sum)
@@ -91,15 +91,15 @@ plot.table.fn <- function(B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
   out.plot$PSI.yr[which(out.plot$Development == "Background")] <-
     apply(PSI.yr, 2, median)
   out.plot$PSI.yr.lo[which(out.plot$Development == "Background")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.05, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.1, type = 8)
   out.plot$PSI.yr.hi[which(out.plot$Development == "Background")] <-
-    apply(PSI.yr, 2, quantile, prob = 0.95, type = 8)
+    apply(PSI.yr, 2, quantile, prob = 0.9, type = 8)
   out.plot$PSI.pred[which(out.plot$Development == "Background")] <-
     apply(PSI.pred, 2, median)
   out.plot$PSI.pred.lo[which(out.plot$Development == "Background")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.05, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.1, type = 8)
   out.plot$PSI.pred.hi[which(out.plot$Development == "Background")] <-
-    apply(PSI.pred, 2, quantile, prob = 0.95, type = 8)
+    apply(PSI.pred, 2, quantile, prob = 0.9, type = 8)
   
   return(out.plot)
 }

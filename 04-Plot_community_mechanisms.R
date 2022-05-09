@@ -30,7 +30,7 @@ guild.mem <- matrix(NA, nrow = length(spp.list), ncol = length(guilds),
 guild.mem[,"All"] <- TRUE
 for(g in 2:length(guilds)) guild.mem[,g] <- spp.out$Guild == guilds[g]
 # Classify sagebrush species also as shrubland species.
-guild.mem[which(guild.mem["Sagebrush"]), "Shrubland"] <- TRUE
+guild.mem[which(guild.mem[,"Sagebrush"]), "Shrubland"] <- TRUE
 
 #__________ Table compilation function __________#
 plot.table.fn <- function(w, B0, B1, X.B, D0, D1, X.D,
@@ -76,16 +76,16 @@ plot.table.fn <- function(w, B0, B1, X.B, D0, D1, X.D,
   out.plot$SR.pred[which(out.plot$Level == xmn.label)] <-
     (PSI.pred * psi_xmn.pred) %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.pred.lo[which(out.plot$Level == xmn.label)] <-
-    (PSI.pred * psi_xmn.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    (PSI.pred * psi_xmn.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.pred.hi[which(out.plot$Level == xmn.label)] <-
-    (PSI.pred * psi_xmn.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    (PSI.pred * psi_xmn.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   
   out.plot$SR.pred[which(out.plot$Level == xmx.label)] <-
     (PSI.pred * psi_xmx.pred) %>% apply(c(1, 3), sum) %>% apply(2, median)
   out.plot$SR.pred.lo[which(out.plot$Level == xmx.label)] <-
-    (PSI.pred * psi_xmx.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.05, type = 8)
+    (PSI.pred * psi_xmx.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.1, type = 8)
   out.plot$SR.pred.hi[which(out.plot$Level == xmx.label)] <-
-    (PSI.pred * psi_xmx.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.95, type = 8)
+    (PSI.pred * psi_xmx.pred) %>% apply(c(1, 3), sum) %>% apply(2, quantile, prob = 0.9, type = 8)
   
   return(out.plot)
 }

@@ -27,7 +27,7 @@ guild.mem <- matrix(NA, nrow = length(spp.list), ncol = length(guilds),
 guild.mem[,"All"] <- TRUE
 for(g in 2:length(guilds)) guild.mem[,g] <- spp.out$Guild == guilds[g]
   # Classify sagebrush species also as shrubland species.
-guild.mem[which(guild.mem["Sagebrush"]), "Shrubland"] <- TRUE
+guild.mem[which(guild.mem[,"Sagebrush"]), "Shrubland"] <- TRUE
 
 ## Richness and trend estimates ##
 cols <- c("SR_hi", "SR_lo", "SR_bg",
@@ -50,7 +50,7 @@ for(g in 1:length(guilds)) {
     QSLpersonal::BCI(
       (QSLpersonal::expit(BETA_hi) *
          mod$mcmcOutput$w[, spp.ind]) %>% apply(1, sum),
-      flag.sig = F)
+      flag.sig = F, BCIpercent = 80)
   
   BETA_lo <- mod$mcmcOutput$BETA0[, spp.ind]
   for(i in 1:length(spp.ind)) BETA_lo[, i] <- BETA_lo[, i] +
@@ -59,7 +59,7 @@ for(g in 1:length(guilds)) {
     QSLpersonal::BCI(
       (QSLpersonal::expit(BETA_lo) *
          mod$mcmcOutput$w[, spp.ind]) %>% apply(1, sum),
-      flag.sig = F)
+      flag.sig = F, BCIpercent = 80)
   
   BETA_bg <- mod$mcmcOutput$BETA0[, spp.ind]
   for(i in 1:length(spp.ind)) BETA_bg[, i] <- BETA_bg[, i] +
@@ -68,7 +68,7 @@ for(g in 1:length(guilds)) {
     QSLpersonal::BCI(
       (QSLpersonal::expit(BETA_bg) *
          mod$mcmcOutput$w[, spp.ind]) %>% apply(1, sum),
-      flag.sig = F)
+      flag.sig = F, BCIpercent = 80)
 
   # Grid-cell trend #
   L.hi <- mod$mcmcOutput$DELTA0[, spp.ind]
@@ -77,9 +77,9 @@ for(g in 1:length(guilds)) {
   PSI1 <- QSLpersonal::expit(BETA_hi + L.hi * X.trend[1]) * mod$mcmcOutput$w[, spp.ind]
   PSI10 <- QSLpersonal::expit(BETA_hi + L.hi * X.trend[10]) * mod$mcmcOutput$w[, spp.ind]
   TREND_hi <- apply(PSI10, 1, sum) / apply(PSI1, 1, sum)
-  out[g, "TREND_hi"] <- QSLpersonal::BCI(TREND_hi, flag.sig = F)
-  if(quantile(TREND_hi, prob = 0.975, type = 8) < 1 |
-     quantile(TREND_hi, prob = 0.025, type = 8) > 1)
+  out[g, "TREND_hi"] <- QSLpersonal::BCI(TREND_hi, flag.sig = F, BCIpercent = 80)
+  if(quantile(TREND_hi, prob = 0.9, type = 8) < 1 |
+     quantile(TREND_hi, prob = 0.1, type = 8) > 1)
     out[g, "TREND_hi"] <- str_c(out[g, "TREND_hi"], "*")
 
   L.lo <- mod$mcmcOutput$DELTA0[, spp.ind]
@@ -88,9 +88,9 @@ for(g in 1:length(guilds)) {
   PSI1 <- QSLpersonal::expit(BETA_lo + L.lo * X.trend[1]) * mod$mcmcOutput$w[, spp.ind]
   PSI10 <- QSLpersonal::expit(BETA_lo + L.lo * X.trend[10]) * mod$mcmcOutput$w[, spp.ind]
   TREND_lo <- apply(PSI10, 1, sum) / apply(PSI1, 1, sum)
-  out[g, "TREND_lo"] <- QSLpersonal::BCI(TREND_lo, flag.sig = F)
-  if(quantile(TREND_lo, prob = 0.975, type = 8) < 1 |
-     quantile(TREND_lo, prob = 0.025, type = 8) > 1)
+  out[g, "TREND_lo"] <- QSLpersonal::BCI(TREND_lo, flag.sig = F, BCIpercent = 80)
+  if(quantile(TREND_lo, prob = 0.9, type = 8) < 1 |
+     quantile(TREND_lo, prob = 0.1, type = 8) > 1)
     out[g, "TREND_lo"] <- str_c(out[g, "TREND_lo"], "*")
   
   L.bg <- mod$mcmcOutput$DELTA0[, spp.ind]
@@ -99,14 +99,14 @@ for(g in 1:length(guilds)) {
   PSI1 <- QSLpersonal::expit(BETA_bg + L.bg * X.trend[1]) * mod$mcmcOutput$w[, spp.ind]
   PSI10 <- QSLpersonal::expit(BETA_bg + L.bg * X.trend[10]) * mod$mcmcOutput$w[, spp.ind]
   TREND_bg <- apply(PSI10, 1, sum) / apply(PSI1, 1, sum)
-  out[g, "TREND_bg"] <- QSLpersonal::BCI(TREND_bg, flag.sig = F)
-  if(quantile(TREND_bg, prob = 0.975, type = 8) < 1 |
-     quantile(TREND_bg, prob = 0.025, type = 8) > 1)
+  out[g, "TREND_bg"] <- QSLpersonal::BCI(TREND_bg, flag.sig = F, BCIpercent = 80)
+  if(quantile(TREND_bg, prob = 0.9, type = 8) < 1 |
+     quantile(TREND_bg, prob = 0.1, type = 8) > 1)
     out[g, "TREND_bg"] <- str_c(out[g, "TREND_bg"], "*")
   
   # Grid-cell trend differences #
-  out[g, "DIFFTot_lo"] <- QSLpersonal::BCI(TREND_hi - TREND_lo)
-  out[g, "DIFFTot_bg"] <- QSLpersonal::BCI(TREND_hi - TREND_bg)
+  out[g, "DIFFTot_lo"] <- QSLpersonal::BCI(TREND_hi - TREND_lo, BCIpercent = 80)
+  out[g, "DIFFTot_bg"] <- QSLpersonal::BCI(TREND_hi - TREND_bg, BCIpercent = 80)
 
   # Point-scale richness #
   beta_hi <- mod$mcmcOutput$beta0[, spp.ind]
@@ -117,7 +117,7 @@ for(g in 1:length(guilds)) {
       (QSLpersonal::expit(BETA_hi) *
         QSLpersonal::expit(beta_hi) *
          mod$mcmcOutput$w[, spp.ind]) %>% apply(1, sum),
-      flag.sig = F)
+      flag.sig = F, BCIpercent = 80)
   
   beta_lo <- mod$mcmcOutput$beta0[, spp.ind]
   for(i in 1:length(spp.ind)) beta_lo[, i] <- beta_lo[, i] +
@@ -127,7 +127,7 @@ for(g in 1:length(guilds)) {
       (QSLpersonal::expit(BETA_lo) *
          QSLpersonal::expit(beta_lo) *
          mod$mcmcOutput$w[, spp.ind]) %>% apply(1, sum),
-      flag.sig = F)
+      flag.sig = F, BCIpercent = 80)
   
   beta_bg <- mod$mcmcOutput$beta0[, spp.ind]
   for(i in 1:length(spp.ind)) beta_bg[, i] <- beta_bg[, i] +
@@ -137,7 +137,7 @@ for(g in 1:length(guilds)) {
       (QSLpersonal::expit(BETA_bg) *
          QSLpersonal::expit(beta_bg) *
          mod$mcmcOutput$w[, spp.ind]) %>% apply(1, sum),
-      flag.sig = F)
+      flag.sig = F, BCIpercent = 80)
   
   # Point-scale trend #
   l.hi <- mod$mcmcOutput$delta0[, spp.ind]
@@ -150,9 +150,9 @@ for(g in 1:length(guilds)) {
     QSLpersonal::expit(beta_hi + l.hi * X.trend[10]) *
     mod$mcmcOutput$w[, spp.ind]
   trend_hi <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
-  out[g, "trend_hi"] <- QSLpersonal::BCI(trend_hi, flag.sig = F)
-  if(quantile(trend_hi, prob = 0.975, type = 8) < 1 |
-     quantile(trend_hi, prob = 0.025, type = 8) > 1)
+  out[g, "trend_hi"] <- QSLpersonal::BCI(trend_hi, flag.sig = F, BCIpercent = 80)
+  if(quantile(trend_hi, prob = 0.9, type = 8) < 1 |
+     quantile(trend_hi, prob = 0.1, type = 8) > 1)
     out[g, "trend_hi"] <- str_c(out[g, "trend_hi"], "*")
   
   l.lo <- mod$mcmcOutput$delta0[, spp.ind]
@@ -165,9 +165,9 @@ for(g in 1:length(guilds)) {
     QSLpersonal::expit(beta_lo + l.lo * X.trend[10]) *
     mod$mcmcOutput$w[, spp.ind]
   trend_lo <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
-  out[g, "trend_lo"] <- QSLpersonal::BCI(trend_lo, flag.sig = F)
-  if(quantile(trend_lo, prob = 0.975, type = 8) < 1 |
-     quantile(trend_lo, prob = 0.025, type = 8) > 1)
+  out[g, "trend_lo"] <- QSLpersonal::BCI(trend_lo, flag.sig = F, BCIpercent = 80)
+  if(quantile(trend_lo, prob = 0.9, type = 8) < 1 |
+     quantile(trend_lo, prob = 0.1, type = 8) > 1)
     out[g, "trend_lo"] <- str_c(out[g, "trend_lo"], "*")
   
   l.bg <- mod$mcmcOutput$delta0[, spp.ind]
@@ -180,14 +180,14 @@ for(g in 1:length(guilds)) {
     QSLpersonal::expit(beta_bg + l.bg * X.trend[10]) *
     mod$mcmcOutput$w[, spp.ind]
   trend_bg <- apply(psi10, 1, sum) / apply(psi1, 1, sum)
-  out[g, "trend_bg"] <- QSLpersonal::BCI(trend_bg, flag.sig = F)
-  if(quantile(trend_bg, prob = 0.975, type = 8) < 1 |
-     quantile(trend_bg, prob = 0.025, type = 8) > 1)
+  out[g, "trend_bg"] <- QSLpersonal::BCI(trend_bg, flag.sig = F, BCIpercent = 80)
+  if(quantile(trend_bg, prob = 0.9, type = 8) < 1 |
+     quantile(trend_bg, prob = 0.1, type = 8) > 1)
     out[g, "trend_bg"] <- str_c(out[g, "trend_bg"], "*")
   
   # Point-scale trend differences #
-  out[g, "diffTot_lo"] <- QSLpersonal::BCI(trend_hi - trend_lo)
-  out[g, "diffTot_bg"] <- QSLpersonal::BCI(trend_hi - trend_bg)
+  out[g, "diffTot_lo"] <- QSLpersonal::BCI(trend_hi - trend_lo, BCIpercent = 80)
+  out[g, "diffTot_bg"] <- QSLpersonal::BCI(trend_hi - trend_bg, BCIpercent = 80)
 }
 
 write.csv(out, "Summary_community_dev_effects.csv", row.names = T)

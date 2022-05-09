@@ -50,15 +50,15 @@ plot.table.fn <- function(B0, B1, X.B, X.B.ind,
   out.plot$PSI.pred[which(out.plot$Level == xmx.label)] <-
     apply(PSI_xmx.pred, 2, median)
   out.plot$PSI.pred.lo[which(out.plot$Level == xmx.label)] <-
-    apply(PSI_xmx.pred, 2, quantile, prob = 0.05, type = 8)
+    apply(PSI_xmx.pred, 2, quantile, prob = 0.1, type = 8)
   out.plot$PSI.pred.hi[which(out.plot$Level == xmx.label)] <-
-    apply(PSI_xmx.pred, 2, quantile, prob = 0.95, type = 8)
+    apply(PSI_xmx.pred, 2, quantile, prob = 0.9, type = 8)
   out.plot$PSI.pred[which(out.plot$Level == xmn.label)] <-
     apply(PSI_xmn.pred, 2, median)
   out.plot$PSI.pred.lo[which(out.plot$Level == xmn.label)] <-
-    apply(PSI_xmn.pred, 2, quantile, prob = 0.05, type = 8)
+    apply(PSI_xmn.pred, 2, quantile, prob = 0.1, type = 8)
   out.plot$PSI.pred.hi[which(out.plot$Level == xmn.label)] <-
-    apply(PSI_xmn.pred, 2, quantile, prob = 0.95, type = 8)
+    apply(PSI_xmn.pred, 2, quantile, prob = 0.9, type = 8)
 
   return(out.plot)
 }

@@ -54,45 +54,45 @@ parm <- QSLpersonal::expit(mod$mcmcOutput$BETA0)
 out[, "PSI0.est"] <- str_c(
   apply(parm, 2, median) %>% round(digits = 2),
   "(",
-  apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
   ",",
-  apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
   ")")
 
 parm <- mod$mcmcOutput$DELTA0
 out[, "LAMBDA0.est"] <- str_c(
   apply(parm, 2, median) %>% round(digits = 2),
   "(",
-  apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
   ",",
-  apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
   ")")
 
 parm <- QSLpersonal::expit(mod$mcmcOutput$beta0)
 out[, "psi0.est"] <- str_c(
   apply(parm, 2, median) %>% round(digits = 2),
   "(",
-  apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
   ",",
-  apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
   ")")
 
 parm <- mod$mcmcOutput$delta0
 out[, "lambda0.est"] <- str_c(
   apply(parm, 2, median) %>% round(digits = 2),
   "(",
-  apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
   ",",
-  apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
   ")")
 
 parm <- QSLpersonal::expit(mod$mcmcOutput$zeta0) %>% (function(x) 1 - (1-x)^3)
 out[, "pStar.est"] <- str_c(
   apply(parm, 2, median) %>% round(digits = 2),
   "(",
-  apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
   ",",
-  apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+  apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
   ")")
 
 pars <- params[which(str_detect(params, "BETA."))]
@@ -101,9 +101,9 @@ for(i in 1:length(pars)) {
   out[, str_c(pars[i], ".est")] <- str_c(
     apply(parm, 2, median) %>% round(digits = 2),
     "(",
-    apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
     ",",
-    apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
     ")")
   out[, str_c(pars[i], ".f")] <-
     apply(parm, 2, function(x) sum(x > 0) / length(x)) %>%
@@ -116,9 +116,9 @@ for(i in 1:length(pars)) {
   out[, str_c(pars[i], ".est")] <- str_c(
     apply(parm, 2, median) %>% round(digits = 2),
     "(",
-    apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
     ",",
-    apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
     ")")
   out[, str_c(pars[i], ".f")] <-
     apply(parm, 2, function(x) sum(x > 0) / length(x)) %>%
@@ -131,9 +131,9 @@ for(i in 1:length(pars)) {
   out[, str_c(pars[i], ".est")] <- str_c(
     apply(parm, 2, median) %>% round(digits = 2),
     "(",
-    apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
     ",",
-    apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
     ")")
   out[, str_c(pars[i], ".f")] <-
     apply(parm, 2, function(x) sum(x > 0) / length(x)) %>%
@@ -146,9 +146,9 @@ for(i in 1:length(pars)) {
   out[, str_c(pars[i], ".est")] <- str_c(
     apply(parm, 2, median) %>% round(digits = 2),
     "(",
-    apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
     ",",
-    apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
     ")")
   out[, str_c(pars[i], ".f")] <-
     apply(parm, 2, function(x) sum(x > 0) / length(x)) %>%
@@ -161,9 +161,9 @@ for(i in 1:length(pars)) {
   out[, str_c(pars[i], ".est")] <- str_c(
     apply(parm, 2, median) %>% round(digits = 2),
     "(",
-    apply(parm, 2, function(x) quantile(x, prob = 0.05, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.1, type = 8)) %>% round(digits = 2),
     ",",
-    apply(parm, 2, function(x) quantile(x, prob = 0.95, type = 8)) %>% round(digits = 2),
+    apply(parm, 2, function(x) quantile(x, prob = 0.9, type = 8)) %>% round(digits = 2),
     ")")
   out[, str_c(pars[i], ".f")] <-
     apply(parm, 2, function(x) sum(x > 0) / length(x)) %>%
