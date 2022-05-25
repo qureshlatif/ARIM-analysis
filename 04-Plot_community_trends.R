@@ -298,10 +298,10 @@ for(g in 1:length(guilds)[-which(guilds == "Shrubland")]) {
     scale_color_manual(values = c("#D55E00", "#009E73", "#000000")) +
     scale_fill_manual(values = c("#D55E00", "#009E73", "#000000")) +
     scale_shape_manual(values = c(15, 17, 16)) +
+    ylim(0, max(c(dat.plot$SR.yr.hi, dat.plot$SR.pred.hi))) +
     scale_x_continuous(breaks = seq(2010, 2019, by = 2))
   if(gld == "All") {
     p.grid <- p.grid +
-      ylim(5,26) +
       theme(legend.position = c(1,0), legend.justification = c(1,0)) +
       xlab(NULL) + ylab("Grid-cell richness")  
   } else {
@@ -352,6 +352,7 @@ for(g in 1:length(guilds)[-which(guilds == "Shrubland")]) {
     scale_fill_manual(values = c("#D55E00", "#009E73", "#000000")) +
     scale_shape_manual(values = c(15, 17, 16)) +
     scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
+    ylim(0,max(c(dat.plot$SR.yr.hi, dat.plot$SR.pred.hi))) +
     #theme(legend.position = c(1,0), legend.justification = c(1,0)) +
     guides(color = F, fill = F, shape = F) +
     xlab(NULL) + ylab("Point richness")
@@ -374,7 +375,7 @@ p <- ggdraw() +
   draw_plot(p.Riparian,   x = 0.5, y = 0.05,      width = 0.5, height = 0.3166667) +
   draw_plot_label("Year", x = 0.5, y = 0.05, angle = 0, hjust = 0)
 
-save_plot("Figure_guild_trends_supported.jpg", p, ncol = 2.5, nrow = 4.5, dpi = 600)
+save_plot("Figure_guild_trends_supported.jpg", p, ncol = 2, nrow = 3, dpi = 600)
 
 # p <- ggdraw() +
 #   draw_plot(p.All,        x = 0, y = 0.8944444, width = 1, height = 0.1055556) +

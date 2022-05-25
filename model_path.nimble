@@ -172,17 +172,13 @@ model <<- nimbleCode({
       ALPHA.Dev_lo.Well_1km * X.PSI[j, ind.PSI.Dev_lo] +
       ALPHA.Dev_bg.Well_1km * X.PSI[j, ind.PSI.Dev_bg]
 
-    X.PSI.raw[j, ind.PSI.Road_1km] ~ dgamma(shape.Road_1km,
-      shape.Road_1km / exp(pred.Road_1km[j]))
-    pred.Road_1km[j] <- ALPHA0.Road_1km +
-      ALPHA.Dev_lo.Road_1km * X.PSI[j, ind.PSI.Dev_lo] +
-      ALPHA.Dev_bg.Road_1km * X.PSI[j, ind.PSI.Dev_bg]
-
     # Point scale pathways #
     X.psi.raw[j, ind.psi.AHerb] ~ dbeta(a.AHerb[j], b.AHerb[j])
     a.AHerb[j] <- pred.AHerb[j] * phi.AHerb
     b.AHerb[j] <- (1 - pred.AHerb[j]) * phi.AHerb
     logit(pred.AHerb[j]) <- alpha0.AHerb +
+      alpha.Dev_lo.AHerb * X.PSI[j, ind.PSI.Dev_lo] +
+      alpha.Dev_bg.AHerb * X.PSI[j, ind.PSI.Dev_bg] +
       alpha.Well_1km.AHerb * X.psi[j, ind.psi.Well_1km] +
       alpha.Road_125m.AHerb * X.psi[j, ind.psi.Road_125m]
 
@@ -205,19 +201,16 @@ model <<- nimbleCode({
   ALPHA.Dev_bg.Well_1km ~ dnorm(0, 0.66667)
   r.Well_1km ~ dunif(0, 50)
 
-  ALPHA0.Road_1km ~ dnorm(0, 0.5)
-  ALPHA.Dev_lo.Road_1km ~ dnorm(0, 0.5)
-  ALPHA.Dev_bg.Road_1km ~ dnorm(0, 0.5)
-  shape.Road_1km ~ dunif(0, 100)
-
   ## Point level models ##
   alpha0.AHerb ~ dnorm(0, 0.66667)
+  alpha.Dev_lo.AHerb ~ dnorm(0, 0.66667)
+  alpha.Dev_bg.AHerb ~ dnorm(0, 0.66667)
   alpha.Well_1km.AHerb ~ dnorm(0, 0.66667)
   alpha.Road_125m.AHerb ~ dnorm(0, 0.66667)
   phi.AHerb ~ dgamma(.1,.1)
   
-  alpha0.Road_125m ~ dnorm(0, 1)
-  alpha.Dev_lo.Road_125m ~ dnorm(0, 1)
-  alpha.Dev_bg.Road_125m ~ dnorm(0, 1)
+  alpha0.Road_125m ~ dnorm(0, 0.66667)
+  alpha.Dev_lo.Road_125m ~ dnorm(0, 0.66667)
+  alpha.Dev_bg.Road_125m ~ dnorm(0, 0.66667)
   shape.Road_125m ~ dunif(0, 100)
 })

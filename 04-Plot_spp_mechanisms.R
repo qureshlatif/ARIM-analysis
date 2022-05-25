@@ -174,8 +174,8 @@ X.D.ind <- which(dimnames(X.lambda.pred.hi)[[2]] == var.nam)
 
 x.min <- min(X.psi[,X.B.ind])
 x.max <- max(X.psi[,X.B.ind])
-xmn.label <- "0% annual herbaceous cover"
-xmx.label <- "17% annuall herbaceous cover"
+xmn.label <- "0% cheatgrass"
+xmx.label <- "17% cheatgrass"
 
 dat.plot <- plot.table.fn(B0 = mod$mcmcOutput$beta0[,ind.spp],
                           B1 = mod$mcmcOutput$beta1[,ind.spp,],

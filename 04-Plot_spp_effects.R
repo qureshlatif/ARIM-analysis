@@ -257,7 +257,7 @@ p.bAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.AHerb)) +
   scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
                      expand=c(0, 1)) +
   scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
-  ylab(expression(hat(beta)["Annual herb cover"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Cheatgrass"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
@@ -354,7 +354,7 @@ p.dAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.AHerb)) +
   scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
                      expand=c(0, 1)) +
   scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
-  ylab(expression(hat(delta)["Annual herb cover"])) + xlab(NULL) +
+  ylab(expression(hat(delta)["Cheatgrass"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +

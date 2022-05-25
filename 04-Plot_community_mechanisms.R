@@ -134,56 +134,7 @@ p.All_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   geom_line(aes(color = Level), size = 1) +
   scale_color_manual(values = c("#000000", "#D55E00")) +
   scale_fill_manual(values = c("#000000", "#D55E00")) +
-  scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
-  theme(legend.position = c(1,1), legend.justification = c(1,1)) +
-  guides(color=guide_legend(title = NULL),
-         fill=guide_legend(title = NULL)) +
-  ggtitle(gld.nam) +
-  xlab(NULL) + ylab("Point richness")
-
-## All species, Annual herbaceous cover ##
-gld <- "All"
-gld.nam <- str_c(gld, " species")
-ind.spp <- which(guild.mem[,gld])
-
-var.nam <- "AHerb"
-X.b <- X.psi.pred.hi
-X.b.ind <- which(dimnames(X.psi.pred.hi)[[2]] == var.nam)
-X.d <- X.lambda.pred.hi
-X.d.ind <- which(dimnames(X.lambda.pred.hi)[[2]] == var.nam)
-
-x.min <- min(X.psi[,X.b.ind])
-x.max <- max(X.psi[,X.b.ind])
-xmn.label <- "0% annual herbaceous cover"
-xmx.label <- "17% annuall herbaceous cover"
-
-dat.plot <- plot.table.fn(w = mod$mcmcOutput$w[,ind.spp],
-                          B0 = mod$mcmcOutput$BETA0[,ind.spp],
-                          B1 = mod$mcmcOutput$BETA1[,ind.spp,],
-                          X.B = X.PSI.pred.hi,
-                          D0 = mod$mcmcOutput$DELTA0[,ind.spp],
-                          D1 = mod$mcmcOutput$DELTA1[,ind.spp,],
-                          X.D = X.LAMBDA.pred.hi,
-                          b0 = mod$mcmcOutput$beta0[,ind.spp],
-                          b1 = mod$mcmcOutput$beta1[,ind.spp,],
-                          X.b = X.b,
-                          X.b.ind = X.b.ind,
-                          d0 = mod$mcmcOutput$delta0[,ind.spp],
-                          d1 = mod$mcmcOutput$delta1[,ind.spp,],
-                          X.d = X.d,
-                          X.d.ind = X.d.ind,
-                          years = years,
-                          X.trend = X.trend,
-                          x.min = x.min, x.max = x.max,
-                          xmn.label = xmn.label, xmx.label = xmx.label) %>%
-  mutate(Level = factor(Level, levels = c(xmn.label, xmx.label)))
-
-p.All_AHerb <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
-  geom_ribbon(aes(ymin = SR.pred.lo, ymax = SR.pred.hi, fill = Level),
-              size = 0, alpha = 0.3) +
-  geom_line(aes(color = Level), size = 1) +
-  scale_color_manual(values = c("#000000", "#D55E00")) +
-  scale_fill_manual(values = c("#000000", "#D55E00")) +
+  ylim(0, max(dat.plot$SR.pred.hi)) +
   scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +
   guides(color=guide_legend(title = NULL),
@@ -235,6 +186,7 @@ p.Gen_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   scale_color_manual(values = c("#000000", "#D55E00")) +
   scale_fill_manual(values = c("#000000", "#D55E00")) +
   scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
+  ylim(0, max(dat.plot$SR.pred.hi)) +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +
   guides(color=guide_legend(title = NULL),
          fill=guide_legend(title = NULL)) +
@@ -285,6 +237,109 @@ p.Sage_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   scale_color_manual(values = c("#000000", "#D55E00")) +
   scale_fill_manual(values = c("#000000", "#D55E00")) +
   scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
+  ylim(0, max(dat.plot$SR.pred.hi)) +
+  theme(legend.position = c(1,1), legend.justification = c(1,1)) +
+  guides(color=guide_legend(title = NULL),
+         fill=guide_legend(title = NULL)) +
+  ggtitle(gld.nam) +
+  xlab(NULL) + ylab("Point richness")
+
+## Montane, Well_1km ##
+gld <- "Montane"
+gld.nam <- str_c(gld, " species")
+ind.spp <- which(guild.mem[,gld])
+
+var.nam <- "Well_1km"
+X.b <- X.psi.pred.hi
+X.b.ind <- which(dimnames(X.psi.pred.hi)[[2]] == var.nam)
+X.d <- X.lambda.pred.hi
+X.d.ind <- which(dimnames(X.lambda.pred.hi)[[2]] == var.nam)
+
+x.min <- min(X.psi[,X.b.ind])
+x.max <- max(X.psi[,X.b.ind])
+xmn.label <- "0 wells per sqr km"
+xmx.label <- "5 wells per sqr km"
+
+dat.plot <- plot.table.fn(w = mod$mcmcOutput$w[,ind.spp],
+                          B0 = mod$mcmcOutput$BETA0[,ind.spp],
+                          B1 = mod$mcmcOutput$BETA1[,ind.spp,],
+                          X.B = X.PSI.pred.hi,
+                          D0 = mod$mcmcOutput$DELTA0[,ind.spp],
+                          D1 = mod$mcmcOutput$DELTA1[,ind.spp,],
+                          X.D = X.LAMBDA.pred.hi,
+                          b0 = mod$mcmcOutput$beta0[,ind.spp],
+                          b1 = mod$mcmcOutput$beta1[,ind.spp,],
+                          X.b = X.b,
+                          X.b.ind = X.b.ind,
+                          d0 = mod$mcmcOutput$delta0[,ind.spp],
+                          d1 = mod$mcmcOutput$delta1[,ind.spp,],
+                          X.d = X.d,
+                          X.d.ind = X.d.ind,
+                          years = years,
+                          X.trend = X.trend,
+                          x.min = x.min, x.max = x.max,
+                          xmn.label = xmn.label, xmx.label = xmx.label) %>%
+  mutate(Level = factor(Level, levels = c(xmn.label, xmx.label)))
+
+p.Mont_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
+  geom_ribbon(aes(ymin = SR.pred.lo, ymax = SR.pred.hi, fill = Level),
+              size = 0, alpha = 0.3) +
+  geom_line(aes(color = Level), size = 1) +
+  scale_color_manual(values = c("#000000", "#D55E00")) +
+  scale_fill_manual(values = c("#000000", "#D55E00")) +
+  scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
+  ylim(0, max(dat.plot$SR.pred.hi)) +
+  theme(legend.position = c(1,1), legend.justification = c(1,1)) +
+  guides(color=guide_legend(title = NULL),
+         fill=guide_legend(title = NULL)) +
+  ggtitle(gld.nam) +
+  xlab(NULL) + ylab("Point richness")
+
+## Riparian, Well_1km ##
+gld <- "Riparian"
+gld.nam <- str_c(gld, " species")
+ind.spp <- which(guild.mem[,gld])
+
+var.nam <- "Well_1km"
+X.b <- X.psi.pred.hi
+X.b.ind <- which(dimnames(X.psi.pred.hi)[[2]] == var.nam)
+X.d <- X.lambda.pred.hi
+X.d.ind <- which(dimnames(X.lambda.pred.hi)[[2]] == var.nam)
+
+x.min <- min(X.psi[,X.b.ind])
+x.max <- max(X.psi[,X.b.ind])
+xmn.label <- "0 wells per sqr km"
+xmx.label <- "5 wells per sqr km"
+
+dat.plot <- plot.table.fn(w = mod$mcmcOutput$w[,ind.spp],
+                          B0 = mod$mcmcOutput$BETA0[,ind.spp],
+                          B1 = mod$mcmcOutput$BETA1[,ind.spp,],
+                          X.B = X.PSI.pred.hi,
+                          D0 = mod$mcmcOutput$DELTA0[,ind.spp],
+                          D1 = mod$mcmcOutput$DELTA1[,ind.spp,],
+                          X.D = X.LAMBDA.pred.hi,
+                          b0 = mod$mcmcOutput$beta0[,ind.spp],
+                          b1 = mod$mcmcOutput$beta1[,ind.spp,],
+                          X.b = X.b,
+                          X.b.ind = X.b.ind,
+                          d0 = mod$mcmcOutput$delta0[,ind.spp],
+                          d1 = mod$mcmcOutput$delta1[,ind.spp,],
+                          X.d = X.d,
+                          X.d.ind = X.d.ind,
+                          years = years,
+                          X.trend = X.trend,
+                          x.min = x.min, x.max = x.max,
+                          xmn.label = xmn.label, xmx.label = xmx.label) %>%
+  mutate(Level = factor(Level, levels = c(xmn.label, xmx.label)))
+
+p.Ripar_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
+  geom_ribbon(aes(ymin = SR.pred.lo, ymax = SR.pred.hi, fill = Level),
+              size = 0, alpha = 0.3) +
+  geom_line(aes(color = Level), size = 1) +
+  scale_color_manual(values = c("#000000", "#D55E00")) +
+  scale_fill_manual(values = c("#000000", "#D55E00")) +
+  scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
+  ylim(0, max(dat.plot$SR.pred.hi)) +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +
   guides(color=guide_legend(title = NULL),
          fill=guide_legend(title = NULL)) +
@@ -304,8 +359,8 @@ X.d.ind <- which(dimnames(X.lambda.pred.hi)[[2]] == var.nam)
 
 x.min <- min(X.psi[,X.b.ind])
 x.max <- max(X.psi[,X.b.ind])
-xmn.label <- "0% annual herbaceous cover"
-xmx.label <- "17% annuall herbaceous cover"
+xmn.label <- "0% cheatgrass"
+xmx.label <- "17% cheatgrass"
 
 dat.plot <- plot.table.fn(w = mod$mcmcOutput$w[,ind.spp],
                           B0 = mod$mcmcOutput$BETA0[,ind.spp],
@@ -335,6 +390,7 @@ p.Grass_AHerb <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   scale_color_manual(values = c("#000000", "#D55E00")) +
   scale_fill_manual(values = c("#000000", "#D55E00")) +
   scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
+  ylim(0, max(dat.plot$SR.pred.hi)) +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +
   guides(color=guide_legend(title = NULL),
          fill=guide_legend(title = NULL)) +
@@ -344,10 +400,11 @@ p.Grass_AHerb <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
 # Put it all together #
 p <- ggdraw() +
   draw_plot(p.All_Well,    x = 0,   y = 0.6833333, width = 0.5, height = 0.3166667) +
-  draw_plot(p.All_AHerb,   x = 0.5, y = 0.6833333, width = 0.5, height = 0.3166667) +
-  draw_plot(p.Gen_Well,    x = 0,   y = 0.3666667, width = 0.5, height = 0.3166667) +
-  draw_plot(p.Sage_Well,   x = 0.5, y = 0.3666667, width = 0.5, height = 0.3166667) +
-  draw_plot(p.Grass_AHerb, x = 0,   y = 0.05,      width = 0.5, height = 0.3166667) +
+  draw_plot(p.Gen_Well,    x = 0.5, y = 0.6833333, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Sage_Well,   x = 0,   y = 0.3666667, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Grass_AHerb, x = 0.5, y = 0.3666667, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Mont_Well,   x = 0,   y = 0.05,      width = 0.5, height = 0.3166667) +
+  draw_plot(p.Ripar_Well,  x = 0.5, y = 0.05,      width = 0.5, height = 0.3166667) +
   draw_plot_label("Year",  x = 0.5, y = 0.05, angle = 0, hjust = 0)
 
 save_plot("Figure_guild_mechanisms.jpg", p, ncol = 1.5, nrow = 3, dpi = 600)

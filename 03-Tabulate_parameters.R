@@ -172,150 +172,61 @@ for(i in 1:length(pars)) {
 
 write.csv(out, "Parameter_est.csv", row.names = T)
 
-# # Long format for supplementary materials (Not sure yet if I'll do this.) #
-# 
-# beta_var_nams <- dimnames(X.beta)[[3]]
-# beta_var_nams[3] <- "PAROpn"
-# alpha_var_nams <- dimnames(X.alpha)[[2]]
-# zeta_var_nams <- dimnames(X.zeta)[[2]]
-# 
-# tab_sum <- mod$summary %>% select(Parameter, median:u95) %>%
-#   mutate(Species = ifelse(Parameter == "omega" |
-#                             str_sub(Parameter, 1, 3) == "rho" |
-#                             str_detect(Parameter, "mu") |
-#                             str_detect(Parameter, "sigma"), "Community", ""))
-# tab_sum$Species[which(tab_sum$Species == "")] <- spp.list
-# 
-# # Community parameters #
-# tab_sum <- tab_sum %>% filter(Parameter == "omega") %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "rho.ab")) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "rho.za")) %>%
-#   #psi Intercepts
-#   bind_rows(tab_sum %>% filter(Parameter == "beta0.mu")) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.beta0")) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "beta0[") %>%
-#               mutate(Parameter = "beta0")) %>%
-#   #Psi covariate relationships
-#     #Canopy gap extent
-#   bind_rows(tab_sum %>% filter(Parameter == "beta1.mu[1]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[1], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.beta1[1]") %>%
-#               mutate(Parameter = str_c("sigma.beta.", beta_var_nams[1]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "beta1[" & str_sub(Parameter, -2, -1) == "1]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[1]))) %>%
-#     #Open forest extent
-#   bind_rows(tab_sum %>% filter(Parameter == "beta1.mu[2]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[2], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.beta1[2]") %>%
-#               mutate(Parameter = str_c("sigma.beta.", beta_var_nams[2]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "beta1[" & str_sub(Parameter, -2, -1) == "2]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[2]))) %>%
-#     #Perimeter-area ratio for open forest
-#   bind_rows(tab_sum %>% filter(Parameter == "beta1.mu[3]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[3], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.beta1[3]") %>%
-#               mutate(Parameter = str_c("sigma.beta.", beta_var_nams[3]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "beta1[" & str_sub(Parameter, -2, -1) == "3]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[3]))) %>%
-#     #Latitude
-#   bind_rows(tab_sum %>% filter(Parameter == "beta1.mu[4]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[4], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.beta1[4]") %>%
-#               mutate(Parameter = str_c("sigma.beta.", beta_var_nams[4]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "beta1[" & str_sub(Parameter, -2, -1) == "4]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[4]))) %>%
-#     #Heat load
-#   bind_rows(tab_sum %>% filter(Parameter == "beta1.mu[5]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[5], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.beta1[5]") %>%
-#               mutate(Parameter = str_c("sigma.beta.", beta_var_nams[5]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "beta1[" & str_sub(Parameter, -2, -1) == "5]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[5]))) %>%
-#     #TWI
-#   bind_rows(tab_sum %>% filter(Parameter == "beta1.mu[6]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[6], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.beta1[6]") %>%
-#               mutate(Parameter = str_c("sigma.beta.", beta_var_nams[6]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "beta1[" & str_sub(Parameter, -2, -1) == "6]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[6]))) %>%
-#     #Life zone (1 = lower montane)
-#   bind_rows(tab_sum %>% filter(Parameter == "beta1.mu[7]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[7], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.beta1[7]") %>%
-#               mutate(Parameter = str_c("sigma.beta.", beta_var_nams[7]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "beta1[" & str_sub(Parameter, -2, -1) == "7]") %>%
-#               mutate(Parameter = str_c("beta.", beta_var_nams[7]))) %>%
-#   #Year-specific deviations from mean logit(psi)
-#     #Year 1
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "dev.b0" & str_sub(Parameter, -2, -1) == "1]") %>%
-#               mutate(Parameter = "dev.b0.t1")) %>%
-#     #Year 2
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "dev.b0" & str_sub(Parameter, -2, -1) == "2]") %>%
-#               mutate(Parameter = "dev.b0.t2")) %>%
-#     #Year 3
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "dev.b0" & str_sub(Parameter, -2, -1) == "3]") %>%
-#               mutate(Parameter = "dev.b0.t3")) %>%
-#   #theta intercepts
-#   bind_rows(tab_sum %>% filter(Parameter == "alpha0.mu")) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.alpha0")) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "alpha0[") %>%
-#               mutate(Parameter = "alpha0")) %>%
-#   #theta covariate relationships
-#     #Canopy cover
-#   bind_rows(tab_sum %>% filter(Parameter == "alpha1.mu[1]") %>%
-#               mutate(Parameter = str_c("alpha.", alpha_var_nams[1], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.alpha1[1]") %>%
-#               mutate(Parameter = str_c("sigma.alpha.", alpha_var_nams[1]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "alpha1[" & str_sub(Parameter, -2, -1) == "1]") %>%
-#               mutate(Parameter = str_c("alpha.", alpha_var_nams[1]))) %>%
-#     #Canopy cover squared
-#   bind_rows(tab_sum %>% filter(Parameter == "alpha1.mu[2]") %>%
-#               mutate(Parameter = str_c("alpha.", alpha_var_nams[2], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.alpha1[2]") %>%
-#               mutate(Parameter = str_c("sigma.alpha.", alpha_var_nams[2]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "alpha1[" & str_sub(Parameter, -2, -1) == "2]") %>%
-#               mutate(Parameter = str_c("alpha.", alpha_var_nams[2]))) %>%
-#   #p intercepts
-#   bind_rows(tab_sum %>% filter(Parameter == "zeta0.mu"))  %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.zeta0"))  %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "zeta0[") %>%
-#               mutate(Parameter = "zeta0")) %>%
-#   #p covariate relationships
-#     #Canopy cover
-#   bind_rows(tab_sum %>% filter(Parameter == "zeta1.mu[1]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[1], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.zeta1[1]") %>%
-#               mutate(Parameter = str_c("sigma.zeta.", zeta_var_nams[1]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "zeta1[" & str_sub(Parameter, -2, -1) == "1]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[1]))) %>%
-#     #Day of year
-#   bind_rows(tab_sum %>% filter(Parameter == "zeta1.mu[2]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[2], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.zeta1[2]") %>%
-#               mutate(Parameter = str_c("sigma.zeta.", zeta_var_nams[2]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "zeta1[" & str_sub(Parameter, -2, -1) == "2]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[2]))) %>%
-#     #Day of year squared
-#   bind_rows(tab_sum %>% filter(Parameter == "zeta1.mu[4]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[4], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.zeta1[4]") %>%
-#               mutate(Parameter = str_c("sigma.zeta.", zeta_var_nams[4]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "zeta1[" & str_sub(Parameter, -2, -1) == "4]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[4]))) %>%
-#     #Time since sunrise
-#   bind_rows(tab_sum %>% filter(Parameter == "zeta1.mu[3]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[3], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.zeta1[3]") %>%
-#               mutate(Parameter = str_c("sigma.zeta.", zeta_var_nams[3]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "zeta1[" & str_sub(Parameter, -2, -1) == "3]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[3]))) %>%
-#     #Time since sunrise squared
-#   bind_rows(tab_sum %>% filter(Parameter == "zeta1.mu[5]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[5], ".mu"))) %>%
-#   bind_rows(tab_sum %>% filter(Parameter == "sigma.zeta1[5]") %>%
-#               mutate(Parameter = str_c("sigma.zeta.", zeta_var_nams[5]))) %>%
-#   bind_rows(tab_sum %>% filter(str_sub(Parameter, 1, 6) == "zeta1[" & str_sub(Parameter, -2, -1) == "5]") %>%
-#               mutate(Parameter = str_c("zeta.", zeta_var_nams[5]))) %>%
-#   select(Parameter, Species, median:u95)
-# 
-# write.csv(tab_sum, "Parameter_est_AppndS3.csv", row.names = F)
+## Table for appendix ##
+hpars <- c("omega", "rho.bB", "rho.zb",
+           
+           "BETA0.mu", "sigma.BETA0", "sigma.B0",
+           "BETA1.mu[1]", "sigma.BETA1[1]",
+           "BETA1.mu[2]", "sigma.BETA1[2]",
+           "BETA1.mu[3]", "sigma.BETA1[3]",
+           "BETA1.mu[4]", "sigma.BETA1[4]",
+           "BETA1.mu[5]", "sigma.BETA1[5]",
+           "BETA1.mu[6]", "sigma.BETA1[6]",
+           
+           "DELTA0.mu", "sigma.DELTA0",
+           "DELTA1.mu[1]", "sigma.DELTA1[1]",
+           "DELTA1.mu[2]", "sigma.DELTA1[2]",
+           "DELTA1.mu[3]", "sigma.DELTA1[3]",
+           
+           "beta0.mu", "sigma.beta0", "sigma.b0",
+           "beta1.mu[1]", "sigma.beta1[1]",
+           "beta1.mu[2]", "sigma.beta1[2]",
+           "beta1.mu[3]", "sigma.beta1[3]",
+           "beta1.mu[4]", "sigma.beta1[4]",
+           "beta1.mu[5]", "sigma.beta1[5]",
+           "beta1.mu[6]", "sigma.beta1[6]",
+           "beta1.mu[7]", "sigma.beta1[7]",
+           "beta1.mu[8]", "sigma.beta1[8]",
+           
+           "delta0.mu", "sigma.delta0",
+           "delta1.mu[1]", "sigma.delta1[1]",
+           "delta1.mu[2]", "sigma.delta1[2]",
+           "delta1.mu[3]", "sigma.delta1[3]",
+           "delta1.mu[4]", "sigma.delta1[4]",
+           "delta1.mu[5]", "sigma.delta1[5]",
+           
+           "zeta0.mu", "sigma.zeta0", "sigma.z0",
+           "zeta1.mu[1]", "sigma.zeta1[1]",
+           "zeta1.mu[2]", "sigma.zeta1[2]",
+           "zeta1.mu[3]", "sigma.zeta1[3]",
+           "zeta1.mu[4]", "sigma.zeta1[4]",
+           "zeta1.mu[5]", "sigma.zeta1[5]",
+           "zeta1.mu[6]", "sigma.zeta1[6]",
+           
+           "ALPHA0.Well_3km", "ALPHA.Dev_lo.Well_3km",
+           "ALPHA.Dev_bg.Well_3km", "r.Well_3km",
+           
+           "ALPHA0.Well_1km", "ALPHA.Dev_lo.Well_1km",
+           "ALPHA.Dev_bg.Well_1km", "r.Well_1km",
+           
+           "alpha0.Road_125m", "alpha.Dev_lo.Road_125m",
+           "alpha.Dev_bg.Road_125m", "shape.Road_125m",
+           
+           "alpha0.AHerb", "alpha.Dev_lo.AHerb",
+           "alpha.Dev_bg.AHerb", "alpha.Well_1km.AHerb",
+           "alpha.Road_125m.AHerb")
+
+sum.vals <- mod$mcmcOutput[,hpars] %>%
+  apply(2, function(x) QSLpersonal::BCI(x, BCIpercent = 80, flag.sig = F))
+tab.vals <- cbind(Hpar = names(sum.vals), Est = sum.vals)
+write.csv(tab.vals, "HyperMechPars_MS.csv", row.names = F)

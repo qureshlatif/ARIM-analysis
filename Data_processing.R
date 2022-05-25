@@ -6,8 +6,8 @@ psi.vars <- c("TPI_min", "Sage", "Herb", "Dev_bg", "Dev_lo",
               "Well_1km", "Road_125m", "AHerb")
 lambda.vars <- c("Dev_bg", "Dev_lo", "Well_1km", "Road_125m", "AHerb")
 
-zeta.vars <- c("ShrubCov", "DOY", "Time_ssr")
-zeta.quad <- c(F, T, F)
+zeta.vars <- c("ShrubCov", "DOY", "Time_ssr", "Dev_lo", "Dev_bg")
+zeta.quad <- c(F, T, F, F, F)
 
 # Flatten and attach point-level covariate values #
 Cov_point_flat <- matrix(NA, nrow = nrow(cov_pntyr), ncol = dim(Cov_point)[3],
@@ -134,10 +134,14 @@ ind.psi.AHerb <- which(vars == "AHerb")
 X.trend <- (years - mean(years)) / sd(years)
 
   # Detection
-X.zeta <- cov_pntyr[, zeta.vars] %>%
+X.zeta <- cov_pntyr %>%
+  mutate(Dev_lo = as.integer(Development == "LO"),
+         Dev_bg = as.integer(Development == "BG")) %>%
+  select(one_of(zeta.vars)) %>%
   data.matrix %>%
   apply(2, function(x) tapply(x, grdyrID.py, mean)) %>%
   apply(2, (function(x) (x - mean(x, na.rm = T)) / sd(x, na.rm = T)))
+X.zeta <- X.zeta[,zeta.vars]
 for(v in 1:length(zeta.vars)) {
   if(zeta.quad[v]) {
     zeta.vars <- c(zeta.vars, str_c(zeta.vars[v], "2"))

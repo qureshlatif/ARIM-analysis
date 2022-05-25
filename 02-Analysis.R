@@ -47,7 +47,7 @@ if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
   constant.nams <- c(constant.nams,
                      
                      "ind.PSI.Dev_bg", "ind.PSI.Dev_lo", "ind.PSI.Well_3km",
-                     "ind.PSI.Well_1km", "ind.PSI.Road_1km",
+                     "ind.PSI.Well_1km",
                      
                      "ind.psi.Road_125m", "ind.psi.Well_1km", "ind.psi.AHerb") # "ind.D_Road_125m", "ind.PA_Road_125m", "ind.Well_125m"
 }
@@ -75,15 +75,12 @@ parameters <- c(# Bird community parameters
   "ALPHA0.Well_1km", "ALPHA.Dev_lo.Well_1km",
   "ALPHA.Dev_bg.Well_1km", "r.Well_1km",
   
-  "ALPHA0.Road_1km", "ALPHA.Dev_lo.Road_1km",
-  "ALPHA.Dev_bg.Road_1km", "shape.Road_1km",
-  
   "alpha0.Road_125m",
   "alpha.Dev_lo.Road_125m", "alpha.Dev_bg.Road_125m",
   "shape.Road_125m",
   
-  "alpha0.AHerb", "alpha.Well_125m.AHerb",
-  "alpha.Road_1km.AHerb")
+  "alpha0.AHerb", "alpha.Dev_lo.AHerb", "alpha.Dev_bg.AHerb",
+  "alpha.Well_1km.AHerb", "alpha.Road_125m.AHerb", "phi.AHerb")
 
 # Function for setting initial values in JAGS
 inits <- function()
