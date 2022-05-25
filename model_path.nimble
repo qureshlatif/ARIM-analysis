@@ -165,12 +165,26 @@ model <<- nimbleCode({
     log(lambda.Well_3km[j]) <- ALPHA0.Well_3km +
       ALPHA.Dev_lo.Well_3km * X.PSI[j, ind.PSI.Dev_lo] +
       ALPHA.Dev_bg.Well_3km * X.PSI[j, ind.PSI.Dev_bg]
+    #_____ GOF _____#
+    LLobs.Well_3km[j] <- logdensity.negbin(X.PSI.raw[j, ind.PSI.Well_3km],
+      pred.Well_3km[j], r.Well_3km)
+    X.sim.Well_3km[j] ~ dnegbin(pred.Well_3km[j], r.Well_3km)
+    LLsim.Well_3km[j] <- logdensity.negbin(X.sim.Well_3km[j],
+      pred.Well_3km[j], r.Well_3km)
+    #_______________#
 
     X.PSI.raw[j, ind.PSI.Well_1km] ~ dnegbin(pred.Well_1km[j], r.Well_1km)
     pred.Well_1km[j] <- r.Well_1km / (r.Well_1km + lambda.Well_1km[j])
     log(lambda.Well_1km[j]) <- ALPHA0.Well_1km +
       ALPHA.Dev_lo.Well_1km * X.PSI[j, ind.PSI.Dev_lo] +
       ALPHA.Dev_bg.Well_1km * X.PSI[j, ind.PSI.Dev_bg]
+    #_____ GOF _____#
+    LLobs.Well_1km[j] <- logdensity.negbin(X.PSI.raw[j, ind.PSI.Well_1km],
+      pred.Well_1km[j], r.Well_1km)
+    X.sim.Well_1km[j] ~ dnegbin(pred.Well_1km[j], r.Well_1km)
+    LLsim.Well_1km[j] <- logdensity.negbin(X.sim.Well_1km[j],
+      pred.Well_1km[j], r.Well_1km)
+    #_______________#
 
     # Point scale pathways #
     X.psi.raw[j, ind.psi.AHerb] ~ dbeta(a.AHerb[j], b.AHerb[j])
@@ -181,12 +195,27 @@ model <<- nimbleCode({
       alpha.Dev_bg.AHerb * X.PSI[j, ind.PSI.Dev_bg] +
       alpha.Well_1km.AHerb * X.psi[j, ind.psi.Well_1km] +
       alpha.Road_125m.AHerb * X.psi[j, ind.psi.Road_125m]
+    #_____ GOF _____#
+    LLobs.AHerb[j] <- logdensity.beta(X.psi.raw[j, ind.psi.AHerb],
+      a.AHerb[j], b.AHerb[j])
+    X.sim.AHerb[j] ~ dbeta(a.AHerb[j], b.AHerb[j])
+    LLsim.AHerb[j] <- logdensity.beta(X.sim.AHerb[j],
+      a.AHerb[j], b.AHerb[j])
+    #_______________#
 
     X.psi.raw[j, ind.psi.Road_125m] ~ dgamma(shape.Road_125m,
       shape.Road_125m / exp(pred.Road_125m[j]))
     pred.Road_125m[j] <- alpha0.Road_125m +
       alpha.Dev_lo.Road_125m * X.PSI[j, ind.PSI.Dev_lo] +
       alpha.Dev_bg.Road_125m * X.PSI[j, ind.PSI.Dev_bg]
+    #_____ GOF _____#
+    LLobs.Road_125m[j] <- logdensity.gamma(X.psi.raw[j, ind.psi.Road_125m],
+      shape.Road_125m, shape.Road_125m / exp(pred.Road_125m[j]))
+    X.sim.Road_125m[j] ~ dgamma(shape.Road_125m,
+      shape.Road_125m / exp(pred.Road_125m[j]))
+    LLsim.Road_125m[j] <- logdensity.gamma(X.sim.Road_125m[j],
+      shape.Road_125m, shape.Road_125m / exp(pred.Road_125m[j]))
+    #_______________#
   }
 
   ### Prior distributions ###
@@ -213,4 +242,22 @@ model <<- nimbleCode({
   alpha.Dev_lo.Road_125m ~ dnorm(0, 0.66667)
   alpha.Dev_bg.Road_125m ~ dnorm(0, 0.66667)
   shape.Road_125m ~ dunif(0, 100)
+  
+  #_______ GOF _______#
+  dev.obs.Well_3km <- -2 * sum(LLobs.Well_3km[1:n.grdyr])
+  dev.sim.Well_3km <- -2 * sum(LLsim.Well_3km[1:n.grdyr])
+  test.Well_3km <- step(dev.sim.Well_3km - dev.obs.Well_3km)
+  
+  dev.obs.Well_1km <- -2 * sum(LLobs.Well_1km[1:n.grdyr])
+  dev.sim.Well_1km <- -2 * sum(LLsim.Well_1km[1:n.grdyr])
+  test.Well_1km <- step(dev.sim.Well_1km - dev.obs.Well_1km)
+  
+  dev.obs.AHerb <- -2 * sum(LLobs.AHerb[1:n.grdyr])
+  dev.sim.AHerb <- -2 * sum(LLsim.AHerb[1:n.grdyr])
+  test.AHerb <- step(dev.sim.AHerb - dev.obs.AHerb)
+  
+  dev.obs.Road_125m <- -2 * sum(LLobs.Road_125m[1:n.grdyr])
+  dev.sim.Road_125m <- -2 * sum(LLsim.Road_125m[1:n.grdyr])
+  test.Road_125m <- step(dev.sim.Road_125m - dev.obs.Road_125m)
+  #___________________#
 })

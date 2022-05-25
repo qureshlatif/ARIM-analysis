@@ -80,7 +80,9 @@ parameters <- c(# Bird community parameters
   "shape.Road_125m",
   
   "alpha0.AHerb", "alpha.Dev_lo.AHerb", "alpha.Dev_bg.AHerb",
-  "alpha.Well_1km.AHerb", "alpha.Road_125m.AHerb", "phi.AHerb")
+  "alpha.Well_1km.AHerb", "alpha.Road_125m.AHerb", "phi.AHerb",
+  
+  "test.Well_3km", "test.Well_1km", "test.Road_125m", "test.AHerb")
 
 # Function for setting initial values in JAGS
 inits <- function()
