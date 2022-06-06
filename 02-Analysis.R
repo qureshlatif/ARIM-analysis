@@ -53,17 +53,17 @@ if(mod.nam %in% c("mod_path", "mod_interm_paths")) {
 
 # Stuff to save from NIMBLE
 parameters <- c(# Bird community parameters
-  "omega", "rho.zb", "rho.bB",# "rho.zB",
+  "omega", "w", "rho.zb", "rho.bB",# "rho.zB",
   
-  "BETA0.mu", "sigma.BETA0", "BETA1.mu", "sigma.BETA1", # "sigma.B0", 
+  "BETA0.mu", "sigma.BETA0", "sigma.B0", "BETA1.mu", "sigma.BETA1", 
   "DELTA0.mu", "sigma.DELTA0", "DELTA1.mu", "sigma.DELTA1",
-  "beta0.mu", "sigma.beta0", "beta1.mu", "sigma.beta1", # "sigma.b0", 
+  "beta0.mu", "sigma.beta0", "sigma.b0", "beta1.mu", "sigma.beta1",
   "delta0.mu", "sigma.delta0", "delta1.mu", "sigma.delta1",
   "zeta0.mu", "sigma.zeta0", "sigma.z0", "zeta1.mu", "sigma.zeta1",
   
-  "BETA0", "BETA1",# "BETA1.offset", "dev.BETA", 
+  "BETA0", "dev.BETA", "BETA1",# "BETA1.offset", 
   "DELTA0", "DELTA1",# "DELTA1.offset",
-  "beta0", "beta1",# "beta1.offset", "dev.beta", 
+  "beta0", "dev.beta", "beta1",# "beta1.offset",
   "delta0", "delta1",# "delta1.offset",
   "zeta0", "dev.zeta", "zeta1",
   
@@ -80,7 +80,7 @@ parameters <- c(# Bird community parameters
   
   "alpha0.AHerb", "alpha.Dev_lo.AHerb", "alpha.Dev_bg.AHerb",
   "alpha.Well_1km.AHerb", "alpha.Road_125m.AHerb", "phi.AHerb",
-  
+
   "test.Well_3km", "test.Well_1km", "test.Road_125m", "test.AHerb")
 
 # Function for setting initial values in JAGS
@@ -91,14 +91,14 @@ inits <- function()
        tvar.zeta1 = rnorm(p.zeta),
        
        tvar.sigma.BETA0 = rnorm(1),
-       #tvar.sigma.B0 = rnorm(1),
+       tvar.sigma.B0 = rnorm(1),
        tvar.BETA1 = rnorm(p.PSI),
        
        tvar.sigma.DELTA0 = rnorm(1),
        tvar.DELTA1 = rnorm(p.PSI),
        
        tvar.sigma.beta0 = rnorm(1),
-       #tvar.sigma.b0 = rnorm(1),
+       tvar.sigma.b0 = rnorm(1),
        tvar.beta1 = rnorm(p.psi),
        
        tvar.sigma.delta0 = rnorm(1),
@@ -125,8 +125,8 @@ inits <- function()
        zeta1 = matrix(0, nrow = n.spp, ncol = p.zeta),
        
        dev.zeta = matrix(0, nrow = n.spp, ncol = n.observer),
-       #dev.beta = matrix(0, nrow = n.spp, ncol = n.year),
-       #dev.BETA = matrix(0, nrow = n.spp, ncol = n.year),
+       dev.beta = matrix(0, nrow = n.spp, ncol = n.year),
+       dev.BETA = matrix(0, nrow = n.spp, ncol = n.year),
        
        rho.zb = runif(1, -1, 1),
        rho.bB = runif(1, -1, 1),
@@ -154,12 +154,9 @@ inits <- function()
        ALPHA.Dev_bg.Well_1km = rnorm(1),
        r.Well_1km = runif(1),
        
-       ALPHA0.Road_1km = rnorm(1),
-       ALPHA.Dev_lo.Road_1km = rnorm(1),
-       ALPHA.Dev_bg.Road_1km = rnorm(1),
-       shape.Road_1km = runif(1),
-       
        alpha0.AHerb = rnorm(1),
+       alpha.Dev_lo.AHerb = rnorm(1),
+       alpha.Dev_bg.AHerb = rnorm(1),
        alpha.Well_1km.AHerb = rnorm(1),
        alpha.Road_125m.AHerb = rnorm(1),
        phi.AHerb = rgamma(1, 1),
