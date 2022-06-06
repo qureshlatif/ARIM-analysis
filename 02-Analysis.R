@@ -10,12 +10,20 @@ load("Data_compiled.RData")
 scripts.loc <- "ARIM-analysis/"
 model.file <- str_c(scripts.loc, "model_path.nimble")
 mod.nam <- "mod_path"
+chain <- 1 # For poor man's parallel processing
 
-# MCMC values
-nc <- 2 # number of chains
-nb <- 10 #10000 # burn in
-ni <- 20 #50000 # number of iterations
-nt <- 1 #10 # thinning
+# # MCMC values (for full run)
+# nc <- 1 # number of chains (run parallel chains on separate instances of R, and then use code below to put them together).
+# nb <- 10000 # burn in
+# ni <- 410000 # number of iterations
+# nt <- 400 # thinning
+# #_________________________#
+
+# MCMC values (for trial run)
+nc <- 2
+nb <- 10 
+ni <- 20 
+nt <- 1 
 #_________________________#
 
 # Compile data #
@@ -193,23 +201,23 @@ source(model.file)
 rm(.Random.seed, envir=.GlobalEnv)
 
 # All at once using built-in wrapper... #
-st.time <- Sys.time()
-out <- nimbleMCMC(code = model,
-                  constants = constants,
-                  data=data,
-                  inits=inits,
-                  nchains = nc,
-                  nburnin = nb,
-                  niter = ni,
-                  thin = nt,
-                  samplesAsCodaMCMC = T,
-                  summary = FALSE,
-                  WAIC = FALSE,
-                  monitors = parameters)
-end.time <- Sys.time()
-run.time <- end.time - st.time
-run.time
-rm(st.time,end.time)
+# st.time <- Sys.time()
+# out <- nimbleMCMC(code = model,
+#                   constants = constants,
+#                   data=data,
+#                   inits=inits, 
+#                   nchains = nc,
+#                   nburnin = nb,
+#                   niter = ni,
+#                   thin = nt,
+#                   samplesAsCodaMCMC = T,
+#                   summary = FALSE,
+#                   WAIC = FALSE,
+#                   monitors = parameters)
+# end.time <- Sys.time()
+# run.time <- end.time - st.time
+# run.time
+# rm(st.time,end.time)
 # R.utils::saveObject(out, str_c(mod.nam, "_samples")) # If running chains in parallel.
 
 
@@ -230,7 +238,7 @@ st.time <- Sys.time()
 mcmc <- configureMCMC(mod,
                       monitors = parameters,
                       enableWAIC = F,
-                      control = list(adaptInterval = 50))
+                      control = list(adaptInterval = 100))
 #mcmc$removeSamplers(c("...")) # Switch out samplers here as desired.
 #mcmc$addSampler(c("..."), type = "...")
 end.time <- Sys.time()
@@ -262,18 +270,21 @@ out <- runMCMC(Cmcmc, nchains = nc, nburnin = nb, niter = ni, thin = nt)
 end.time <- Sys.time()
 end.time - st.time
 
-# Step 7 (Continue if not converged; Not clear to me how this works.)
-# Cmcmc$mvSamples # Does this have samples in it??
-#Cmcmc$run(50000, reset = FALSE) # ??
+# Step 7 (Continue if not converged)
+out2 <- runMCMC(Cmcmc, niter = ni, thin = nt)
+out <- rbind(out, out2)
 
 # Save chain
 R.utils::saveObject(out, str_c(mod.nam, "_chain", chain)) # If running chains in parallel.
-rm(out)
+#rm(out)
 
 # Recover independent chains #
+nt_again <- 2
 if(nc == 1) {
   out_chain1 <- R.utils::loadObject(str_c(mod.nam, "_chain1"))
+  out_chain1 <- out_chain1[seq(1, nrow(out_chain1), by = nt_again),]
   out_chain2 <- R.utils::loadObject(str_c(mod.nam, "_chain2"))
+  out_chain2 <- out_chain2[seq(1, nrow(out_chain2), by = nt_again),]
   out.samples <- list(chain1 = out_chain1, chain2 = out_chain2)
   #out$samples$chain1 <- out$samples$chain1[-c(1:nb),][seq(1,(ni-nb),by=10),] # If burnin and thinning not implemented with model run.
   #out$samples$chain2 <- out$samples$chain2[-c(1:nb),][seq(1,(ni-nb),by=10),] # If burnin and thinning not implemented with model run.
@@ -282,72 +293,15 @@ if(nc == 1) {
 
 library(mcmcOutput)
 #if(nc > 1) mod.raw <- coda::as.mcmc.list(lapply(out$samples, coda::mcmc))
-if(nc > 1) {
-  mod <- mcmcOutput(out)
-} else {
-  mod <- mcmcOutput(mod.raw)
-}
+mod <- mcmcOutput(mod.raw)
 sumTab <- summary(mod, MCEpc = F, Rhat = T, n.eff = T, f = T, overlap0 = T, verbose = F)
 sumTab <- sumTab %>%
   as_tibble() %>%
   mutate(Parameter = row.names(sumTab)) %>%
   select(Parameter, mean:f)
 
-library(MCMCvis)
-MCMCvis::MCMCtrace(mod.raw, params = "zeta1[100, 1]", pdf = F, ISB = F)
+#library(MCMCvis)
+#MCMCvis::MCMCtrace(mod.raw, params = "sigma.DELTA1[2]", pdf = F, ISB = F)
 mod <- list(mcmcOutput = mod, summary = sumTab)
 
 R.utils::saveObject(mod, mod.nam) # If running all in one.
-
-#   R.utils::saveObject(out, mod.nam)
-
-#################################################################
-# Parallelization and updating code from NIMBLE user group post #
-#################################################################
-
-# library(parallel)
-# library(coda)
-# #set.seed(22)
-# cl<-makeCluster(nc,timeout=5184000)
-# inits <- function() {list(a = rnorm(1), b = rnorm(1))}
-# nimbledata <- list(y = data)
-# nimbleconstants <- list(length_y = 1000)
-# params <- c("a", "b")
-# clusterExport(cl, c("myCode", "inits", "nimbledata", "nimbleconstants", "params"))
-# for (j in seq_along(cl)) {
-#   set.seed(j)
-#   init <- inits()
-#   clusterExport(cl[j], "init")
-# }
-# out <- clusterEvalQ(cl, {
-#   library(nimble)
-#   library(coda)
-#   model <- nimbleModel(code = myCode, name = "myCode",
-#                        constants = nimbleconstants, data = nimbledata,
-#                        inits = init)
-#   Cmodel <- compileNimble(model)
-#   modelConf <- configureMCMC(model)
-#   modelConf$addMonitors(params)
-#   modelMCMC <- buildMCMC(modelConf)
-#   CmodelMCMC <- compileNimble(modelMCMC, project = myCode)
-#   out1 <- runMCMC(CmodelMCMC, niter = 10000)
-#   return(as.mcmc(out1))
-# })
-# 
-# out.mcmc <- as.mcmc(out)
-# traceplot(out.mcmc[, "b"])
-#           
-# ## If has not converged, continue sampling
-# start <- Sys.time()
-# out2 <- clusterEvalQ(cl, {
-#   out1 <- runMCMC(CmodelMCMC, niter = 20000)
-#   return(as.mcmc(out1))
-# })
-# 
-# out.mcmc.update1 <- as.mcmc(out2)
-# 
-# out.mcmc.bind <- mcmc.list()
-# for (i in seq_len(nc)) {
-#   out.mcmc.bind[[i]] <- mcmc(rbind(out.mcmc[[i]], out.mcmc.update1[[i]]))
-# }
-# traceplot(out.mcmc.bind[, "b"])
