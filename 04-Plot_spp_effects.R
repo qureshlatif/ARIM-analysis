@@ -437,7 +437,7 @@ p.bTPI <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.TPI_min)) +
   scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
                      expand=c(0, 1)) +
   scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
-  ylab(expression(hat(beta)["Min TPI"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Topographic position index"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
@@ -451,7 +451,7 @@ p.bSage <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Sage)) +
   scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
                      expand=c(0, 1)) +
   scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
-  ylab(expression(hat(beta)["Sagebrush cover"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Sagebrush"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +

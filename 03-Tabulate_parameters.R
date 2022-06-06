@@ -172,7 +172,27 @@ for(i in 1:length(pars)) {
 
 write.csv(out, "Parameter_est.csv", row.names = T)
 
-## Table for appendix ##
+## Detectability table for appendix ##
+out.det <- out %>% data.frame(stringsAsFactors = F) %>%
+  mutate(Spp = row.names(out)) %>%
+  mutate(zeta.ShrubCov.est = ifelse(zeta.ShrubCov.f < 0.1 | zeta.ShrubCov.f > 0.9,
+                                    str_c(zeta.ShrubCov.est, "*"), zeta.ShrubCov.est),
+         zeta.DOY.est = ifelse(zeta.DOY.f < 0.1 | zeta.DOY.f > 0.9,
+                                    str_c(zeta.DOY.est, "*"), zeta.DOY.est),
+         zeta.Time_ssr.est = ifelse(zeta.Time_ssr.f < 0.1 | zeta.Time_ssr.f > 0.9,
+                                    str_c(zeta.Time_ssr.est, "*"), zeta.Time_ssr.est),
+         zeta.Dev_lo.est = ifelse(zeta.Dev_lo.f < 0.1 | zeta.Dev_lo.f > 0.9,
+                                    str_c(zeta.Dev_lo.est, "*"), zeta.Dev_lo.est),
+         zeta.Dev_bg.est = ifelse(zeta.Dev_bg.f < 0.1 | zeta.Dev_bg.f > 0.9,
+                                    str_c(zeta.Dev_bg.est, "*"), zeta.Dev_bg.est),
+         zeta.DOY2.est = ifelse(zeta.DOY2.f < 0.1 | zeta.DOY2.f > 0.9,
+                                    str_c(zeta.DOY2.est, "*"), zeta.DOY2.est)) %>%
+  select(Spp, pStar.est, zeta.ShrubCov.est, zeta.DOY.est,
+         zeta.DOY2.est, zeta.Time_ssr.est, zeta.Dev_lo.est,
+         zeta.Dev_bg.est)
+write.csv(out.det, "Detectability_MS.csv", row.names = F)
+
+## Hyper-parameter table for appendix ##
 hpars <- c("omega", "rho.bB", "rho.zb",
            
            "BETA0.mu", "sigma.BETA0", "sigma.B0",

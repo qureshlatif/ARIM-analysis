@@ -31,7 +31,6 @@ data.nams <- c("Y.sum", "Y.int", "X.PSI.raw", "X.psi.raw")
 constant.nams <- c("n.grdyr", "yearID.grdyr", #"gridID", "yearID", "pointID", "Y.point", "Y.grid", "Y.spp", "TPeriod", 
                    "n.year", "n.point", "K", "n.spp", #"n.grid", "n.pntyr", "gridXyrID",  "R", "Sig_df",
                    "n.int", "grdyrID.int", "sppID.int",
-                   "n.observer", "observerID",
                    
                    "X.PSI", "p.PSI", "X.LAMBDA", "p.LAMBDA", "X.trend",
                    # "ind.PSI.offset", "ind.PSI.no_offset",

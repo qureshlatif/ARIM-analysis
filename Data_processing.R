@@ -21,7 +21,6 @@ gridID.py <- cov_pntyr[, "gridIndex"]
 yearID.py <- cov_pntyr[, "YearInd"]
 grdyrID.py <- str_c(gridID.py, yearID.py, sep = "_") %>%
   as.factor() %>% as.integer()
-observerID.py <- cov_pntyr[, "ObserverID"]
 n.grdyr <- max(grdyrID.py)
 n.spp <- dim(Y.mat)[2]
 K <- max(TPeriod)
@@ -33,10 +32,8 @@ for(j in 1:n.grdyr) for(k in 1:K)
 Y.sum <- apply(Y, c(1, 2), sum)
 gridID.grdyr <- tapply(gridID.py, grdyrID.py, unique)
 yearID.grdyr <- tapply(yearID.py, grdyrID.py, unique)
-observerID <- tapply(observerID.py, grdyrID.py, unique)
 n.year <- max(yearID.py)
 n.point <- tapply(grdyrID.py, grdyrID.py, length)
-n.observer <- max(observerID)
 
   # Detections within survey intervals #
 n.int <- sum(Y.sum > 0)
