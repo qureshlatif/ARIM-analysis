@@ -35,7 +35,7 @@ dat2 <- dat[,1,]
 for(t in years[-1]) dat2 <- rbind(dat2, dat[,as.character(t),])
 #cor(cov_point %>% select(Sage, Herb:NDVI), use = "complete") # Just exploring.
 # Drop NDVI - correlated with Herb at r = 0.81
-cor(dat2 %>% as.data.frame() %>% select(Road_125m:TPI_min, Road_1km),
+cor(dat2 %>% as.data.frame() %>% select(Well_1km, Road_125m:TPI_min, Road_1km),
     use = "complete") %>% # All of these can be included in analysis.
   write.csv("Cor_point.csv", row.names = T)
 QSLpersonal::VIF(dat2 %>% as.data.frame() %>%
@@ -98,3 +98,40 @@ out[names(dat.point.sum)[-c(1:2)], c("HI", "BG", "LO")] <- dat.point.sum %>%
 
 write.csv(out, "SumStats.csv", row.names = T)
 
+## Survey dates by elevation ##
+dat_elev <- read.csv("covariates/ARIM_elevations.csv", header = T, stringsAsFactors = F)
+tab_sum <- tab.datetime %>%
+  mutate(TrnsctN = str_sub(Point_year, 1, -9)) %>%
+  left_join(dat_elev, by = "TrnsctN") %>%
+  mutate(Elev_class = ifelse(Elev_m < 2000, "lt2000",
+                             ifelse(Elev_m >= 2000 & Elev_m < 2300, "2000-2300",
+                                    ifelse(Elev_m >= 2300 & Elev_m < 2600, "2300-2600", "gt2600")))) %>%
+  dplyr::group_by(Elev_class) %>%
+  summarise(minDOY = round(quantile(DOY, prob = 0.01, type = 8)),
+            maxDOY = round(quantile(DOY, prob = 0.99, type = 8)),
+            meanDOY = round(mean(DOY, na.rm = T)))
+tab_ref <- tab.datetime %>%
+  mutate(Date = str_sub(Date, 6, -1)) %>%
+  arrange(DOY) %>%
+  select(DOY, Date) %>%
+  distinct() %>%
+  dplyr::group_by(DOY) %>%
+  summarise(first = first(Date), last = last(Date))
+tab_sum <- tab_sum %>%
+  left_join(
+    tab_ref %>%
+      select(DOY, first),
+    by = c("minDOY" = "DOY")
+  ) %>%
+  left_join(
+    tab_ref %>%
+      select(DOY, last),
+    by = c("maxDOY" = "DOY")
+  ) %>%
+  left_join(
+    tab_ref %>%
+      rename(mean = first) %>%
+      select(DOY, mean),
+    by = c("meanDOY" = "DOY")
+  )
+View(tab_sum)

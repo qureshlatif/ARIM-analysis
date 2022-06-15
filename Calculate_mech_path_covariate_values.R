@@ -5,9 +5,9 @@ dimnames(X.PSI.pred.hi)[[2]] <-
   dimnames(X.PSI.pred.lo)[[2]] <- 
   dimnames(X.PSI.pred.bg)[[2]] <- 
   dimnames(X.PSI)[[2]]
-X.PSI.pred.hi[, c("PJ_area", "NDVI")] <-
-  X.PSI.pred.lo[, c("PJ_area", "NDVI")] <-
-  X.PSI.pred.bg[, c("PJ_area", "NDVI")] <- 0
+X.PSI.pred.hi[, c("PJ_area", "NDVI", "Road_1km")] <-
+  X.PSI.pred.lo[, c("PJ_area", "NDVI", "Road_1km")] <-
+  X.PSI.pred.bg[, c("PJ_area", "NDVI", "Road_1km")] <- 0
 
 # High development occupancy #
 X.Dev <- X.PSI[which(X.PSI.raw[,"Dev_bg"] == 0 &
@@ -19,10 +19,6 @@ X.PSI.pred.hi[, "Well_3km"] <- exp(mod$mcmcOutput$ALPHA0.Well_3km +
   mod$mcmcOutput$ALPHA.Dev_lo.Well_3km * X.Dev[1] +
   mod$mcmcOutput$ALPHA.Dev_bg.Well_3km * X.Dev[2]) %>%
   (function(x) (x - X.mns["Well_3km"]) / X.sd["Well_3km"])
-X.PSI.pred.hi[, "Road_1km"] <- exp(mod$mcmcOutput$ALPHA0.Road_1km +
-  mod$mcmcOutput$ALPHA.Dev_lo.Road_1km * X.Dev[1] +
-  mod$mcmcOutput$ALPHA.Dev_bg.Road_1km * X.Dev[2]) %>%
-  (function(x) ((x - 0.01) - X.mns["Road_1km"]) / X.sd["Road_1km"])
 
 # Low development occupancy #
 X.Dev <- X.PSI[which(X.PSI.raw[,"Dev_lo"] == 1), c("Dev_lo", "Dev_bg")][1,]
@@ -32,10 +28,6 @@ X.PSI.pred.lo[, "Well_3km"] <- exp(mod$mcmcOutput$ALPHA0.Well_3km +
                                      mod$mcmcOutput$ALPHA.Dev_lo.Well_3km * X.Dev[1] +
                                      mod$mcmcOutput$ALPHA.Dev_bg.Well_3km * X.Dev[2]) %>%
   (function(x) (x - X.mns["Well_3km"]) / X.sd["Well_3km"])
-X.PSI.pred.lo[, "Road_1km"] <- exp(mod$mcmcOutput$ALPHA0.Road_1km +
-                                     mod$mcmcOutput$ALPHA.Dev_lo.Road_1km * X.Dev[1] +
-                                     mod$mcmcOutput$ALPHA.Dev_bg.Road_1km * X.Dev[2]) %>%
-  (function(x) ((x - 0.01) - X.mns["Road_1km"]) / X.sd["Road_1km"])
 
 # Background occupancy #
 X.Dev <- X.PSI[which(X.PSI.raw[,"Dev_bg"] == 1), c("Dev_lo", "Dev_bg")][1,]
@@ -45,11 +37,6 @@ X.PSI.pred.bg[, "Well_3km"] <- exp(mod$mcmcOutput$ALPHA0.Well_3km +
                                      mod$mcmcOutput$ALPHA.Dev_lo.Well_3km * X.Dev[1] +
                                      mod$mcmcOutput$ALPHA.Dev_bg.Well_3km * X.Dev[2]) %>%
   (function(x) (x - X.mns["Well_3km"]) / X.sd["Well_3km"])
-X.PSI.pred.bg[, "Road_1km"] <- exp(mod$mcmcOutput$ALPHA0.Road_1km +
-                                     mod$mcmcOutput$ALPHA.Dev_lo.Road_1km * X.Dev[1] +
-                                     mod$mcmcOutput$ALPHA.Dev_bg.Road_1km * X.Dev[2]) %>%
-  (function(x) ((x - 0.01) - X.mns["Road_1km"]) / X.sd["Road_1km"])
-
 
 # Trend #
 X.LAMBDA.pred.hi <- X.PSI.pred.hi[, dimnames(X.LAMBDA)[[2]]]

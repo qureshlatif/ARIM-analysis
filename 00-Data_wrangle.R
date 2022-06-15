@@ -234,7 +234,7 @@ tab.datetime <- grab %>%
   mutate(dateTime = str_c(Date, Time, sep = " ")) %>%
   mutate(Time_ssr = QSLpersonal::tssr(PointLatitude, PointLongitude, dateTime)) %>%
   mutate(ObserverID = Observer %>% as.factor %>% as.integer) %>%
-  select(Point_year, Observer, ObserverID, PointLatitude, PointLongitude, DOY, Time_ssr)
+  select(Point_year, Observer, ObserverID, PointLatitude, PointLongitude, Date, DOY, Time_ssr)
 
 bird_data <- grab %>%  # Store bird survey data for later use.
   mutate(Point_year = str_c(TransectNum, "-", str_pad(Point, width = 2, pad = "0", side = "left"), "-", Year))

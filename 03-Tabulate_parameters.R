@@ -15,7 +15,7 @@ out.vals <- c("est", "f")
 
 mod$summary %>% write.csv(str_c("Params_all.csv"), row.names = F) # Save full table of parameter estimates
 mod$summary %>%
-  filter(!str_detect(Parameter, "BETA0\\[") &
+  filter((!str_detect(Parameter, "BETA0\\[") &
            !str_detect(Parameter, "BETA1\\[") &
            !str_detect(Parameter, "dev.BETA\\[") &
            !str_detect(Parameter, "DELTA0\\[") &
@@ -28,7 +28,8 @@ mod$summary %>%
            !str_detect(Parameter, "zeta0\\[") &
            !str_detect(Parameter, "zeta1\\[") &
            !str_detect(Parameter, "dev.zeta\\[") &
-           !str_detect(Parameter, "w\\[")) %>%
+           !str_detect(Parameter, "w\\[")) |
+           str_detect(Parameter, "sigma")) %>%
   write.csv(str_c("HyperParams.csv"), row.names = F)
 
 # Compile data to get covariate names #
@@ -191,6 +192,14 @@ out.det <- out %>% data.frame(stringsAsFactors = F) %>%
          zeta.DOY2.est, zeta.Time_ssr.est, zeta.Dev_lo.est,
          zeta.Dev_bg.est)
 write.csv(out.det, "Detectability_MS.csv", row.names = F)
+out.det %>%
+  filter(str_sub(zeta.ShrubCov.est, -1, -1) == "*" |
+           str_sub(zeta.DOY.est, -1, -1) == "*" |
+           str_sub(zeta.DOY2.est, -1, -1) == "*" |
+           str_sub(zeta.Time_ssr.est, -1, -1) == "*" |
+           str_sub(zeta.Dev_lo.est, -1, -1) == "*" |
+           str_sub(zeta.Dev_bg.est, -1, -1) == "*") %>%
+  nrow
 
 ## Hyper-parameter table for appendix ##
 hpars <- c("omega", "rho.bB", "rho.zb",
@@ -244,9 +253,9 @@ hpars <- c("omega", "rho.bB", "rho.zb",
            
            "alpha0.AHerb", "alpha.Dev_lo.AHerb",
            "alpha.Dev_bg.AHerb", "alpha.Well_1km.AHerb",
-           "alpha.Road_125m.AHerb")
+           "alpha.Road_125m.AHerb", "phi.AHerb")
 
 sum.vals <- mod$mcmcOutput[,hpars] %>%
   apply(2, function(x) QSLpersonal::BCI(x, BCIpercent = 80, flag.sig = F))
 tab.vals <- cbind(Hpar = names(sum.vals), Est = sum.vals)
-write.csv(tab.vals, "HyperMechPars_MS.csv", row.names = F)
+write.csv(tab.vals, "HyperPars_MS.csv", row.names = F)
