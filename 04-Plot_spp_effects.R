@@ -271,7 +271,7 @@ p <- ggdraw() +
   draw_plot(p.bAHerb, x = 0.81, y = 0, width = 0.19, height = 1) +
   draw_plot_label("Species", x = 0, y = 0.5, size = 40, angle = 90, hjust = 0)
 
-save_plot("Plot_MechEffects_occupancy.jpg", p, ncol = 3, nrow = 3.5, dpi = 200)
+save_plot("Plot_MechEffects_occupancy.jpg", p, ncol = 3.5, nrow = 4, dpi = 200)
 
 #### Mechanistic covariate effects on trend ####
 pars.sub <- c("DELTA.Well_3km", "delta.Well_1km", "delta.Road_125m", "delta.AHerb")
@@ -479,4 +479,4 @@ p <- ggdraw() +
   draw_plot(p.bHerb, x = 0.81, y = 0, width = 0.19, height = 1) +
   draw_plot_label("Species", x = 0, y = 0.5, size = 40, angle = 90, hjust = 0)
 
-save_plot("Plot_ControlEffects.jpg", p, ncol = 4, nrow = 4.5, dpi = 200)
+save_plot("Plot_ControlEffects.jpg", p, ncol = 5, nrow = 5.5, dpi = 200)
