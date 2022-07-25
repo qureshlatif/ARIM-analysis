@@ -303,11 +303,11 @@ for(g in 1:length(guilds)[-which(guilds == "Shrubland")]) {
   if(gld == "All") {
     p.grid <- p.grid +
       theme(legend.position = c(1,0), legend.justification = c(1,0)) +
-      xlab(NULL) + ylab("Grid-cell richness")  
+      xlab(NULL) + ylab("Coarse-scale richness")  
   } else {
     p.grid <- p.grid +
       guides(color = F, fill = F, shape = F) +
-      xlab(NULL) + ylab("Grid-cell richness")  
+      xlab(NULL) + ylab("Coarse-scale richness")  
   }
 
   # Point occupancy #
@@ -355,7 +355,7 @@ for(g in 1:length(guilds)[-which(guilds == "Shrubland")]) {
     ylim(0,max(c(dat.plot$SR.yr.hi, dat.plot$SR.pred.hi))) +
     #theme(legend.position = c(1,0), legend.justification = c(1,0)) +
     guides(color = F, fill = F, shape = F) +
-    xlab(NULL) + ylab("Point richness")
+    xlab(NULL) + ylab("Fine-scale richness")
   
   # Put everything together
   p.gld <- ggdraw() +

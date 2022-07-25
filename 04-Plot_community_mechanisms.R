@@ -140,7 +140,7 @@ p.All_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   guides(color=guide_legend(title = NULL),
          fill=guide_legend(title = NULL)) +
   ggtitle(gld.nam) +
-  xlab(NULL) + ylab("Point richness")
+  xlab(NULL) + ylab("Fine-scale richness")
 
 ## Generalists, Well_1km ##
 gld <- "Generalist"
@@ -191,7 +191,7 @@ p.Gen_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   guides(color=guide_legend(title = NULL),
          fill=guide_legend(title = NULL)) +
   ggtitle(gld.nam) +
-  xlab(NULL) + ylab("Point richness")
+  xlab(NULL) + ylab("Fine-scale richness")
 
 ## Sagebrush, Well_1km ##
 gld <- "Sagebrush"
@@ -242,7 +242,7 @@ p.Sage_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   guides(color=guide_legend(title = NULL),
          fill=guide_legend(title = NULL)) +
   ggtitle(gld.nam) +
-  xlab(NULL) + ylab("Point richness")
+  xlab(NULL) + ylab("Fine-scale richness")
 
 ## Montane, Well_1km ##
 gld <- "Montane"
@@ -293,7 +293,7 @@ p.Mont_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   guides(color=guide_legend(title = NULL),
          fill=guide_legend(title = NULL)) +
   ggtitle(gld.nam) +
-  xlab(NULL) + ylab("Point richness")
+  xlab(NULL) + ylab("Fine-scale richness")
 
 ## Riparian, Well_1km ##
 gld <- "Riparian"
@@ -344,7 +344,7 @@ p.Ripar_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   guides(color=guide_legend(title = NULL),
          fill=guide_legend(title = NULL)) +
   ggtitle(gld.nam) +
-  xlab(NULL) + ylab("Point richness")
+  xlab(NULL) + ylab("Fine-scale richness")
 
 ## Grassland, Annual herbaceous cover ##
 gld <- "Grassland"
@@ -395,7 +395,7 @@ p.Grass_AHerb <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   guides(color=guide_legend(title = NULL),
          fill=guide_legend(title = NULL)) +
   ggtitle(gld.nam) +
-  xlab(NULL) + ylab("Point richness")
+  xlab(NULL) + ylab("Fine-scale richness")
 
 # Put it all together #
 p <- ggdraw() +

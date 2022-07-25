@@ -158,11 +158,11 @@ for(sp in 1:length(spp.plot)) {
   if(spp %in% c("HOLA", "BRSP")) {
     p.grid <- p.grid +
       theme(legend.position = c(1,0), legend.justification = c(1,0)) +
-      xlab(NULL) + ylab("Grid-cell occupancy")  
+      xlab(NULL) + ylab("Coarse-scale occupancy")  
   } else {
     p.grid <- p.grid +
       guides(color = F, fill = F, shape = F) +
-      xlab(NULL) + ylab("Grid-cell occupancy")  
+      xlab(NULL) + ylab("Coarse-scale occupancy")  
   }
 
   # Point occupancy #
@@ -198,7 +198,7 @@ for(sp in 1:length(spp.plot)) {
     ylim(0, 1) +
     #theme(legend.position = c(1,0), legend.justification = c(1,0)) +
     guides(color = F, fill = F, shape = F) +
-    xlab(NULL) + ylab("Point occupancy")
+    xlab(NULL) + ylab("Fine-scale occupancy")
   
   # Put everything together
   p.spp <- ggdraw() +
@@ -408,7 +408,7 @@ p.TREND <- ggplot(dat = dat_plot_long, aes(x = index, y = TREND)) +
                      expand=c(0, 1)) +
   scale_y_continuous(limits = c(ymin, ymax), breaks = breaks, labels = break.labs) +
   scale_color_manual(values = c("#000000", "#009E73", "#D55E00")) +
-  ylab("Grid cell trend (%)") + xlab(NULL) +
+  ylab("Coarse-scale trend (%)") + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
@@ -453,7 +453,7 @@ p.trend <- ggplot(dat = dat_plot_long, aes(x = index, y = trend)) +
                      expand=c(0, 1)) +
   scale_y_continuous(limits = c(ymin, ymax), breaks = breaks, labels = break.labs) +
   scale_color_manual(values = c("#000000", "#009E73", "#D55E00")) +
-  ylab("Point scale trend (%)") + xlab(NULL) +
+  ylab("Fine-scale trend (%)") + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
