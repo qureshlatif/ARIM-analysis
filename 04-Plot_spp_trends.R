@@ -24,9 +24,9 @@ source(str_c(scripts.loc, "Data_processing.R"))
 source(str_c(scripts.loc, "Calculate_mech_path_covariate_values.R"))
 
 
-#**********************#
+########################
 # Focal species trends #
-#**********************#
+########################
 
 plot.table.fn <- function(B0, B1, X.B.hi, X.B.lo, X.B.bg, dev.B,
                           D0, D1, X.D.hi, X.D.lo, X.D.bg, X.trend) {
@@ -161,7 +161,7 @@ for(sp in 1:length(spp.plot)) {
       xlab(NULL) + ylab("Coarse-scale occupancy")  
   } else {
     p.grid <- p.grid +
-      guides(color = F, fill = F, shape = F) +
+      guides(color = "none", fill = "none", shape = "none") +
       xlab(NULL) + ylab("Coarse-scale occupancy")  
   }
 
@@ -197,7 +197,7 @@ for(sp in 1:length(spp.plot)) {
     scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
     ylim(0, 1) +
     #theme(legend.position = c(1,0), legend.justification = c(1,0)) +
-    guides(color = F, fill = F, shape = F) +
+    guides(color = "none", fill = "none", shape = "none") +
     xlab(NULL) + ylab("Fine-scale occupancy")
   
   # Put everything together
@@ -218,9 +218,9 @@ p <- ggdraw() +
 save_plot("Figure_focal_spp_trends.jpg", p, ncol = 1.5, nrow = 3.5, dpi = 600)
 
 
-#********************#
+######################
 # All species trends #
-#********************#
+######################
 
 ## Set up output table ##
 cols <- c("Spp", "TREND_hi", "TREND_hi_lo", "TREND_hi_hi",
@@ -457,7 +457,7 @@ p.trend <- ggplot(dat = dat_plot_long, aes(x = index, y = trend)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p <- ggdraw() +
   draw_plot(p.TREND, x = 0.05, y = 0, width = 0.475, height = 1) +

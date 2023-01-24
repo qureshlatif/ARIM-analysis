@@ -14,7 +14,7 @@ out.vals <- c("est", "f")
 #______________________________________#
 
 mod$summary %>% write.csv(str_c("Params_all.csv"), row.names = F) # Save full table of parameter estimates
-mod$summary %>%
+out <- mod$summary %>% # Just for reference. For manuscript supplement, there is another tabulation script below.
   filter((!str_detect(Parameter, "BETA0\\[") &
            !str_detect(Parameter, "BETA1\\[") &
            !str_detect(Parameter, "dev.BETA\\[") &
@@ -29,8 +29,103 @@ mod$summary %>%
            !str_detect(Parameter, "zeta1\\[") &
            !str_detect(Parameter, "dev.zeta\\[") &
            !str_detect(Parameter, "w\\[")) |
-           str_detect(Parameter, "sigma")) %>%
-  write.csv(str_c("HyperParams.csv"), row.names = F)
+           str_detect(Parameter, "sigma"))
+out2 <- out %>%
+  filter(Parameter == "omega") %>%
+  bind_rows(out %>% filter(str_sub(Parameter, 1, 3) == "rho")) %>%
+  bind_rows(out %>% filter(Parameter == "BETA0.mu")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.BETA0")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.B0")) %>%
+  bind_rows(out %>% filter(Parameter == "BETA1.mu[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.BETA1[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "BETA1.mu[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.BETA1[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "BETA1.mu[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.BETA1[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "BETA1.mu[4]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.BETA1[4]")) %>%
+  bind_rows(out %>% filter(Parameter == "BETA1.mu[5]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.BETA1[5]")) %>%
+  bind_rows(out %>% filter(Parameter == "BETA1.mu[6]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.BETA1[6]")) %>%
+  bind_rows(out %>% filter(Parameter == "DELTA0.mu")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.DELTA0")) %>%
+  bind_rows(out %>% filter(Parameter == "DELTA1.mu[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.DELTA1[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "DELTA1.mu[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.DELTA1[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "DELTA1.mu[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.DELTA1[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "beta0.mu")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.beta0")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.b0")) %>%
+  bind_rows(out %>% filter(Parameter == "beta1.mu[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.beta1[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "beta1.mu[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.beta1[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "beta1.mu[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.beta1[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "beta1.mu[4]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.beta1[4]")) %>%
+  bind_rows(out %>% filter(Parameter == "beta1.mu[5]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.beta1[5]")) %>%
+  bind_rows(out %>% filter(Parameter == "beta1.mu[6]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.beta1[6]")) %>%
+  bind_rows(out %>% filter(Parameter == "beta1.mu[7]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.beta1[7]")) %>%
+  bind_rows(out %>% filter(Parameter == "beta1.mu[8]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.beta1[8]")) %>%
+  bind_rows(out %>% filter(Parameter == "delta0.mu")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.delta0")) %>%
+  bind_rows(out %>% filter(Parameter == "delta1.mu[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.delta1[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "delta1.mu[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.delta1[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "delta1.mu[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.delta1[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "delta1.mu[4]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.delta1[4]")) %>%
+  bind_rows(out %>% filter(Parameter == "delta1.mu[5]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.delta1[5]")) %>%
+  bind_rows(out %>% filter(Parameter == "zeta0.mu")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.zeta0")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.z0")) %>%
+  bind_rows(out %>% filter(Parameter == "zeta1.mu[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.zeta1[1]")) %>%
+  bind_rows(out %>% filter(Parameter == "zeta1.mu[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.zeta1[2]")) %>%
+  bind_rows(out %>% filter(Parameter == "zeta1.mu[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.zeta1[3]")) %>%
+  bind_rows(out %>% filter(Parameter == "zeta1.mu[4]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.zeta1[4]")) %>%
+  bind_rows(out %>% filter(Parameter == "zeta1.mu[5]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.zeta1[5]")) %>%
+  bind_rows(out %>% filter(Parameter == "zeta1.mu[6]")) %>%
+  bind_rows(out %>% filter(Parameter == "sigma.zeta1[6]")) %>%
+  
+  bind_rows(out %>% filter(Parameter == "ALPHA0.Well_3km")) %>%
+  bind_rows(out %>% filter(Parameter == "ALPHA.Dev_bg.Well_3km")) %>%
+  bind_rows(out %>% filter(Parameter == "ALPHA.Dev_lo.Well_3km")) %>%
+  bind_rows(out %>% filter(Parameter == "r.Well_3km")) %>%
+  
+  bind_rows(out %>% filter(Parameter == "ALPHA0.Well_1km")) %>%
+  bind_rows(out %>% filter(Parameter == "ALPHA.Dev_bg.Well_1km")) %>%
+  bind_rows(out %>% filter(Parameter == "ALPHA.Dev_lo.Well_1km")) %>%
+  bind_rows(out %>% filter(Parameter == "r.Well_1km")) %>%
+  
+  bind_rows(out %>% filter(Parameter == "alpha0.Road_125m")) %>%
+  bind_rows(out %>% filter(Parameter == "alpha.Dev_bg.Road_125m")) %>%
+  bind_rows(out %>% filter(Parameter == "alpha.Dev_lo.Road_125m")) %>%
+  bind_rows(out %>% filter(Parameter == "shape.Road_125m")) %>%
+  
+  bind_rows(out %>% filter(Parameter == "alpha0.AHerb")) %>%
+  bind_rows(out %>% filter(Parameter == "alpha.Dev_bg.AHerb")) %>%
+  bind_rows(out %>% filter(Parameter == "alpha.Dev_lo.AHerb")) %>%
+  bind_rows(out %>% filter(Parameter == "alpha.Well_1km.AHerb")) %>%
+  bind_rows(out %>% filter(Parameter == "alpha.Road_125m.AHerb")) %>%
+  bind_rows(out %>% filter(Parameter == "phi.AHerb"))
+  
+write.csv(out2, str_c("HyperParams.csv"), row.names = F)
 
 # Compile data to get covariate names #
 source(str_c(scripts.loc, "Data_processing.R"))

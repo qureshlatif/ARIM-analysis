@@ -15,6 +15,12 @@ scripts.loc <- "ARIM-analysis/"
 mod <- loadObject(mod.nam)
 nsims <- dim(mod$mcmcOutput)[1]
 
+# List guild designations to add to spp codes #
+guild.codes <- c("Gn", "Gr", "M", "R", "Sg", "Sh", "Wt", "Wd")
+names(guild.codes) <- sort(unique(spp.out$Guild))
+guild.codes <- guild.codes[spp.out$Guild]
+names(guild.codes) <- spp.out$BirdCode
+
   # Data processing
 source(str_c(scripts.loc, "Data_processing.R"))
 #______________________________________#
@@ -70,7 +76,8 @@ pars.sub <- c("DELTA.Dev_lo", "DELTA.Dev_bg", "delta.Dev_lo", "delta.Dev_bg")
 dat.plt <- tbl_pars %>% as_tibble() %>%
   select(contains(pars.sub, ignore.case = F))%>%
   mutate(Spp = spp.list[which(spp.detected)]) %>%
-  mutate(index = row_number() %>% rev())
+  mutate(index = row_number() %>% rev()) %>%
+  mutate(Spp = str_c(Spp, "(", guild.codes[Spp], ")"))
 
 dat.plt.supp <- dat.plt %>%
   filter_at(vars(ends_with(".lo")), any_vars(. > 0)) %>%
@@ -108,7 +115,7 @@ p.DDlo <- ggplot(dat = dat.plt.supp, aes(x = index, y = DELTA.Dev_lo)) +
   theme(axis.title.x=element_text(size=30)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.DDbg <- ggplot(dat = dat.plt.supp, aes(x = index, y = DELTA.Dev_bg)) +
   geom_errorbar(aes(ymin = DELTA.Dev_bg.lo, ymax = DELTA.Dev_bg.hi, color = DELTA.Dev_bg.supp), size=1, width=0) +
@@ -122,7 +129,7 @@ p.DDbg <- ggplot(dat = dat.plt.supp, aes(x = index, y = DELTA.Dev_bg)) +
   theme(axis.title.x=element_text(size=30)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.dDlo <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Dev_lo)) +
   geom_errorbar(aes(ymin = delta.Dev_lo.lo, ymax = delta.Dev_lo.hi, color = delta.Dev_lo.supp), size=1, width=0) +
@@ -136,7 +143,7 @@ p.dDlo <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Dev_lo)) +
   theme(axis.title.x=element_text(size=30)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.dDbg <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Dev_bg)) +
   geom_errorbar(aes(ymin = delta.Dev_bg.lo, ymax = delta.Dev_bg.hi, color = delta.Dev_bg.supp), size=1, width=0) +
@@ -150,7 +157,7 @@ p.dDbg <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Dev_bg)) +
   theme(axis.title.x=element_text(size=30)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p <- ggdraw() + 
   draw_plot(p.DDlo, x = 0.0500, y = 0, width = 0.2375, height = 1) +
@@ -167,7 +174,8 @@ pars.sub <- c("BETA.Well_3km", "BETA.Road_1km",
 dat.plt <- tbl_pars %>% as_tibble() %>%
   select(contains(pars.sub, ignore.case = F))%>%
   mutate(Spp = spp.list[which(spp.detected)]) %>%
-  mutate(index = row_number() %>% rev())
+  mutate(index = row_number() %>% rev()) %>%
+  mutate(Spp = str_c(Spp, "(", guild.codes[Spp], ")"))
 
 dat.plt.supp <- dat.plt %>%
   filter_at(vars(ends_with(".lo")), any_vars(. > 0)) %>%
@@ -201,11 +209,11 @@ p.BWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.Well_3km)) +
   scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
                      expand=c(0, 1)) +
   scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
-  ylab(expression(hat(Beta)["Well density (900 ha)"])) + xlab(NULL) +
+  ylab(expression(hat(Beta)["Well pad density (900 ha)"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.BRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.Road_1km)) +
   geom_errorbar(aes(ymin = BETA.Road_1km.lo, ymax = BETA.Road_1km.hi, color = BETA.Road_1km.supp), size=1, width=0) +
@@ -219,7 +227,7 @@ p.BRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.Road_1km)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.bWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Well_1km)) +
   geom_errorbar(aes(ymin = beta.Well_1km.lo, ymax = beta.Well_1km.hi, color = beta.Well_1km.supp), size=1, width=0) +
@@ -229,11 +237,11 @@ p.bWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Well_1km)) +
   scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
                      expand=c(0, 1)) +
   scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
-  ylab(expression(hat(beta)["Well density (100 ha)"])) + xlab(NULL) +
+  ylab(expression(hat(beta)["Well pad density (100 ha)"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.bRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Road_125m)) +
   geom_errorbar(aes(ymin = beta.Road_125m.lo, ymax = beta.Road_125m.hi, color = beta.Road_125m.supp), size=1, width=0) +
@@ -247,7 +255,7 @@ p.bRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Road_125m)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.bAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.AHerb)) +
   geom_errorbar(aes(ymin = beta.AHerb.lo, ymax = beta.AHerb.hi, color = beta.AHerb.supp), size=1, width=0) +
@@ -261,7 +269,7 @@ p.bAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.AHerb)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p <- ggdraw() + 
   draw_plot(p.BWell,  x = 0.05, y = 0, width = 0.19, height = 1) +
@@ -278,7 +286,8 @@ pars.sub <- c("DELTA.Well_3km", "delta.Well_1km", "delta.Road_125m", "delta.AHer
 dat.plt <- tbl_pars %>% as_tibble() %>%
   select(contains(pars.sub, ignore.case = F))%>%
   mutate(Spp = spp.list[which(spp.detected)]) %>%
-  mutate(index = row_number() %>% rev())
+  mutate(index = row_number() %>% rev()) %>%
+  mutate(Spp = str_c(Spp, "(", guild.codes[Spp], ")"))
 
 dat.plt.supp <- dat.plt %>%
   filter_at(vars(ends_with(".lo")), any_vars(. > 0)) %>%
@@ -312,11 +321,11 @@ p.DWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = DELTA.Well_3km)) +
   scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
                      expand=c(0, 1)) +
   scale_color_manual(values = c("#000000", "#D55E00")) +
-  ylab(expression(hat(Delta)["Well density (900 ha)"])) + xlab(NULL) +
+  ylab(expression(hat(Delta)["Well pad density (900 ha)"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.dWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Well_1km)) +
   geom_errorbar(aes(ymin = delta.Well_1km.lo, ymax = delta.Well_1km.hi, color = delta.Well_1km.supp), size=1, width=0) +
@@ -326,11 +335,11 @@ p.dWell <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Well_1km)) +
   scale_x_continuous(breaks = 1:nrow(dat.plt.supp), labels = rev(dat.plt.supp$Spp),
                      expand=c(0, 1)) +
   scale_color_manual(values = c("#0072B2", "#000000", "#D55E00")) +
-  ylab(expression(hat(delta)["Well density (100 ha)"])) + xlab(NULL) +
+  ylab(expression(hat(delta)["Well pad density (100 ha)"])) + xlab(NULL) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.dRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Road_125m)) +
   geom_errorbar(aes(ymin = delta.Road_125m.lo, ymax = delta.Road_125m.hi, color = delta.Road_125m.supp), size=1, width=0) +
@@ -344,7 +353,7 @@ p.dRoad <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.Road_125m)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.dAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.AHerb)) +
   geom_errorbar(aes(ymin = delta.AHerb.lo, ymax = delta.AHerb.hi, color = delta.AHerb.supp), size=1, width=0) +
@@ -358,7 +367,7 @@ p.dAHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = delta.AHerb)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p <- ggdraw() + 
   draw_plot(p.DWell,  x = 0.0500, y = 0, width = 0.2375, height = 1) +
@@ -375,7 +384,8 @@ pars.sub <- c("BETA.PJ_area", "BETA.NDVI", "beta.TPI_min",
 dat.plt <- tbl_pars %>% as_tibble() %>%
   select(contains(pars.sub, ignore.case = F))%>%
   mutate(Spp = spp.list[which(spp.detected)]) %>%
-  mutate(index = row_number() %>% rev())
+  mutate(index = row_number() %>% rev()) %>%
+  mutate(Spp = str_c(Spp, "(", guild.codes[Spp], ")"))
 
 dat.plt.supp <- dat.plt %>%
   filter_at(vars(ends_with(".lo")), any_vars(. > 0)) %>%
@@ -413,7 +423,7 @@ p.BPJA <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.PJ_area)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.BNDVI <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.NDVI)) +
   geom_errorbar(aes(ymin = BETA.NDVI.lo, ymax = BETA.NDVI.hi, color = BETA.NDVI.supp), size=1, width=0) +
@@ -427,7 +437,7 @@ p.BNDVI <- ggplot(dat = dat.plt.supp, aes(x = index, y = BETA.NDVI)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.bTPI <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.TPI_min)) +
   geom_errorbar(aes(ymin = beta.TPI_min.lo, ymax = beta.TPI_min.hi, color = beta.TPI_min.supp), size=1, width=0) +
@@ -441,7 +451,7 @@ p.bTPI <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.TPI_min)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.bSage <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Sage)) +
   geom_errorbar(aes(ymin = beta.Sage.lo, ymax = beta.Sage.hi, color = beta.Sage.supp), size=1, width=0) +
@@ -455,7 +465,7 @@ p.bSage <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Sage)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p.bHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Herb)) +
   geom_errorbar(aes(ymin = beta.Herb.lo, ymax = beta.Herb.hi, color = beta.Herb.supp), size=1, width=0) +
@@ -469,7 +479,7 @@ p.bHerb <- ggplot(dat = dat.plt.supp, aes(x = index, y = beta.Herb)) +
   theme(axis.title.x=element_text(size=25)) +
   theme(axis.text.x=element_text(size=15)) +
   theme(axis.text.y=element_text(size=15)) +
-  guides(color = F)
+  guides(color = "none")
 
 p <- ggdraw() + 
   draw_plot(p.BPJA,  x = 0.05, y = 0, width = 0.19, height = 1) +

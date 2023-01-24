@@ -306,7 +306,7 @@ for(g in 1:length(guilds)[-which(guilds == "Shrubland")]) {
       xlab(NULL) + ylab("Coarse-scale richness")  
   } else {
     p.grid <- p.grid +
-      guides(color = F, fill = F, shape = F) +
+      guides(color = "none", fill = "none", shape = "none") +
       xlab(NULL) + ylab("Coarse-scale richness")  
   }
 
@@ -354,7 +354,7 @@ for(g in 1:length(guilds)[-which(guilds == "Shrubland")]) {
     scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
     ylim(0,max(c(dat.plot$SR.yr.hi, dat.plot$SR.pred.hi))) +
     #theme(legend.position = c(1,0), legend.justification = c(1,0)) +
-    guides(color = F, fill = F, shape = F) +
+    guides(color = "none", fill = "none", shape = "none") +
     xlab(NULL) + ylab("Fine-scale richness")
   
   # Put everything together
@@ -367,16 +367,15 @@ for(g in 1:length(guilds)[-which(guilds == "Shrubland")]) {
 
 # Put it all together #
 p <- ggdraw() +
-  draw_plot(p.All,        x = 0,   y = 0.7625, width = 1,   height = 0.2375) +
-  draw_plot(p.Sagebrush,  x = 0,   y = 0.5250, width = 0.5, height = 0.2375) +
-  draw_plot(p.Grassland,  x = 0.5, y = 0.5250, width = 0.5, height = 0.2375) +
-  draw_plot(p.Generalist, x = 0,   y = 0.2875, width = 0.5, height = 0.2375) +
-  draw_plot(p.Montane,    x = 0.5, y = 0.2875, width = 0.5, height = 0.2375) +
-  draw_plot(p.Riparian,   x = 0,   y = 0.05,   width = 0.5, height = 0.2375) +
-  draw_plot(p.Woodland,   x = 0.5, y = 0.05,   width = 0.5, height = 0.2375) +
+  draw_plot(p.All,        x = 0,   y = 0.6833333, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Sagebrush,  x = 0.5, y = 0.6833333, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Grassland,  x = 0,   y = 0.3666667, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Generalist, x = 0.5, y = 0.3666667, width = 0.5, height = 0.3166667) +
+  draw_plot(p.Montane,    x = 0,   y = 0.05,      width = 0.5, height = 0.3166667) +
+  draw_plot(p.Riparian,   x = 0.5, y = 0.05,      width = 0.5, height = 0.3166667) +
   draw_plot_label("Year", x = 0.5, y = 0.05, angle = 0, hjust = 0)
 
-save_plot("Figure_guild_trends_supported.jpg", p, ncol = 2, nrow = 4, dpi = 600)
+save_plot("Figure_guild_trends_supported.jpg", p, ncol = 2, nrow = 3, dpi = 600)
 
 # p <- ggdraw() +
 #   draw_plot(p.All,        x = 0, y = 0.8944444, width = 1, height = 0.1055556) +

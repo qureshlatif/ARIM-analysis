@@ -270,10 +270,6 @@ out <- runMCMC(Cmcmc, nchains = nc, nburnin = nb, niter = ni, thin = nt)
 end.time <- Sys.time()
 end.time - st.time
 
-# Step 7 (Continue if not converged)
-out2 <- runMCMC(Cmcmc, niter = ni, thin = nt)
-out <- rbind(out, out2)
-
 # Save chain
 R.utils::saveObject(out, str_c(mod.nam, "_chain", chain)) # If running chains in parallel.
 #rm(out)
