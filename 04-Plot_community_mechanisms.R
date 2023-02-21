@@ -104,8 +104,8 @@ X.d.ind <- which(dimnames(X.lambda.pred.hi)[[2]] == var.nam)
 
 x.min <- min(X.psi[,X.b.ind])
 x.max <- max(X.psi[,X.b.ind])
-xmn.label <- "0 wells per sqr km"
-xmx.label <- "5 wells per sqr km"
+xmn.label <- "0 wells/km^2"
+xmx.label <- "5 wells/km^2"
 
 dat.plot <- plot.table.fn(w = mod$mcmcOutput$w[,ind.spp],
                           B0 = mod$mcmcOutput$BETA0[,ind.spp],
@@ -132,8 +132,8 @@ p.All_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   geom_ribbon(aes(ymin = SR.pred.lo, ymax = SR.pred.hi, fill = Level),
               size = 0, alpha = 0.3) +
   geom_line(aes(color = Level), size = 1) +
-  scale_color_manual(values = c("#000000", "#D55E00")) +
-  scale_fill_manual(values = c("#000000", "#D55E00")) +
+  scale_color_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
+  scale_fill_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
   ylim(0, max(dat.plot$SR.pred.hi)) +
   scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +
@@ -183,8 +183,8 @@ p.Gen_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   geom_ribbon(aes(ymin = SR.pred.lo, ymax = SR.pred.hi, fill = Level),
               size = 0, alpha = 0.3) +
   geom_line(aes(color = Level), size = 1) +
-  scale_color_manual(values = c("#000000", "#D55E00")) +
-  scale_fill_manual(values = c("#000000", "#D55E00")) +
+  scale_color_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
+  scale_fill_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
   scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
   ylim(0, max(dat.plot$SR.pred.hi)) +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +
@@ -234,8 +234,8 @@ p.Sage_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   geom_ribbon(aes(ymin = SR.pred.lo, ymax = SR.pred.hi, fill = Level),
               size = 0, alpha = 0.3) +
   geom_line(aes(color = Level), size = 1) +
-  scale_color_manual(values = c("#000000", "#D55E00")) +
-  scale_fill_manual(values = c("#000000", "#D55E00")) +
+  scale_color_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
+  scale_fill_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
   scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
   ylim(0, max(dat.plot$SR.pred.hi)) +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +
@@ -285,8 +285,8 @@ p.Mont_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   geom_ribbon(aes(ymin = SR.pred.lo, ymax = SR.pred.hi, fill = Level),
               size = 0, alpha = 0.3) +
   geom_line(aes(color = Level), size = 1) +
-  scale_color_manual(values = c("#000000", "#D55E00")) +
-  scale_fill_manual(values = c("#000000", "#D55E00")) +
+  scale_color_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
+  scale_fill_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
   scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
   ylim(0, max(dat.plot$SR.pred.hi)) +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +
@@ -336,8 +336,8 @@ p.Ripar_Well <- ggplot(dat.plot, aes(x = Year, y = SR.pred)) +
   geom_ribbon(aes(ymin = SR.pred.lo, ymax = SR.pred.hi, fill = Level),
               size = 0, alpha = 0.3) +
   geom_line(aes(color = Level), size = 1) +
-  scale_color_manual(values = c("#000000", "#D55E00")) +
-  scale_fill_manual(values = c("#000000", "#D55E00")) +
+  scale_color_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
+  scale_fill_manual(values = c("#000000", "#D55E00"), labels = c(expression(0~wells/km^2), expression(5~wells/km^2))) +
   scale_x_continuous(breaks = seq(2010, 2019, by = 2)) +
   ylim(0, max(dat.plot$SR.pred.hi)) +
   theme(legend.position = c(1,1), legend.justification = c(1,1)) +

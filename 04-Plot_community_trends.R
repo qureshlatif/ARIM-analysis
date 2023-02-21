@@ -375,7 +375,7 @@ p <- ggdraw() +
   draw_plot(p.Riparian,   x = 0.5, y = 0.05,      width = 0.5, height = 0.3166667) +
   draw_plot_label("Year", x = 0.5, y = 0.05, angle = 0, hjust = 0)
 
-save_plot("Figure_guild_trends_supported.jpg", p, ncol = 2, nrow = 3, dpi = 600)
+save_plot("Figure_guild_trends_supported.jpg", p, ncol = 2, nrow = 3, dpi = 400)
 
 # p <- ggdraw() +
 #   draw_plot(p.All,        x = 0, y = 0.8944444, width = 1, height = 0.1055556) +

@@ -215,7 +215,7 @@ p <- ggdraw() +
   draw_plot(p.SATH, x = 0, y = 0.05,   width = 1, height = 0.2375) +
   draw_plot_label("Year", x = 0.5, y = 0.05, angle = 0, hjust = 0)
 
-save_plot("Figure_focal_spp_trends.jpg", p, ncol = 1.5, nrow = 3.5, dpi = 600)
+save_plot("Figure_focal_spp_trends.jpg", p, ncol = 1.5, nrow = 3.5, dpi = 400)
 
 
 ######################
@@ -464,4 +464,4 @@ p <- ggdraw() +
   draw_plot(p.trend, x = 0.525, y = 0, width = 0.475, height = 1) +
   draw_plot_label("Species", x = 0, y = 0.5, angle = 90, hjust = 0, size = 30)
 
-save_plot("Figure_spp_trends.jpg", p, ncol = 2, nrow = 3, dpi = 600)
+save_plot("Figure_spp_trends.jpg", p, ncol = 2, nrow = 3, dpi = 400)
